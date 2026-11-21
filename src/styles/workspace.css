@@ -103,6 +103,30 @@
   min-width: 0;
 }
 
+.workspace__home {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace__home:hover .wordmark {
+  opacity: 0.78;
+}
+
+.workspace__home:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .workspace .wordmark {
   color: var(--ink);
 }
