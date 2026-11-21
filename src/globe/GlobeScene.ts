@@ -159,8 +159,8 @@ const ARC_FRAGMENT = /* glsl */ `
     float glow = 0.0;
 
     if (uActive > 0.5) {
-      for (int i = 0; i < 3; i++) {
-        float head = fract(uTime * uSpeed + uPhase + float(i) / 3.0);
+      for (int i = 0; i < ${TUNING.arcs.activePackets}; i++) {
+        float head = fract(uTime * uSpeed + uPhase + float(i) / ${TUNING.arcs.activePackets}.0);
         float d = head - vT;
         float body = smoothstep(uTrail, 0.0, d) * step(0.0, d);
         glow += body * 0.42;

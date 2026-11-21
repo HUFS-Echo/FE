@@ -115,7 +115,7 @@ export const TUNING = {
     activeRadius: 0.0072,
     /** 공식 목록 밖의 비활성 목적지 줄기 굵기 */
     idleRadius: 0.0024,
-    /** active 줄기에 동시에 흐르는 빛 패킷 수 */
+    /** 공식 목적지 각 줄기를 따라 동시에 흐르는 빛 패킷 수 */
     activePackets: 3,
     /** active 패킷 속도(초당 1회전 비율) */
     activeSpeed: 0.19,
