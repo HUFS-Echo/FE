@@ -8,6 +8,7 @@ import {
   type SubjectId,
 } from '../../../config/learning';
 import type { Session } from '../../../lib/session';
+import { getDemoState } from '../../../lib/demoStore';
 import { MiniGlobe } from './MiniGlobe';
 
 type Props = {
@@ -21,7 +22,10 @@ type Props = {
 export function StudentHome({ session, subject, onSubject, onOpen, onToast }: Props) {
   const current = getSubject(subject);
   const sets = PRACTICE_SETS[subject];
-  const others = OTHER_MISSIONS[subject];
+  const disabledCourses = (getDemoState().studentSettings.disabledCourses as string[] | undefined) ?? [];
+  const courseName: Record<SubjectId, string> = { reading: '읽기와 쓰기', writing: '작문', speaking: '회화' };
+  const availableSubjects = SUBJECTS.filter((item) => !disabledCourses.includes(courseName[item.id]));
+  const others = OTHER_MISSIONS[subject].filter((mission) => !disabledCourses.includes(courseName[mission.subject]));
 
   return (
     <div className="home">
@@ -51,7 +55,7 @@ export function StudentHome({ session, subject, onSubject, onOpen, onToast }: Pr
       </header>
 
       <div className="subject-tabs" role="tablist" aria-label="과목 선택">
-        {SUBJECTS.map((item) => (
+        {availableSubjects.map((item) => (
           <button
             key={item.id}
             type="button"

@@ -1,0 +1,47 @@
+/* The original student workspace already owns the ivory canvas in workspace.css.
+   Apply that same study-desk palette only to the newly added professor/profile surfaces. */
+.prof-shell { background:#f4f1ea; color:#14243b; }
+.prof-sidebar { border-color:#e5ded1; background:rgba(250,248,242,.94); }
+.prof-sidebar__top { color:#8a857d; }
+.prof-sidebar nav>button { color:#4a5a6d; }
+.prof-sidebar nav>button:hover { background:#f1ece2; }
+.prof-sidebar nav>button.is-active { background:#eaf1fa; color:#2e5fa3; }
+.prof-sidebar__foot { border-color:#e5ded1; }
+.prof-page-head p,.prof-filter-context { color:#817f79; }
+.prof-filter-context b { color:#4a5a6d; }
+.prof-kpis>article,.prof-kpis>button,.prof-card { border-color:#e5ded1; background:#fff; box-shadow:0 1px 2px rgba(20,36,59,.04),0 10px 24px -20px rgba(20,36,59,.3); }
+.prof-kpis>article>span,.prof-kpis>button>span { color:#6b6a66; }
+.prof-ai-card { border-color:#e3dfd5; background:linear-gradient(120deg,#f7f4ec,#fff 72%); box-shadow:0 1px 2px rgba(20,36,59,.03),0 10px 24px -20px rgba(20,36,59,.24); }
+.ai-avatar { background:#fbf8f0; }
+.prof-shell .ai-pill,.prof-shell .tag,.profile-page .ai-pill,.profile-page .tag { background:#eaf1fa; color:#2e5fa3; }
+.prof-shell .error-bar>i,.prof-shell .mini-progress,.prof-shell .week-progress-list i { background:#f0ede6; }
+.prof-shell .error-bar>i>b,.prof-shell .mini-progress>i,.prof-shell .week-progress-list em { background:linear-gradient(90deg,#2e5fa3,#5b83bc); }
+.prof-empty { border-color:#d8cfbe; background:#fff; }
+.prof-shell .subject-tabs { border-color:#e5ded1; background:#fff; }
+.prof-shell .subject-tabs button.is-active { background:#eaf1fa; color:#2e5fa3; }
+.prof-shell .scope-status--active { background:#eaf1fa; color:#2e5fa3; }
+.prof-shell .scope-status--scheduled { background:#fbf0dc; color:#8c6228; }
+.prof-shell .scope-status--draft,.prof-shell .scope-status--private { background:#f4f1ea; color:#7e817f; }
+.prof-shell .prof-table th,.prof-shell .prof-table td { border-color:#eee9df; }
+.prof-shell .prof-table th { color:#88847c; }
+.prof-shell .weakness-item { border-color:#e5ded1; }
+.prof-shell .search-field,.prof-shell .roster-filters select,.prof-shell .form-label input,.prof-shell .form-label textarea,.prof-shell .form-label select,.prof-shell .count-fields input,.prof-shell .checklist-edit>input { border-color:#e5ded1; }
+.prof-shell .form-label input,.prof-shell .form-label textarea,.prof-shell .form-label select,.prof-shell .count-fields input,.prof-shell .checklist-edit>input { background:#fff; }
+.prof-shell .feedback-columns>div { background:#faf7f0; }
+.prof-shell .feedback-ai { background:#eef3f9!important; }
+.prof-shell .student-example,.prof-shell .student-preview-head,.prof-shell .publish-summary { background:#f7f4ed; }
+.prof-shell .pdf-page-wrap { background:#f0ede6; }
+.prof-shell .pdf-thumbnails button { border-color:#e5ded1; }
+.profile-page { color:#14243b; }
+.profile-hero { border-color:#e5ded1; background:linear-gradient(115deg,#f7f3e9,#fff 68%); box-shadow:0 1px 2px rgba(20,36,59,.04),0 10px 24px -20px rgba(20,36,59,.3); }
+.profile-card { border-color:#e5ded1; box-shadow:0 1px 2px rgba(20,36,59,.04),0 10px 24px -20px rgba(20,36,59,.3); }
+.profile-stat-grid article,.course-profile-list article,.file-list article { border-color:#eee9df; }
+.vocab-list article,.profile-data-grid input:disabled,.course-profile-list article:hover { background:#faf7f0; }
+.profile-data-grid input,.profile-select input,.profile-select select,.glossary-list input { border-color:#e5ded1; }
+.profile-route-note { border:1px solid #e5ded1; background:#fff; color:#4a5a6d; }
+.prof-shell .prof-kpis em.good,.prof-shell .good,.profile-page .good { color:#2f8f73!important; }
+.prof-shell .warn,.prof-shell .text-danger,.profile-page .warn,.profile-page .text-danger { color:#b4483f!important; }
+@media(max-width:680px) { .prof-filter-context { padding:7px 14px 0; } }
+
+.prof-shell .scope-table tbody tr.is-selected { background:#fcf8ef; }
+.prof-shell .scope-table tbody tr.is-selected td:first-child b { color:#2e5fa3; }

@@ -1,1 +1,84 @@
-{"routes":[{"path":"/","title":"HUFS Echo"}]}
+{
+  "routes": [
+    {
+      "path": "/",
+      "title": "HUFS Echo"
+    },
+    {
+      "path": "/student",
+      "title": "학생 홈"
+    },
+    {
+      "path": "/student/me",
+      "title": "학생 마이페이지"
+    },
+    {
+      "path": "/prof",
+      "title": "교수 반 현황"
+    },
+    {
+      "path": "/prof/scope/new",
+      "title": "학습 범위 설정"
+    },
+    {
+      "path": "/prof/scopes",
+      "title": "범위 관리"
+    },
+    {
+      "path": "/prof/report",
+      "title": "취약점 리포트"
+    },
+    {
+      "path": "/prof/students",
+      "title": "학생별 진행률"
+    },
+    {
+      "path": "/prof/feedback",
+      "title": "피드백 신고"
+    },
+    {
+      "path": "/prof/me",
+      "title": "교수 마이페이지"
+    },
+    {
+      "path": "/student/practice/reading",
+      "title": "문법·독해 연습"
+    },
+    {
+      "path": "/student/practice/writing",
+      "title": "작문 연습"
+    },
+    {
+      "path": "/student/practice/speaking",
+      "title": "회화 연습"
+    },
+    {
+      "path": "/student/summary",
+      "title": "연습 결과"
+    },
+    {
+      "path": "/student/history",
+      "title": "교정 기록"
+    },
+    {
+      "path": "/student/progress",
+      "title": "학생 진행률"
+    },
+    {
+      "path": "/student/weeks",
+      "title": "주차 목록"
+    },
+    {
+      "path": "/student/course/reading",
+      "title": "읽기와 쓰기 선택"
+    },
+    {
+      "path": "/student/course/writing",
+      "title": "작문 선택"
+    },
+    {
+      "path": "/student/course/speaking",
+      "title": "회화 선택"
+    }
+  ]
+}
