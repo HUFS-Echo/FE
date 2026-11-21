@@ -35,6 +35,7 @@ type ArcObject = {
   active: boolean;
   launchAt: number | null;
   progress: number;
+  revealIndex: number | null;
 };
 
 type RippleObject = {
@@ -154,8 +155,12 @@ const ARC_FRAGMENT = /* glsl */ `
   uniform vec3 uHeadColor;
   uniform float uSpeed;
   uniform float uPhase;
+  uniform float uReveal;
 
   void main() {
+    if (vT > uReveal) discard;
+    float revealOpacity = smoothstep(0.0, 0.035, uReveal) *
+      (1.0 - smoothstep(uReveal - 0.024, uReveal, vT));
     float glow = 0.0;
 
     if (uActive > 0.5) {
@@ -173,7 +178,7 @@ const ARC_FRAGMENT = /* glsl */ `
       glow += exp(-abs(d) * 170.0) * 1.0;
     }
 
-    float alpha = uBase + glow * uOpacity;
+    float alpha = (uBase + glow * uOpacity) * revealOpacity;
     if (alpha < 0.004) discard;
     vec3 color = mix(uColor, uHeadColor, clamp(glow, 0.0, 1.0));
     gl_FragColor = vec4(color, alpha);
@@ -262,6 +267,7 @@ export class GlobeScene {
   private disposed = false;
   private ready = false;
   private motionStarted = false;
+  private motionStartTime = 0;
   private paused = false;
 
   private nextArcAt = 0;
@@ -464,6 +470,7 @@ export class GlobeScene {
         uHeadColor: { value: new THREE.Color('#F4FAFF') },
         uSpeed: { value: TUNING.arcs.activeSpeed },
         uPhase: { value: active ? activeIndex * 0.19 : 0 },
+        uReveal: { value: 0 },
       };
 
       const material = this.track(
@@ -490,6 +497,7 @@ export class GlobeScene {
         active,
         launchAt: null,
         progress: -1,
+        revealIndex: included ? activeIndex : null,
       });
       this.arcTimeUniforms.push(uniforms.uTime);
       if (active) activeIndex += 1;
@@ -883,6 +891,25 @@ export class GlobeScene {
       uniform.value = motion ? t : 0;
     });
 
+    this.arcs.forEach((arc) => {
+      if (arc.revealIndex === null) return;
+      if (this.quality.reducedMotion) {
+        arc.uniforms.uReveal.value = 1;
+        return;
+      }
+      if (!this.motionStarted) {
+        arc.uniforms.uReveal.value = 0;
+        return;
+      }
+      const startAt =
+        this.motionStartTime +
+        TUNING.arcs.revealStartDelayMs / 1000 +
+        (arc.revealIndex * TUNING.arcs.revealStaggerMs) / 1000;
+      const progress =
+        (t - startAt) / (TUNING.arcs.revealDurationMs / 1000);
+      arc.uniforms.uReveal.value = Math.max(0, Math.min(1, progress));
+    });
+
     if (motion) {
       if (this.nextArcAt === 0) this.nextArcAt = t + 0.4;
       const idleArcs = this.arcs.filter((arc) => !arc.active && arc.included).slice(0, this.quality.arcLimit);
@@ -985,6 +1012,7 @@ export class GlobeScene {
   startMotion(): void {
     if (this.motionStarted) return;
     this.motionStarted = true;
+    this.motionStartTime = this.time;
     this.nextArcAt = this.time + 0.35;
     this.lastRippleAt = 0;
   }

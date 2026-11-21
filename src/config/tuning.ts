@@ -111,6 +111,12 @@ export const TUNING = {
 
   /** 서울 → 세계로 뻗는 빛 */
   arcs: {
+    /** 인트로 시작 뒤 첫 공식 노선을 그리기 전 대기 시간(ms) */
+    revealStartDelayMs: 100,
+    /** 공식 목적지 노선 간 바깥으로 펼쳐지는 간격(ms) */
+    revealStaggerMs: 140,
+    /** 각 목적지까지 선이 뻗는 시간(ms) */
+    revealDurationMs: 950,
     /** 공식 언어 전체 목적지(21개 언어·22개 핀) 줄기 굵기 */
     activeRadius: 0.0072,
     /** 공식 목록 밖의 비활성 목적지 줄기 굵기 */
