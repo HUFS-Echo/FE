@@ -1,10 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Wordmark } from '../Wordmark';
 import { DEMO_PROFESSOR, DEMO_STUDENT, getSavedProfile, type Role, type Session } from '../../lib/session';
-import { getDemoState } from '../../lib/demoStore';
 
 type Props = { onLogin: (session: Session) => void; onBack: () => void };
-type Stage = 'email' | 'code' | 'profile' | 'course';
+type Stage = 'email' | 'code' | 'profile';
 
 export function LoginScreen({ onLogin, onBack }: Props) {
   const [role, setRole] = useState<Role>('student');
@@ -14,15 +13,12 @@ export function LoginScreen({ onLogin, onBack }: Props) {
   const [name, setName] = useState('');
   const [studentId, setStudentId] = useState('');
   const [department, setDepartment] = useState('포르투갈어과');
-  const [courseCode, setCourseCode] = useState('PT01');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const email = `${mailId.trim()}@hufs.ac.kr`;
   const demo = role === 'student' ? DEMO_STUDENT : DEMO_PROFESSOR;
-  const steps = role === 'student'
-    ? ['학교 메일', '인증 코드', '학생 정보', '수업 연결']
-    : ['학교 메일', '인증 코드', '교수 정보'];
-  const activeStep = stage === 'email' ? 0 : stage === 'code' ? 1 : stage === 'profile' ? 2 : 3;
+  const steps = ['학교 메일', '인증 코드', role === 'student' ? '학생 정보' : '교수 정보'];
+  const activeStep = stage === 'email' ? 0 : stage === 'code' ? 1 : 2;
   const currentStep = steps[Math.min(activeStep, steps.length - 1)];
   const progress = ((activeStep + 1) / steps.length) * 100;
 
@@ -69,28 +65,19 @@ export function LoginScreen({ onLogin, onBack }: Props) {
       return;
     }
     setError('');
-    if (role === 'student') {
-      setStage('course');
-    } else {
-      onLogin({ ...demo, name: name.trim(), email, department: department.trim(), setupComplete: true });
-    }
-  }
-
-  function finishCourse(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const reissued = getDemoState().professorSettings.courseCodes;
-    const issuedCodes = reissued && typeof reissued === 'object' ? Object.values(reissued as Record<string, string>) : [];
-    const acceptedCodes = ['PT01', ...issuedCodes].map((value) => value.toUpperCase());
-    if (!acceptedCodes.includes(courseCode.trim().toUpperCase())) {
-      setError('유효한 데모 수업 코드를 입력해 주세요. (예: PT01)');
-      return;
-    }
-    onLogin({ ...DEMO_STUDENT, name: name.trim(), studentId: studentId.trim(), email, department: department.trim(), setupComplete: true });
+    onLogin({
+      ...demo,
+      name: name.trim(),
+      ...(role === 'student' ? { studentId: studentId.trim() } : {}),
+      email,
+      department: department.trim(),
+      setupComplete: true,
+    });
   }
 
   function goBack() {
     setError('');
-    setStage(stage === 'code' ? 'email' : stage === 'course' ? 'profile' : 'email');
+    setStage(stage === 'code' ? 'email' : 'code');
   }
 
   return (
@@ -99,7 +86,7 @@ export function LoginScreen({ onLogin, onBack }: Props) {
         <div className="login__pattern" aria-hidden="true" />
         <Wordmark />
         <div className="login__visual-copy">
-          <p className="login__serif">Olá!</p>
+          <p className="login__serif">안녕하세요</p>
           <p className="login__quote">저는 에코예요.<br />말하고, 바로 교정받아요.</p>
           <ul className="login__points">
             <li><b>01</b> AI 튜터와 자유롭게 연습</li>
@@ -107,8 +94,8 @@ export function LoginScreen({ onLogin, onBack }: Props) {
             <li><b>03</b> 교수님은 학습 범위를 설계</li>
           </ul>
         </div>
-        <div className="login__owl" aria-hidden="true"><img src="/owls/football.png" alt="" draggable={false} /></div>
-        <p className="login__visual-foot">LISBOA · 38.72°N, 9.14°W</p>
+        <div className="login__owl" aria-hidden="true"><img src="/manus-storage/waving-owl_c4d09c1b.png" alt="" draggable={false} /></div>
+        <p className="login__visual-foot">HUFS · 21 LANGUAGES</p>
       </div>
 
       <div className="login__panel">
@@ -143,9 +130,9 @@ export function LoginScreen({ onLogin, onBack }: Props) {
             </div>
             <form className="auth-form" onSubmit={sendCode} noValidate>
               <label className="login__field">
-                <span>학교 메일 아이디</span>
+                <span>학교 메일</span>
                 <span className="auth-email">
-                  <input value={mailId} onChange={(event) => { setMailId(event.target.value.replace(/[^a-zA-Z0-9._-]/g, '')); setError(''); }} placeholder="예: 이름 또는 학번" autoComplete="username" autoFocus />
+                  <input value={mailId} onChange={(event) => { setMailId(event.target.value.replace(/[^a-zA-Z0-9._-]/g, '')); setError(''); }} placeholder="학교 메일" autoComplete="username" autoFocus />
                   <b>@hufs.ac.kr</b>
                 </span>
               </label>
@@ -178,20 +165,10 @@ export function LoginScreen({ onLogin, onBack }: Props) {
               {role === 'student' && <label className="login__field"><span>학번</span><input value={studentId} onChange={(event) => setStudentId(event.target.value)} placeholder="예: 202503356" autoComplete="off" /> </label>}
               <label className="login__field"><span>소속 학과</span><input value={department} onChange={(event) => setDepartment(event.target.value)} placeholder="학과" /></label>
               {error && <p className="login__error" role="alert">{error}</p>}
-              <button className="login__submit">{role === 'student' ? '다음 단계로' : '교수 화면으로'}<span aria-hidden="true">→</span></button>
+              <button className="login__submit">{role === 'student' ? '학생 화면으로' : '교수 화면으로'}<span aria-hidden="true">→</span></button>
             </form>
           </>}
 
-          {stage === 'course' && <>
-            <h1 className="login__title">수업 코드를 입력해 주세요</h1>
-            <p className="login__sub">담당 교수님에게 받은 코드로 수업을 연결해요.</p>
-            <form className="auth-form" onSubmit={finishCourse} noValidate>
-              <label className="login__field"><span>수업 코드</span><input value={courseCode} onChange={(event) => { setCourseCode(event.target.value.toUpperCase()); setError(''); }} placeholder="수업 코드" autoComplete="off" autoFocus /></label>
-              <p className="auth-demo-note"><b>DEMO</b><span>테스트 코드 <strong>PT01</strong>을 입력해 시작할 수 있어요.</span></p>
-              {error && <p className="login__error" role="alert">{error}</p>}
-              <button className="login__submit">수업 연결하고 시작하기<span aria-hidden="true">→</span></button>
-            </form>
-          </>}
         </div>
         <p className="login__foot">학교 메일 기반 HUFS Echo 시연 로그인 · 실제 인증 메일은 발송되지 않습니다</p>
       </div>

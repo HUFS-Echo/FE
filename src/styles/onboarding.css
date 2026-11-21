@@ -62,11 +62,11 @@
     linear-gradient(158deg, #0c1834 0%, #0a142b 56%, #0e1f3f 100%);
 }
 
-.onboarding--football {
+.onboarding--welcome {
   background:
     radial-gradient(ellipse at 74% 46%, rgba(58, 106, 196, 0.24), transparent 50%),
-    radial-gradient(ellipse at 82% 68%, rgba(196, 104, 74, 0.12), transparent 46%),
-    radial-gradient(ellipse at 10% 90%, rgba(28, 90, 72, 0.18), transparent 52%),
+    radial-gradient(ellipse at 82% 68%, rgba(91, 141, 239, 0.1), transparent 46%),
+    radial-gradient(ellipse at 10% 90%, rgba(28, 52, 110, 0.22), transparent 52%),
     linear-gradient(158deg, #0c1834 0%, #0a142b 56%, #0e1f3f 100%);
 }
 

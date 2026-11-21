@@ -29,6 +29,7 @@ type PinObject = {
 
 type ArcObject = {
   pinId: string;
+  included: boolean;
   mesh: THREE.Mesh;
   uniforms: Record<string, THREE.IUniform>;
   active: boolean;
@@ -443,7 +444,8 @@ export class GlobeScene {
     let activeIndex = 0;
 
     ALL_PINS.forEach((pin) => {
-      const active = pin.status === 'active';
+      const active = pin.languageId === 'pt' && pin.language.official;
+      const included = pin.language.official;
       const curve = buildArcCurve(SEOUL, { lat: pin.lat, lon: pin.lon }, TUNING.arcs.lift);
       const radius = active ? TUNING.arcs.activeRadius : TUNING.arcs.idleRadius;
       const geometry = this.track(new THREE.TubeGeometry(curve, 128, radius, 6, false));
@@ -453,7 +455,7 @@ export class GlobeScene {
         uProgress: { value: -1 },
         uActive: { value: active ? 1 : 0 },
         uBase: {
-          value: active ? TUNING.arcs.activeBaseOpacity : TUNING.arcs.baseOpacity,
+          value: active ? TUNING.arcs.activeBaseOpacity : included ? 0.065 : 0,
         },
         uOpacity: { value: active ? 0.95 : 0.85 },
         uTrail: { value: active ? TUNING.arcs.activeTrail : 0.2 },
@@ -481,6 +483,7 @@ export class GlobeScene {
       this.yawGroup.add(mesh);
       this.arcs.push({
         pinId: pin.id,
+        included,
         mesh,
         uniforms,
         active,
@@ -511,8 +514,9 @@ export class GlobeScene {
       group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
       group.renderOrder = 4;
 
-      const active = pin.status === 'active';
-      const coreRadius = active ? TUNING.pins.activeRadius : TUNING.pins.comingRadius;
+      const active = pin.language.official;
+      const featured = pin.languageId === 'pt';
+      const coreRadius = featured ? TUNING.pins.activeRadius : active ? TUNING.pins.activeRadius * 0.72 : TUNING.pins.comingRadius;
 
       const glow = new THREE.Sprite(
         this.track(
@@ -520,14 +524,14 @@ export class GlobeScene {
             map: this.glowTexture,
             color: new THREE.Color(active ? COLORS.pinActive : COLORS.pinComing),
             transparent: true,
-            opacity: active ? 0.85 : 0.34,
+            opacity: active ? (featured ? 0.85 : 0.58) : 0.34,
             depthWrite: false,
             depthTest: true,
             blending: THREE.AdditiveBlending,
           }),
         ),
       );
-      glow.scale.setScalar(active ? TUNING.pins.activeGlow : TUNING.pins.comingGlow);
+      glow.scale.setScalar(active ? (featured ? TUNING.pins.activeGlow : TUNING.pins.activeGlow * 0.68) : TUNING.pins.comingGlow);
       glow.position.z = 0.002;
       group.add(glow);
 
@@ -542,7 +546,7 @@ export class GlobeScene {
       );
       group.add(core);
 
-      if (active) {
+      if (featured) {
         const inner = new THREE.Mesh(
           this.track(new THREE.SphereGeometry(TUNING.pins.activeCoreRadius, 16, 16)),
           this.track(new THREE.MeshBasicMaterial({ color: COLORS.pinActive, toneMapped: false })),
@@ -559,7 +563,7 @@ export class GlobeScene {
             new THREE.MeshBasicMaterial({
               color: COLORS.echoBright,
               transparent: true,
-              opacity: 0.4,
+              opacity: featured ? 0.4 : 0.24,
               depthWrite: false,
               blending: THREE.AdditiveBlending,
               side: THREE.DoubleSide,
@@ -869,7 +873,7 @@ export class GlobeScene {
       if (pin.ring && pin.front && motion) {
         const pulse = (t / TUNING.pins.pulseDuration + pin.phase) % 1;
         pin.ring.scale.setScalar(1 + pulse * (TUNING.pins.pulseMaxScale - 1));
-        (pin.ring.material as THREE.MeshBasicMaterial).opacity = (1 - pulse) * 0.46;
+        (pin.ring.material as THREE.MeshBasicMaterial).opacity = (1 - pulse) * (pin.pin.languageId === 'pt' ? 0.46 : 0.28);
       }
     });
 
@@ -880,7 +884,7 @@ export class GlobeScene {
 
     if (motion) {
       if (this.nextArcAt === 0) this.nextArcAt = t + 0.4;
-      const idleArcs = this.arcs.filter((arc) => !arc.active).slice(0, this.quality.arcLimit);
+      const idleArcs = this.arcs.filter((arc) => !arc.active && arc.included).slice(0, this.quality.arcLimit);
       if (idleArcs.length > 0) {
         if (this.arcCursor >= idleArcs.length) {
           if (t >= this.cycleRestartAt) {

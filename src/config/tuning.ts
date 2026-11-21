@@ -113,7 +113,7 @@ export const TUNING = {
   arcs: {
     /** active(포르투갈·브라질) 줄기 굵기 */
     activeRadius: 0.0072,
-    /** coming_soon 줄기 굵기 */
+    /** 공식 특수외국어 줄기 굵기 */
     idleRadius: 0.0024,
     /** active 줄기에 동시에 흐르는 빛 패킷 수 */
     activePackets: 3,
@@ -129,7 +129,7 @@ export const TUNING = {
     cyclePauseMs: 1400,
     /** 순차 발사에 참여하는 최대 줄기 수 (저사양 자동 축소) */
     sequenceLimit: 21,
-    sequenceLimitLow: 9,
+    sequenceLimitLow: 20,
     /** 지나간 자리의 희미한 경로 불투명도 */
     baseOpacity: 0.035,
     activeBaseOpacity: 0.12,

@@ -9,6 +9,7 @@ type Props = {
 };
 
 const STEP_ONE_SECONDS = 16;
+const WAVING_OWL = '/manus-storage/waving-owl_c4d09c1b.png';
 
 export function OnboardingStage({ step, onNext, onExit, onSkip }: Props) {
   const [auto, setAuto] = useState(true);
@@ -22,7 +23,7 @@ export function OnboardingStage({ step, onNext, onExit, onSkip }: Props) {
   const isSuitcase = step === 1;
 
   return (
-    <section className={`onboarding onboarding--${isSuitcase ? 'suitcase' : 'football'}`}>
+    <section className={`onboarding onboarding--${isSuitcase ? 'suitcase' : 'welcome'}`}>
       <div className="onboarding__pattern" aria-hidden="true" />
       <div className="onboarding__glow" aria-hidden="true" />
 
@@ -49,42 +50,42 @@ export function OnboardingStage({ step, onNext, onExit, onSkip }: Props) {
       <div className="onboarding__main">
         <div className="onboarding__copy">
           <p className="onboarding__eyebrow">
-            <span>{isSuitcase ? 'PASSO 01 · PARTIDA' : 'PASSO 02 · EQUIPE'}</span>
+            <span>{isSuitcase ? 'HUFS · 21 LANGUAGES' : 'READY · ECHO'}</span>
             <i aria-hidden="true" />
           </p>
           <h2 className="onboarding__title">
             {isSuitcase ? (
               <>
-                여행가방을 싸고,
+                언어 가방을 챙겨,
                 <br />
-                <em>포르투갈로</em> 떠나요.
+                <em>세계의 말</em>을 만나러 가요.
               </>
             ) : (
               <>
                 준비 완료.
                 <br />
-                이제 <em>말해볼까요?</em>
+                <em>이제 함께 공부해볼까요?</em>
               </>
             )}
           </h2>
           <p className="onboarding__body">
             {isSuitcase
-              ? '오늘의 단원은 리스본 카페에서 주문하기. 이사벨라가 작은 카페에서 기다리고 있어요. 배운 표현으로 첫 문장을 건네볼까요?'
-              : '이번 주 배운 표현으로 AI와 대화하면, 문장마다 교정이 돌아옵니다. 반 전체가 자주 틀린 표현은 교수님의 다음 수업으로 이어져요.'}
+              ? '특수외국어는 국가 발전을 위해 전략적으로 필요한 언어로, 대통령령으로 정해집니다. 한국외대에서 만나는 21개 언어와 문화를 살펴보고, 배운 표현을 AI와 연습해 보세요.'
+              : '관심 있는 특수외국어를 선택해 AI와 말하고 써 보세요. 문장마다 바로 교정받고, 연습은 다음 수업을 더 알차게 만드는 데 이어집니다.'}
           </p>
 
           <ul className="onboarding__chips">
             {isSuitcase ? (
               <>
-                <li>3주차 · 카페에서 주문하기</li>
-                <li>A1 · 기초 회화</li>
-                <li>12개 표현</li>
+                <li>21개 특수외국어</li>
+                <li>언어와 문화</li>
+                <li>말하기·쓰기 연습</li>
               </>
             ) : (
               <>
-                <li>이사벨라 · AI 튜터</li>
+                <li>AI와 언어 연습</li>
                 <li>즉시 교정</li>
-                <li>교수 요약</li>
+                <li>함께 성장하기</li>
               </>
             )}
           </ul>
@@ -129,28 +130,28 @@ export function OnboardingStage({ step, onNext, onExit, onSkip }: Props) {
 
         <div className="onboarding__stage">
           <span className="onboarding__ghost" aria-hidden="true">
-            {isSuitcase ? 'Olá' : 'Vamos'}
+            {isSuitcase ? 'Hello' : 'Echo'}
           </span>
           <div className="onboarding__spot" aria-hidden="true" />
           <div className="onboarding__owl">
             <img
-              src={isSuitcase ? '/owls/suitcase.png' : '/owls/football.png'}
+              src={isSuitcase ? '/owls/suitcase.png' : WAVING_OWL}
               alt={
                 isSuitcase
                   ? '여행가방을 메고 걷는 파란 부엉이 캐릭터'
-                  : '포르투갈 축구 유니폼을 입고 공을 차는 부엉이 캐릭터'
+                  : '반갑게 인사하는 HUFS Echo 부엉이 캐릭터'
               }
               draggable={false}
             />
           </div>
           <span className="onboarding__float onboarding__float--one">
-            {isSuitcase ? 'Um café, por favor' : 'Bom jogo!'}
+            {isSuitcase ? 'Olá · Halo · Cześć' : '안녕하세요 · Hello'}
           </span>
           <span className="onboarding__float onboarding__float--two">
-            {isSuitcase ? 'Obrigado' : 'Eu quero aprender'}
+            {isSuitcase ? '말하기와 쓰기로 연습' : '한 문장부터 시작해요'}
           </span>
           <span className="onboarding__float onboarding__float--three">
-            {isSuitcase ? 'Lisboa · 38.72°N' : '3주차 · 12 expressions'}
+            {isSuitcase ? 'SEOUL → THE WORLD' : 'HUFS · 21 LANGUAGES'}
           </span>
           <div className="onboarding__floor" aria-hidden="true" />
         </div>
@@ -158,7 +159,7 @@ export function OnboardingStage({ step, onNext, onExit, onSkip }: Props) {
 
       <footer className="onboarding__foot">
         <span>HUFS ECHO · 특수외국어 AI 연습</span>
-        <span>SEOUL → LISBOA</span>
+        <span>SEOUL → THE WORLD</span>
       </footer>
     </section>
   );

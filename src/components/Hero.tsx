@@ -6,7 +6,6 @@ import { GreetingTitle } from './GreetingTitle';
 import { LanguageIndex } from './LanguageIndex';
 import { MagneticButton } from './MagneticButton';
 import { Starfield } from './Starfield';
-import { StatsStrip } from './StatsStrip';
 import { Wordmark } from './Wordmark';
 
 type Props = {
@@ -18,7 +17,6 @@ type Props = {
 export function Hero({ onStart, onSkip, onToast }: Props) {
   const quality = useMemo(() => getQuality(), []);
   const [revealed, setRevealed] = useState(false);
-  const [statsStart, setStatsStart] = useState(false);
   const [motionStarted, setMotionStarted] = useState(false);
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
@@ -28,17 +26,12 @@ export function Hero({ onStart, onSkip, onToast }: Props) {
   useEffect(() => {
     const reduced = quality.reducedMotion;
     const raf = requestAnimationFrame(() => setRevealed(true));
-    const statsTimer = window.setTimeout(
-      () => setStatsStart(true),
-      reduced ? 0 : TUNING.intro.statsDelay,
-    );
     const motionTimer = window.setTimeout(
       () => setMotionStarted(true),
       reduced ? 0 : TUNING.intro.motionStart,
     );
     return () => {
       cancelAnimationFrame(raf);
-      window.clearTimeout(statsTimer);
       window.clearTimeout(motionTimer);
     };
   }, [quality.reducedMotion]);
@@ -59,7 +52,7 @@ export function Hero({ onStart, onSkip, onToast }: Props) {
     setSelectedPin(id);
 
     if (pin.status === 'coming_soon') {
-      onToast(`${pin.language.nameKo}는 아직 준비 중이에요. 포르투갈어로 먼저 체험해 보세요.`);
+      onToast(`${pin.language.nameKo} 학습은 순차적으로 열릴 예정이에요.`);
       return;
     }
     if (pin.id === 'br') {
@@ -114,8 +107,7 @@ export function Hero({ onStart, onSkip, onToast }: Props) {
         <div className="hero__lead">
           <p className="hero__eyebrow reveal" style={{ '--delay': `${TUNING.intro.eyebrowDelay}ms` } as CSSProperties}>
             <span className="hero__eyebrow-line" aria-hidden="true" />
-            한국외국어대학교 · 특수외국어 AI 연습
-            <span className="hero__pilot">파일럿</span>
+            한국외국어대학교 · 21개 특수외국어
           </p>
           <GreetingTitle
             hoveredLanguageId={hoveredLanguageId}
@@ -137,27 +129,23 @@ export function Hero({ onStart, onSkip, onToast }: Props) {
 
         <div className="hero__tail">
           <p className="hero__body reveal" style={{ '--delay': `${TUNING.intro.bodyDelay}ms` } as CSSProperties}>
-            이번 주 수업에서 배운 표현으로 AI와 대화하세요. 말하고 쓰면 바로 교정이
-            돌아옵니다. 반 전체가 자주 틀린 표현은 교수님의 다음 수업으로 이어집니다.
+            특수외국어는 국가 발전을 위해 전략적으로 필요한 언어로, 대통령령으로 정해집니다.
+            한국외대의 21개 언어를 만나고, 배운 표현을 AI와 말하고 쓰며 바로 교정받아 보세요.
           </p>
 
           <div className="hero__cta reveal" style={{ '--delay': `${TUNING.intro.ctaDelay}ms` } as CSSProperties}>
             <MagneticButton
               onClick={onStart}
               reducedMotion={quality.reducedMotion}
-              ariaLabel="포르투갈어로 HUFS Echo 시작하기"
+              ariaLabel="특수외국어에 대해 알아보기"
             >
-              포르투갈어로 시작하기
+              특수외국어란?
             </MagneticButton>
             <span className="hero__note">
               체험 데모
               <br />
               30초면 충분해요
             </span>
-          </div>
-
-          <div className="reveal" style={{ '--delay': `${TUNING.intro.statsDelay}ms` } as CSSProperties}>
-            <StatsStrip start={statsStart} reducedMotion={quality.reducedMotion} />
           </div>
 
           <p className="hero__hint reveal" style={{ '--delay': `${TUNING.intro.hintDelay}ms` } as CSSProperties}>
