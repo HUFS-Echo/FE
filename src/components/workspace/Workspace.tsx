@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Wordmark } from '../Wordmark';
 import { DEMO_PROFESSOR, type Role, type Session } from '../../lib/session';
+import { WEEK } from '../../config/learning';
 import { ProfessorDashboard } from './ProfessorDashboard';
-import { StudentPractice } from './StudentPractice';
+import { StudentShell } from './student/StudentShell';
 
 type Props = {
   session: Session;
@@ -21,10 +22,15 @@ export function Workspace({ session, onLogout, onToast }: Props) {
         <div className="workspace__brand">
           <Wordmark compact />
           <span className="workspace__divider" aria-hidden="true" />
-          <span className="workspace__course">포르투갈어과 · 3주차</span>
+          <span className="workspace__course">포르투갈어과</span>
         </div>
 
         <div className="workspace__tools">
+          <span className="week-chip">
+            <i aria-hidden="true" />
+            {WEEK.label} · {WEEK.dates}
+          </span>
+
           <div className="role-switch" role="group" aria-label="데모 역할 전환">
             <button
               type="button"
@@ -67,7 +73,7 @@ export function Workspace({ session, onLogout, onToast }: Props) {
         </div>
       </header>
 
-      {isStudent ? <StudentPractice onToast={onToast} /> : <ProfessorDashboard onToast={onToast} />}
+      {isStudent ? <StudentShell session={session} onToast={onToast} /> : <ProfessorDashboard onToast={onToast} />}
     </div>
   );
 }

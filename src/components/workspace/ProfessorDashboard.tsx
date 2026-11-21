@@ -16,7 +16,7 @@ export function ProfessorDashboard({ onToast }: Props) {
     <div className="dashboard">
       <header className="dashboard__head">
         <div>
-          <p className="practice__eyebrow">PROFESSOR · PORTUGUÊS A1</p>
+          <p className="dashboard__eyebrow">PROFESSOR · PORTUGUÊS A1</p>
           <h1>이번 주, 어디서 막혔을까요?</h1>
           <p className="dashboard__sub">3주차 카페 단원 · 11월 18일 ~ 11월 21일 · 28명</p>
         </div>
@@ -47,6 +47,31 @@ export function ProfessorDashboard({ onToast }: Props) {
           </div>
         ))}
       </div>
+
+      <section className="prof-ai">
+        <span className="prof-ai__mark" aria-hidden="true">AI</span>
+        <div className="prof-ai__copy">
+          <p className="eyebrow">RESUMO DA SEMANA</p>
+          <h2>관사 오류는 줄고, 전치사 실수가 새로 늘었어요.</h2>
+          <p>
+            3주차에는 <b>um / uma</b> 정확도가 84%로 올랐지만, <b>à / na</b> 같은 전치사 축약에서
+            막히는 학생이 7명 늘었습니다. 4주차 시장 단원 전에 10분 복습을 권장해요.
+          </p>
+        </div>
+        <div className="prof-ai__stats">
+          <div>
+            <span>관사 정확도</span>
+            <b>+6%</b>
+          </div>
+          <div>
+            <span>전치사 오류</span>
+            <b>7명</b>
+          </div>
+          <button type="button" onClick={() => onToast('4주차 수업 계획에 반영했어요. (데모)')}>
+            수업에 반영
+          </button>
+        </div>
+      </section>
 
       <div className="dashboard__grid">
         <section className="panel panel--wide">
