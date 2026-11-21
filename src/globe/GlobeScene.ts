@@ -444,8 +444,9 @@ export class GlobeScene {
     let activeIndex = 0;
 
     ALL_PINS.forEach((pin) => {
-      const active = pin.languageId === 'pt' && pin.language.official;
       const included = pin.language.official;
+      // Keep every official-language route as bright, thick, and continuously flowing as Portugal.
+      const active = included;
       const curve = buildArcCurve(SEOUL, { lat: pin.lat, lon: pin.lon }, TUNING.arcs.lift);
       const radius = active ? TUNING.arcs.activeRadius : TUNING.arcs.idleRadius;
       const geometry = this.track(new THREE.TubeGeometry(curve, 128, radius, 6, false));

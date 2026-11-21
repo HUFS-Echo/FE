@@ -129,8 +129,8 @@ export function Hero({ onStart, onSkip, onToast }: Props) {
 
         <div className="hero__tail">
           <p className="hero__body reveal" style={{ '--delay': `${TUNING.intro.bodyDelay}ms` } as CSSProperties}>
-            특수외국어는 국가 발전을 위해 전략적으로 필요한 언어로, 대통령령으로 정해집니다.
-            한국외대의 21개 언어를 만나고, 배운 표현을 AI와 말하고 쓰며 바로 교정받아 보세요.
+            수업에서 배운 표현으로 AI와 말하고 쓰며 연습해요. 문장마다 바로 교정받고,
+            학생들이 자주 어려워한 표현은 교수님의 다음 수업에 이어집니다.
           </p>
 
           <div className="hero__cta reveal" style={{ '--delay': `${TUNING.intro.ctaDelay}ms` } as CSSProperties}>
