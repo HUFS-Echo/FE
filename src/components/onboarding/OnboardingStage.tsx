@@ -9,7 +9,7 @@ type Props = {
 };
 
 const STEP_ONE_SECONDS = 16;
-const WAVING_OWL = '/manus-storage/waving-owl_c4d09c1b.png';
+const WAVING_OWL = '/owls/waving.png';
 
 export function OnboardingStage({ step, onNext, onExit, onSkip }: Props) {
   const [auto, setAuto] = useState(true);

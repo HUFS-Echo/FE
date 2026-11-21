@@ -94,7 +94,7 @@ export function LoginScreen({ onLogin, onBack }: Props) {
             <li><b>03</b> 교수님은 학습 범위를 설계</li>
           </ul>
         </div>
-        <div className="login__owl" aria-hidden="true"><img src="/manus-storage/waving-owl_c4d09c1b.png" alt="" draggable={false} /></div>
+        <div className="login__owl" aria-hidden="true"><img src="/owls/waving.png" alt="" draggable={false} /></div>
         <p className="login__visual-foot">HUFS · 21 LANGUAGES</p>
       </div>
 
