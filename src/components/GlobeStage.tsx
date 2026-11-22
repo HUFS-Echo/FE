@@ -122,6 +122,13 @@ export const GlobeStage = forwardRef<GlobeStageHandle, Props>(function GlobeStag
           draggable={false}
         />
       )}
+      <img
+        className="globe-owl-logo"
+        src="/owls/hufs-owl-light.svg"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
       {quality.webgl && activePin && (
         <div className="lang-tip-wrap" ref={tooltipRef} data-side="right">
           <LanguageTooltip pin={activePin} />
