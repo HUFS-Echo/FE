@@ -116,8 +116,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 100%;
-  max-width: none;
+  width: calc(100% - min(46vw, 80vh) - clamp(32px, 4vw, 64px));
+  max-width: 760px;
   min-height: calc(100svh - 90px);
   padding: clamp(20px, 4vh, 48px) 0 clamp(26px, 5vh, 54px);
 }
@@ -553,13 +553,12 @@
 /* ---------- globe placement ---------- */
 .hero__globe {
   position: absolute;
-  right: clamp(-120px, -3.4vw, -44px);
-  bottom: -34vh;
+  top: 50%;
+  right: clamp(24px, 5vw, 72px);
   z-index: 1;
-  width: 112vh;
-  height: 112vh;
-  max-width: 1500px;
-  max-height: 1500px;
+  width: min(46vw, 80vh);
+  height: min(46vw, 80vh);
+  transform: translateY(-50%);
 }
 
 /* ---------- language index trigger ---------- */
@@ -610,13 +609,6 @@
 
 /* ---------- responsive ---------- */
 @media (max-width: 1180px) {
-  .hero__globe {
-    right: -16vw;
-    bottom: -30vh;
-    width: 104vh;
-    height: 104vh;
-  }
-
   .hero__content {
     max-width: 640px;
   }
@@ -638,6 +630,7 @@
 
   .hero__content {
     min-height: auto;
+    width: 100%;
     max-width: 100%;
     padding: 22px 0 36px;
   }
@@ -649,12 +642,12 @@
   .hero__globe {
     position: relative;
     right: auto;
+    top: auto;
     bottom: auto;
     width: min(100%, 600px);
     height: min(88vw, 480px);
     margin: 4px auto 0;
-    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 74%, transparent 96%);
-    mask-image: radial-gradient(circle at 50% 50%, #000 74%, transparent 96%);
+    transform: none;
   }
 
   .hero__tail {
@@ -832,5 +825,33 @@
 
   .hero__hint {
     margin-top: 18px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 900px) {
+  .hero__content {
+    min-height: calc(100svh - 90px);
+    width: calc(100% - min(46vw, 80vh) - 32px);
+    max-width: none;
+    padding: 22px 0 36px;
+  }
+
+  .hero__globe {
+    position: absolute;
+    top: 50%;
+    right: 24px;
+    bottom: auto;
+    width: min(46vw, 80vh);
+    height: min(46vw, 80vh);
+    margin: 0;
+    transform: translateY(-50%);
+  }
+
+  .hero__title {
+    font-size: clamp(52px, 6.2vw, 64px);
+  }
+
+  .hero__body {
+    font-size: 13px;
   }
 }

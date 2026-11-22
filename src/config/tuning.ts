@@ -37,8 +37,8 @@ export type ColorKey = keyof typeof COLORS;
 export const TUNING = {
   /** 지구본이 처음 바라보는 좌표. 서울과 리스본이 함께 보이는 지점. */
   view: {
-    lat: 30,
-    lon: 55,
+    lat: 24,
+    lon: 60,
     /** 드래그로 돌릴 수 있는 상하 한계(도) */
     pitchLimit: 55,
     /** 사용자가 아무것도 하지 않을 때의 아주 느린 표류(라디안) */
@@ -88,8 +88,8 @@ export const TUNING = {
     haloSize: 2.75,
     /** 지구본 본체(바다) 반지름 */
     oceanRadius: 0.997,
-    /** 카메라 프러스텀 절반 높이. 클수록 지구본이 작아집니다. */
-    frustumHalf: 1.12,
+    /** 카메라 프러스텀 절반 높이. 0.997 반지름의 구체가 정사각형 박스의 약 81%를 차지합니다. */
+    frustumHalf: 1.23,
     /** DPR 상한 */
     dprMax: 2,
     dprMaxLow: 1.5,

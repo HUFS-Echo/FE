@@ -272,6 +272,7 @@ export class GlobeScene {
 
   private resizeObserver: ResizeObserver;
   private glowTexture: THREE.CanvasTexture;
+  private seoulAnchor: THREE.Group | null = null;
   private seoulCanvas: HTMLCanvasElement | null = null;
   private seoulTexture: THREE.CanvasTexture | null = null;
   private disposables: Array<{ dispose: () => void }> = [];
@@ -297,7 +298,8 @@ export class GlobeScene {
     this.renderer.domElement.setAttribute('role', 'img');
     container.appendChild(this.renderer.domElement);
 
-    this.camera = new THREE.OrthographicCamera(-1.12, 1.12, 1.12, -1.12, 0.1, 10);
+    const half = TUNING.globe.frustumHalf;
+    this.camera = new THREE.OrthographicCamera(-half, half, half, -half, 0.1, 10);
     this.camera.position.set(0, 0, 3);
 
     this.scene.add(this.tiltGroup);
@@ -594,6 +596,7 @@ export class GlobeScene {
   private buildSeoul(): void {
     const normal = latLonToVector3(SEOUL.lat, SEOUL.lon, 1).normalize();
     const group = new THREE.Group();
+    this.seoulAnchor = group;
     group.position.copy(normal).multiplyScalar(1.004);
     group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
     group.renderOrder = 4;
@@ -659,6 +662,7 @@ export class GlobeScene {
     label.center.set(0.5, 0);
     label.position.set(0, 0.052, 0.008);
     group.add(label);
+    label.visible = false;
 
     const rippleGeometry = this.track(new THREE.RingGeometry(0.92, 1, 72));
     for (let i = 0; i < TUNING.ripple.count; i += 1) {
@@ -1024,6 +1028,19 @@ export class GlobeScene {
 
   resetView(): void {
     this.focusTarget = { yaw: 0, pitch: 0 };
+  }
+
+  getSeoulScreen(): PinScreen | null {
+    if (!this.seoulAnchor) return null;
+    const world = this.seoulAnchor.getWorldPosition(new THREE.Vector3());
+    const facing = world.clone().normalize().z;
+    const ndc = world.clone().project(this.camera);
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const x = (ndc.x * 0.5 + 0.5) * rect.width;
+    const y = (-ndc.y * 0.5 + 0.5) * rect.height;
+    const front = facing > TUNING.pins.frontThreshold;
+    const visible = front && x > 8 && x < rect.width - 8 && y > 8 && y < rect.height - 8;
+    return { id: 'seoul', x, y, front, visible };
   }
 
   getPinScreen(id: string): PinScreen | null {

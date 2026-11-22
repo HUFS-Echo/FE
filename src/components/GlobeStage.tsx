@@ -32,6 +32,7 @@ export const GlobeStage = forwardRef<GlobeStageHandle, Props>(function GlobeStag
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const seoulOverlayRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<GlobeScene | null>(null);
   const callbacksRef = useRef({ onHoverPin, onSelectPin, onReady });
   const [ready, setReady] = useState(false);
@@ -60,6 +61,26 @@ export const GlobeStage = forwardRef<GlobeStageHandle, Props>(function GlobeStag
       scene.dispose();
       sceneRef.current = null;
     };
+  }, [quality]);
+
+  useEffect(() => {
+    if (!quality.webgl) return;
+    const element = seoulOverlayRef.current;
+    if (!element) return;
+
+    let raf = 0;
+    const tick = () => {
+      const screen = sceneRef.current?.getSeoulScreen();
+      if (screen) {
+        element.style.transform = `translate3d(${screen.x}px, ${screen.y}px, 0)`;
+        element.style.opacity = screen.visible ? '1' : '0';
+      } else {
+        element.style.opacity = '0';
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [quality]);
 
   useEffect(() => {
@@ -129,6 +150,14 @@ export const GlobeStage = forwardRef<GlobeStageHandle, Props>(function GlobeStag
         aria-hidden="true"
         draggable={false}
       />
+      <div
+        className={`seoul-overlay ${quality.webgl ? 'seoul-overlay--webgl' : 'seoul-overlay--fallback'}`}
+        ref={seoulOverlayRef}
+        aria-hidden="true"
+      >
+        <span className="seoul-overlay__pin" />
+        <span className="seoul-overlay__label">S E O U L</span>
+      </div>
       {quality.webgl && activePin && (
         <div className="lang-tip-wrap" ref={tooltipRef} data-side="right">
           <LanguageTooltip pin={activePin} />
