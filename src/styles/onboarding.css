@@ -561,6 +561,7 @@
   font-family: var(--font-serif);
   font-style: italic;
   font-size: clamp(64px, 7vw, 96px);
+  white-space: nowrap;
   line-height: 0.9;
   letter-spacing: -0.02em;
   text-shadow: 0 0 60px rgba(91, 141, 239, 0.3);

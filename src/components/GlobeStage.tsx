@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { getPinById } from '../config/languages';
 import type { Quality } from '../config/tuning';
 import { GlobeScene } from '../globe/GlobeScene';
@@ -158,11 +159,15 @@ export const GlobeStage = forwardRef<GlobeStageHandle, Props>(function GlobeStag
         <span className="seoul-overlay__pin" />
         <span className="seoul-overlay__label">S E O U L</span>
       </div>
-      {quality.webgl && activePin && (
-        <div className="lang-tip-wrap" ref={tooltipRef} data-side="right">
-          <LanguageTooltip pin={activePin} />
-        </div>
-      )}
+      {/* placeTooltip uses viewport coordinates; render outside the transformed globe layer. */}
+      {quality.webgl &&
+        activePin &&
+        createPortal(
+          <div className="lang-tip-wrap" ref={tooltipRef} data-side="right">
+            <LanguageTooltip pin={activePin} />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 });
