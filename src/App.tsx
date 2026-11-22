@@ -50,9 +50,9 @@ export default function App() {
   }, [notify]);
   const handleSessionUpdate = useCallback((next: Session) => { saveSession(next); setSession(next); }, []);
   const handleLogout = useCallback(() => {
-    clearSession(); setSession(null); navigateTo('/'); setScreen('intro'); notify('로그아웃했어요. 다른 역할로 다시 로그인할 수 있어요.');
+    clearSession(); setSession(null); navigateTo('/'); setScreen('intro'); notify('로그아웃했어요.');
   }, [notify]);
-  const handleReset = useCallback(() => { resetDemoState(); notify('데모 데이터를 기본값으로 초기화했어요.'); }, [notify]);
+  const handleReset = useCallback(() => { resetDemoState(); notify('데모 데이터를 기본값으로 초기화했어요.'); }, []);
   const handleReplay = useCallback(() => { clearSession(); setSession(null); navigateTo('/'); setScreen('intro'); }, []);
   const goFootball = useCallback(() => startWipe('football'), [startWipe]);
   const goLogin = useCallback(() => startWipe('login'), [startWipe]);

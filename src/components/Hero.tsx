@@ -141,11 +141,6 @@ export function Hero({ onStart, onSkip, onToast }: Props) {
             >
               특수외국어란?
             </MagneticButton>
-            <span className="hero__note">
-              체험 데모
-              <br />
-              30초면 충분해요
-            </span>
           </div>
 
           <p className="hero__hint reveal" style={{ '--delay': `${TUNING.intro.hintDelay}ms` } as CSSProperties}>
