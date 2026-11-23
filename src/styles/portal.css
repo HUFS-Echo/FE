@@ -78,3 +78,7 @@
   .login__card { padding:22px 0; }
   .login__card--signup { margin:auto; }
 }
+
+.header-select--course select { max-width:220px; }
+@media(max-width:760px) { .header-select--course select { max-width:185px; } }
+@media(max-width:560px) { .header-select--course select { max-width:170px; } }
