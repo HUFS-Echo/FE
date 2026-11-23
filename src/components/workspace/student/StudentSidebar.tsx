@@ -1,7 +1,7 @@
 import type { SubjectId } from '../../../config/learning';
 import { StudentCoursePicker } from './StudentCoursePicker';
 
-export type StudentNavKey = 'home' | 'practice' | 'history' | 'progress' | 'weeks' | 'me';
+export type StudentNavKey = 'home' | 'practice' | 'history' | 'me';
 
 type Props = {
   subject: SubjectId;
@@ -10,7 +10,7 @@ type Props = {
   onSubjectChange: (id: SubjectId) => void;
 };
 
-const NAV: { key: StudentNavKey; label: string; icon: 'home' | 'practice' | 'history' | 'progress' | 'weeks' | 'profile' }[] = [
+const NAV: { key: StudentNavKey; label: string; icon: 'home' | 'practice' | 'history' | 'profile' }[] = [
   { key: 'home', label: '홈', icon: 'home' },
   { key: 'practice', label: '연습하기', icon: 'practice' },
   { key: 'history', label: '교정 기록', icon: 'history' },
@@ -41,7 +41,7 @@ export function StudentSidebar({ subject, active, onNavigate, onSubjectChange }:
   );
 }
 
-function NavIcon({ name }: { name: 'home' | 'practice' | 'history' | 'progress' | 'weeks' | 'profile' }) {
+function NavIcon({ name }: { name: 'home' | 'practice' | 'history' | 'profile' }) {
   if (name === 'home') {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -75,13 +75,6 @@ function NavIcon({ name }: { name: 'home' | 'practice' | 'history' | 'progress' 
         <path d="M3.2 6.5V3.2h3.3" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M3.4 6.6A7.2 7.2 0 1 1 2.8 11" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
         <path d="M10 6v4.3l2.8 1.6" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  if (name === 'progress') {
-    return (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M3.5 16.5V11M8.5 16.5V7M13.5 16.5V9M18 16.5V4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       </svg>
     );
   }

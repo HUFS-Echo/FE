@@ -61,14 +61,6 @@
       "title": "교정 기록"
     },
     {
-      "path": "/student/progress",
-      "title": "학생 진행률"
-    },
-    {
-      "path": "/student/weeks",
-      "title": "주차 목록"
-    },
-    {
       "path": "/student/course/reading",
       "title": "읽기와 쓰기 선택"
     },

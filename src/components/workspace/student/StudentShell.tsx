@@ -9,11 +9,8 @@ import { WritingPractice } from './WritingPractice';
 import { SpeakingPractice } from './SpeakingPractice';
 import { PracticeSummary, type SummaryData } from './PracticeSummary';
 import { CorrectionHistory } from './CorrectionHistory';
-import { ProgressView } from './ProgressView';
-import { WeekList } from './WeekList';
 import { StudentProfile } from '../profile/MyPages';
-
-type View = 'home' | 'reading' | 'writing' | 'speaking' | 'summary' | 'history' | 'progress' | 'weeks' | 'me';
+type View = 'home' | 'reading' | 'writing' | 'speaking' | 'summary' | 'history' | 'me';
 type Props = { session: Session; path: string; onNavigate: (path: string) => void; onToast: (message: string) => void; onSessionUpdate: (session: Session) => void; onLogout: () => void; onReset: () => void; onReplay: () => void };
 
 function viewFromPath(path: string): View {
@@ -23,8 +20,6 @@ function viewFromPath(path: string): View {
     return subject === 'writing' || subject === 'speaking' ? subject : 'reading';
   }
   if (path === '/student/history') return 'history';
-  if (path === '/student/progress') return 'progress';
-  if (path === '/student/weeks') return 'weeks';
   if (path === '/student/me') return 'me';
   if (path === '/student/summary') return 'summary';
   return 'home';
@@ -73,7 +68,7 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
   useEffect(() => { mainRef.current?.scrollTo({ top: 0, behavior: 'auto' }); }, [view]);
 
   const active: StudentNavKey = view === 'home' ? 'home'
-    : view === 'history' || view === 'progress' || view === 'weeks' || view === 'me' ? view : 'practice';
+    : view === 'history' || view === 'me' ? view : 'practice';
 
   function navigate(view: View, nextSubject = subject) {
     if (nextSubject !== subject) setSubject(nextSubject);
@@ -106,8 +101,6 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
         {view === 'speaking' && <SpeakingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} onRetry={() => openPractice(summary.subject)} onNext={openPractice} />}
         {view === 'history' && <CorrectionHistory onPractice={openPractice} />}
-        {view === 'progress' && <ProgressView />}
-        {view === 'weeks' && <WeekList onOpen={openPractice} />}
         {view === 'me' && <StudentProfile session={session} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
       </main>
     </div>

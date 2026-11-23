@@ -15,7 +15,6 @@ export type Subject = {
   rangeTitle: string;
   pdf: string;
   deadline: string;
-  progress: number;
   cta: string;
   tone: 'blue' | 'amber' | 'mint';
 };
@@ -29,7 +28,6 @@ export const SUBJECTS: Subject[] = [
     rangeTitle: '부정관사와 명사의 성·수 일치',
     pdf: 'PDF 29–30쪽',
     deadline: '11.23(일)까지',
-    progress: 64,
     cta: '학습하기',
     tone: 'blue',
   },
@@ -41,7 +39,6 @@ export const SUBJECTS: Subject[] = [
     rangeTitle: '학교 파티 일기 쓰기',
     pdf: 'PDF 93쪽',
     deadline: '11.23(일)까지',
-    progress: 35,
     cta: '학습하기',
     tone: 'amber',
   },
@@ -53,7 +50,6 @@ export const SUBJECTS: Subject[] = [
     rangeTitle: '카페에서 주문하고 가격 묻기',
     pdf: 'PDF 48–49쪽',
     deadline: '11.23(일)까지',
-    progress: 20,
     cta: '학습하기',
     tone: 'mint',
   },
@@ -566,43 +562,6 @@ export const CORRECTION_HISTORY: HistoryItem[] = [
     repeat: 0,
     subject: 'reading',
   },
-];
-
-/* ------------------------------------------------------------------ */
-/* Progress                                                            */
-/* ------------------------------------------------------------------ */
-
-export const PROGRESS_STATS = {
-  total: 42,
-  streak: 6,
-  accuracy: 84,
-  recurrence: 18,
-};
-
-export const WEEKLY_PROGRESS = [
-  { week: '1주차', practices: 5, accuracy: 72 },
-  { week: '2주차', practices: 8, accuracy: 78 },
-  { week: '3주차', practices: 6, accuracy: 84 },
-  { week: '4주차', practices: 0, accuracy: 0 },
-  { week: '5주차', practices: 0, accuracy: 0 },
-  { week: '6주차', practices: 0, accuracy: 0 },
-];
-
-export const RECENT_DAYS = [
-  { day: '월', value: 1 },
-  { day: '화', value: 2 },
-  { day: '수', value: 0 },
-  { day: '목', value: 3 },
-  { day: '금', value: 2 },
-  { day: '토', value: 1 },
-  { day: '일', value: 2 },
-];
-
-export const ERROR_TREND = [
-  { label: '관사', w1: 48, w2: 42, w3: 32, delta: -10 },
-  { label: '전치사', w1: 31, w2: 29, w3: 24, delta: -5 },
-  { label: '형용사 성 일치', w1: 22, w2: 24, w3: 19, delta: -5 },
-  { label: '복수 일치', w1: 14, w2: 13, w3: 12, delta: -1 },
 ];
 
 /* ------------------------------------------------------------------ */
