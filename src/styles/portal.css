@@ -65,3 +65,16 @@
   .login__card--signup .auth-roles { margin-bottom:12px; }
   .login__card--signup .login__field { margin-top:8px; }
 }
+
+/* Centered auth forms: remove the split illustration layout from login and signup. */
+.login { display:flex; min-height:100svh; background:var(--bg-0); }
+.login__visual { display:none; }
+.login__panel { width:100%; min-height:100svh; align-items:center; justify-content:flex-start; padding:clamp(24px,4vw,48px); overflow-y:auto; }
+.login__top { width:100%; max-width:430px; flex:0 0 auto; }
+.login__card { max-width:430px; margin:auto; }
+.login__card--signup { margin:auto; }
+@media(max-width:560px) {
+  .login__panel { padding:20px 18px; }
+  .login__card { padding:22px 0; }
+  .login__card--signup { margin:auto; }
+}

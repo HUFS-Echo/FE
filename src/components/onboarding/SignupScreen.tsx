@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { Wordmark } from '../Wordmark';
 import { DEMO_PROFESSOR, DEMO_STUDENT, type Role, type Session } from '../../lib/session';
 
 type Props = {
@@ -18,11 +17,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
   const email = `${mailId.trim()}@hufs.ac.kr`;
-
-  function selectRole(nextRole: Role) {
-    setRole(nextRole);
-    setError('');
-  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,22 +53,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
 
   return (
     <section className="login">
-      <div className="login__visual">
-        <div className="login__pattern" aria-hidden="true" />
-        <Wordmark />
-        <div className="login__visual-copy">
-          <p className="login__serif">반가워요</p>
-          <p className="login__quote">새 계정을 만들고<br />에코와 공부를 시작해요.</p>
-          <ul className="login__points">
-            <li><b>01</b> 학교 메일로 계정 만들기</li>
-            <li><b>02</b> 역할별 학습 화면 이용</li>
-            <li><b>03</b> 기본 정보를 입력하고 시작</li>
-          </ul>
-        </div>
-        <div className="login__owl" aria-hidden="true"><img src="/owls/waving.png" alt="" draggable={false} /></div>
-        <p className="login__visual-foot">HUFS · 21 LANGUAGES</p>
-      </div>
-
       <div className="login__panel">
         <div className="login__top">
           <span className="login__badge">HUFS ECHO</span>
@@ -86,10 +64,10 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
           <p className="login__sub">역할과 기본 정보를 입력해 가입을 진행해 주세요.</p>
 
           <div className="auth-roles" role="group" aria-label="가입 역할">
-            <button type="button" className={role === 'student' ? 'is-active' : ''} aria-pressed={role === 'student'} onClick={() => selectRole('student')}>
+            <button type="button" className={role === 'student' ? 'is-active' : ''} aria-pressed={role === 'student'} onClick={() => { setRole('student'); setError(''); }}>
               <b>학생</b><span>학습과 연습을 이어가요</span>
             </button>
-            <button type="button" className={role === 'professor' ? 'is-active' : ''} aria-pressed={role === 'professor'} onClick={() => selectRole('professor')}>
+            <button type="button" className={role === 'professor' ? 'is-active' : ''} aria-pressed={role === 'professor'} onClick={() => { setRole('professor'); setError(''); }}>
               <b>교수</b><span>수업과 학습을 관리해요</span>
             </button>
           </div>

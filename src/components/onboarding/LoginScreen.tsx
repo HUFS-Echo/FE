@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { Wordmark } from '../Wordmark';
 import { DEMO_PROFESSOR, DEMO_STUDENT, getSavedProfile, type Role, type Session } from '../../lib/session';
 
 type Props = {
@@ -44,22 +43,6 @@ export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
 
   return (
     <section className="login">
-      <div className="login__visual">
-        <div className="login__pattern" aria-hidden="true" />
-        <Wordmark />
-        <div className="login__visual-copy">
-          <p className="login__serif">안녕하세요</p>
-          <p className="login__quote">저는 에코예요.<br />말하고, 바로 교정받아요.</p>
-          <ul className="login__points">
-            <li><b>01</b> AI 튜터와 자유롭게 연습</li>
-            <li><b>02</b> 문장마다 즉시 교정</li>
-            <li><b>03</b> 교수님은 학습 범위를 설계</li>
-          </ul>
-        </div>
-        <div className="login__owl" aria-hidden="true"><img src="/owls/waving.png" alt="" draggable={false} /></div>
-        <p className="login__visual-foot">HUFS · 21 LANGUAGES</p>
-      </div>
-
       <div className="login__panel">
         <div className="login__top">
           <span className="login__badge">HUFS ECHO</span>
