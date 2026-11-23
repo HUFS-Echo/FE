@@ -60,11 +60,6 @@ export function CorrectionHistory({ onPractice }: Props) {
                   <b>{item.corrected}</b>
                 </p>
                 <p className="history-item__note">{item.explanation}</p>
-                <div className="history-item__foot">
-                  <span className={item.repeat > 0 ? 'repeat is-warn' : 'repeat'}>
-                    {item.repeat > 0 ? `${item.repeat}회 반복` : '재발 없음'}
-                  </span>
-                </div>
               </article>
             ))
           ) : (
