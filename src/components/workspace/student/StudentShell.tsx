@@ -11,9 +11,10 @@ import { PracticeSummary, type SummaryData } from './PracticeSummary';
 import { CorrectionHistory } from './CorrectionHistory';
 import { ProgressView } from './ProgressView';
 import { WeekList } from './WeekList';
+import { StudentProfile } from '../profile/MyPages';
 
-type View = 'home' | 'reading' | 'writing' | 'speaking' | 'summary' | 'history' | 'progress' | 'weeks';
-type Props = { session: Session; path: string; onNavigate: (path: string) => void; onToast: (message: string) => void };
+type View = 'home' | 'reading' | 'writing' | 'speaking' | 'summary' | 'history' | 'progress' | 'weeks' | 'me';
+type Props = { session: Session; path: string; onNavigate: (path: string) => void; onToast: (message: string) => void; onSessionUpdate: (session: Session) => void; onLogout: () => void; onReset: () => void; onReplay: () => void };
 
 function viewFromPath(path: string): View {
   if (path.startsWith('/student/course/')) return 'home';
@@ -24,6 +25,7 @@ function viewFromPath(path: string): View {
   if (path === '/student/history') return 'history';
   if (path === '/student/progress') return 'progress';
   if (path === '/student/weeks') return 'weeks';
+  if (path === '/student/me') return 'me';
   if (path === '/student/summary') return 'summary';
   return 'home';
 }
@@ -39,7 +41,7 @@ function pathForView(view: View, subject: SubjectId): string {
   return `/student/${view}`;
 }
 
-export function StudentShell({ session, path, onNavigate, onToast }: Props) {
+export function StudentShell({ session, path, onNavigate, onToast, onSessionUpdate, onLogout, onReset, onReplay }: Props) {
   const [view, setView] = useState<View>(() => viewFromPath(path));
   const [subject, setSubject] = useState<SubjectId>(() => subjectFromPath(path) ?? 'reading');
   const [summary, setSummary] = useState<SummaryData | null>(() => { try { return JSON.parse(sessionStorage.getItem('hufs-echo.practice-summary.v1') || 'null') as SummaryData | null; } catch { return null; } });
@@ -57,7 +59,8 @@ export function StudentShell({ session, path, onNavigate, onToast }: Props) {
     const courseName: Record<SubjectId, string> = { reading: '읽기와 쓰기', writing: '작문', speaking: '회화' };
     const available = SUBJECTS.filter((item) => !disabled.includes(courseName[item.id]));
     const requestedSubject = nextSubject ?? subject;
-    if (disabled.includes(courseName[requestedSubject])) {
+    const needsCourse = nextView === 'home' || nextView === 'reading' || nextView === 'writing' || nextView === 'speaking';
+    if (needsCourse && disabled.includes(courseName[requestedSubject])) {
       const fallback = available[0]?.id ?? 'reading';
       setSubject(fallback);
       setView('home');
@@ -70,7 +73,7 @@ export function StudentShell({ session, path, onNavigate, onToast }: Props) {
   useEffect(() => { mainRef.current?.scrollTo({ top: 0, behavior: 'auto' }); }, [view]);
 
   const active: StudentNavKey = view === 'home' ? 'home'
-    : view === 'history' || view === 'progress' || view === 'weeks' ? view : 'practice';
+    : view === 'history' || view === 'progress' || view === 'weeks' || view === 'me' ? view : 'practice';
 
   function navigate(view: View, nextSubject = subject) {
     if (nextSubject !== subject) setSubject(nextSubject);
@@ -95,16 +98,17 @@ export function StudentShell({ session, path, onNavigate, onToast }: Props) {
 
   return (
     <div className="student-shell">
-      <StudentSidebar subject={subject} active={active} onNavigate={handleNavigate} onSubjectChange={(id) => navigate('home', id)} onSpeak={() => openPractice('speaking')} />
+      <StudentSidebar subject={subject} active={active} onNavigate={handleNavigate} onSubjectChange={(id) => navigate('home', id)} />
       <main className="student-main" ref={mainRef}>
         {view === 'home' && <StudentHome session={session} subject={subject} onOpen={openPractice} onToast={onToast} />}
         {view === 'reading' && <ReadingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'writing' && <WritingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'speaking' && <SpeakingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} onRetry={() => openPractice(summary.subject)} onNext={openPractice} />}
-        {view === 'history' && <CorrectionHistory onPractice={openPractice} onToast={onToast} />}
+        {view === 'history' && <CorrectionHistory onPractice={openPractice} />}
         {view === 'progress' && <ProgressView />}
         {view === 'weeks' && <WeekList onOpen={openPractice} />}
+        {view === 'me' && <StudentProfile session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
       </main>
     </div>
   );

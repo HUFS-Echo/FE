@@ -486,7 +486,7 @@ export type HistoryItem = {
   subject: SubjectId;
 };
 
-export const HISTORY_TAGS = ['전체', '관사', '전치사', '형용사 성 일치', '수 일치'] as const;
+export const HISTORY_WEEK_FILTERS = ['전체', '1주차', '2주차', '3주차'] as const;
 
 export const CORRECTION_HISTORY: HistoryItem[] = [
   {
@@ -566,13 +566,6 @@ export const CORRECTION_HISTORY: HistoryItem[] = [
     repeat: 0,
     subject: 'reading',
   },
-];
-
-export const HISTORY_WEAKNESSES = [
-  { label: '관사 um / uma', percent: 42 },
-  { label: '전치사 em / a', percent: 27 },
-  { label: '형용사 성 일치', percent: 19 },
-  { label: '복수 일치', percent: 12 },
 ];
 
 /* ------------------------------------------------------------------ */

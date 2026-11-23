@@ -1,25 +1,24 @@
 import type { SubjectId } from '../../../config/learning';
 import { StudentCoursePicker } from './StudentCoursePicker';
 
-export type StudentNavKey = 'home' | 'practice' | 'history' | 'progress' | 'weeks';
+export type StudentNavKey = 'home' | 'practice' | 'history' | 'progress' | 'weeks' | 'me';
 
 type Props = {
   subject: SubjectId;
   active: StudentNavKey;
   onNavigate: (key: StudentNavKey) => void;
   onSubjectChange: (id: SubjectId) => void;
-  onSpeak: () => void;
 };
 
-const NAV: { key: StudentNavKey; label: string; icon: 'home' | 'practice' | 'history' | 'progress' | 'weeks' }[] = [
+const NAV: { key: StudentNavKey; label: string; icon: 'home' | 'practice' | 'history' | 'progress' | 'weeks' | 'profile' }[] = [
   { key: 'home', label: '홈', icon: 'home' },
   { key: 'practice', label: '연습하기', icon: 'practice' },
   { key: 'history', label: '교정 기록', icon: 'history' },
-  { key: 'progress', label: '내 진행률', icon: 'progress' },
   { key: 'weeks', label: '주차 목록', icon: 'weeks' },
+  { key: 'me', label: '마이페이지', icon: 'profile' },
 ];
 
-export function StudentSidebar({ subject, active, onNavigate, onSubjectChange, onSpeak }: Props) {
+export function StudentSidebar({ subject, active, onNavigate, onSubjectChange }: Props) {
   return (
     <aside className="student-side">
       <StudentCoursePicker variant="sidebar" subject={subject} onChange={onSubjectChange} />
@@ -39,38 +38,11 @@ export function StudentSidebar({ subject, active, onNavigate, onSubjectChange, o
           </button>
         ))}
       </nav>
-
-      <div className="side-tile">
-        <span className="side-tile__pattern" aria-hidden="true" />
-        <div className="side-tile__content">
-          <p className="side-tile__eyebrow">BOM DIA</p>
-          <p className="side-tile__message">
-            오늘도
-            <br />
-            <em>5문장만</em>
-            <br />
-            말해 봐요.
-          </p>
-          <button type="button" onClick={onSpeak}>
-            말하기 연습
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }
 
-function NavIcon({ name }: { name: 'home' | 'practice' | 'history' | 'progress' | 'weeks' }) {
+function NavIcon({ name }: { name: 'home' | 'practice' | 'history' | 'progress' | 'weeks' | 'profile' }) {
   if (name === 'home') {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -111,6 +83,14 @@ function NavIcon({ name }: { name: 'home' | 'practice' | 'history' | 'progress' 
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <path d="M3.5 16.5V11M8.5 16.5V7M13.5 16.5V9M18 16.5V4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (name === 'profile') {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="6.4" r="3" fill="none" stroke="currentColor" strokeWidth="1.3" />
+        <path d="M4.2 17c.5-3.1 2.4-4.8 5.8-4.8s5.3 1.7 5.8 4.8" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
       </svg>
     );
   }
