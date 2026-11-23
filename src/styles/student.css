@@ -651,6 +651,8 @@
 .hero-card__copy h2 {
   max-width: 580px;
   margin-top: 17px;
+  margin-inline: auto;
+  text-align: center;
   font-size: clamp(25px, 2.55vw, 35px);
   line-height: 1.22;
   word-break: keep-all;
