@@ -1,31 +1,17 @@
-import {
-  LOCKED_SUBJECT,
-  OTHER_MISSIONS,
-  PRACTICE_SETS,
-  SUBJECTS,
-  WEEK,
-  getSubject,
-  type SubjectId,
-} from '../../../config/learning';
+import { PRACTICE_SETS, WEEK, getSubject, type SubjectId } from '../../../config/learning';
 import type { Session } from '../../../lib/session';
-import { getDemoState } from '../../../lib/demoStore';
 import { MiniGlobe } from './MiniGlobe';
 
 type Props = {
   session: Session;
   subject: SubjectId;
-  onSubject: (id: SubjectId) => void;
   onOpen: (id: SubjectId) => void;
   onToast: (message: string) => void;
 };
 
-export function StudentHome({ session, subject, onSubject, onOpen, onToast }: Props) {
+export function StudentHome({ session, subject, onOpen, onToast }: Props) {
   const current = getSubject(subject);
   const sets = PRACTICE_SETS[subject];
-  const disabledCourses = (getDemoState().studentSettings.disabledCourses as string[] | undefined) ?? [];
-  const courseName: Record<SubjectId, string> = { reading: '읽기와 쓰기', writing: '작문', speaking: '회화' };
-  const availableSubjects = SUBJECTS.filter((item) => !disabledCourses.includes(courseName[item.id]));
-  const others = OTHER_MISSIONS[subject].filter((mission) => !disabledCourses.includes(courseName[mission.subject]));
 
   return (
     <div className="home">
@@ -39,48 +25,7 @@ export function StudentHome({ session, subject, onSubject, onOpen, onToast }: Pr
             <b>Olá</b>는 포르투갈어로 안녕하세요예요.
           </p>
         </div>
-        <div className="home__goal">
-          <div className="home__goal-top">
-            <span>이번 주 목표</span>
-            <b>
-              {WEEK.goalDone} / {WEEK.goalTotal}
-            </b>
-          </div>
-          <div className="home__goal-dots" aria-hidden="true">
-            {Array.from({ length: WEEK.goalTotal }, (_, index) => (
-              <i key={index} className={index < WEEK.goalDone ? 'is-done' : ''} />
-            ))}
-          </div>
-        </div>
       </header>
-
-      <div className="subject-tabs" role="tablist" aria-label="과목 선택">
-        {availableSubjects.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={subject === item.id}
-            className={subject === item.id ? 'subject-tab is-active' : 'subject-tab'}
-            onClick={() => onSubject(item.id)}
-          >
-            <span>{item.name}</span>
-            <small>{item.type}</small>
-          </button>
-        ))}
-        <button
-          type="button"
-          className="subject-tab subject-tab--locked"
-          aria-disabled="true"
-          onClick={() => onToast(`${LOCKED_SUBJECT.name} ${LOCKED_SUBJECT.type}는 준비 중이에요.`)}
-        >
-          <span>
-            <LockIcon />
-            {LOCKED_SUBJECT.name}
-          </span>
-          <small>{LOCKED_SUBJECT.note}</small>
-        </button>
-      </div>
 
       <section className={`hero-card hero-card--${current.tone}`}>
         <span className="hero-card__grid" aria-hidden="true" />
@@ -171,51 +116,6 @@ export function StudentHome({ session, subject, onSubject, onOpen, onToast }: Pr
           </div>
         </section>
 
-        <aside className="home-aside">
-          <section className="side-block">
-            <header className="block-head block-head--small">
-              <div>
-                <p className="eyebrow">OUTRAS MISSÕES</p>
-                <h2>다른 과목 미션</h2>
-              </div>
-            </header>
-            <div className="mission-list">
-              {others.map((mission) => {
-                const target = getSubject(mission.subject);
-                return (
-                  <button
-                    key={mission.subject}
-                    type="button"
-                    className="mission-card"
-                    onClick={() => onSubject(mission.subject)}
-                  >
-                    <span className={`mission-card__dot mission-card__dot--${target.tone}`} aria-hidden="true" />
-                    <span className="mission-card__body">
-                      <span className="mission-card__subject">
-                        {target.name} · {target.type}
-                      </span>
-                      <b>{mission.title}</b>
-                      <small>{mission.meta}</small>
-                    </span>
-                    <ArrowIcon />
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          <div className="owl-tip">
-            <div className="owl-tip__copy">
-              <p className="eyebrow">DICA DO ECHO</p>
-              <h3>오늘의 팁</h3>
-              <p>
-                “por favor”를 문장 끝에 붙이면 훨씬 공손하게 들려요. 오늘은 5문장만 말해
-                볼까요?
-              </p>
-            </div>
-            <img src="/owls/suitcase.png" alt="" draggable={false} />
-          </div>
-        </aside>
       </div>
     </div>
   );
@@ -232,15 +132,6 @@ function ArrowIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <rect x="3.5" y="7" width="9" height="6.5" rx="1.4" fill="none" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M5.5 7V5.4a2.5 2.5 0 0 1 5 0V7" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   );
 }

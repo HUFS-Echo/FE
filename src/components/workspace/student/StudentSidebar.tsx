@@ -1,4 +1,5 @@
-import { getSubject, WEEK, type SubjectId } from '../../../config/learning';
+import type { SubjectId } from '../../../config/learning';
+import { StudentCoursePicker } from './StudentCoursePicker';
 
 export type StudentNavKey = 'home' | 'practice' | 'history' | 'progress' | 'weeks';
 
@@ -6,6 +7,7 @@ type Props = {
   subject: SubjectId;
   active: StudentNavKey;
   onNavigate: (key: StudentNavKey) => void;
+  onSubjectChange: (id: SubjectId) => void;
   onSpeak: () => void;
 };
 
@@ -17,29 +19,10 @@ const NAV: { key: StudentNavKey; label: string; icon: 'home' | 'practice' | 'his
   { key: 'weeks', label: '주차 목록', icon: 'weeks' },
 ];
 
-export function StudentSidebar({ subject, active, onNavigate, onSpeak }: Props) {
-  const current = getSubject(subject);
-
+export function StudentSidebar({ subject, active, onNavigate, onSubjectChange, onSpeak }: Props) {
   return (
     <aside className="student-side">
-      <div className="side-course">
-        <span className="side-course__mark" aria-hidden="true">
-          <svg viewBox="0 0 20 20">
-            <path
-              d="M3.5 4.5h5.2c.8 0 1.3.5 1.3 1.2v9.8c0-.8-.6-1.3-1.4-1.3H3.5ZM16.5 4.5h-5.2c-.8 0-1.3.5-1.3 1.2v9.8c0-.8.6-1.3 1.4-1.3h5.1Z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </span>
-        <div>
-          <p className="side-course__eyebrow">COURSE · {WEEK.label}</p>
-          <b>{current.name}</b>
-          <span>{current.type} · A1</span>
-        </div>
-      </div>
+      <StudentCoursePicker variant="sidebar" subject={subject} onChange={onSubjectChange} />
 
       <nav className="side-nav" aria-label="학생 메뉴">
         {NAV.map((item) => (

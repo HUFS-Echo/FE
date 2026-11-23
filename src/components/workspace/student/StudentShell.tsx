@@ -95,9 +95,9 @@ export function StudentShell({ session, path, onNavigate, onToast }: Props) {
 
   return (
     <div className="student-shell">
-      <StudentSidebar subject={subject} active={active} onNavigate={handleNavigate} onSpeak={() => openPractice('speaking')} />
+      <StudentSidebar subject={subject} active={active} onNavigate={handleNavigate} onSubjectChange={(id) => navigate('home', id)} onSpeak={() => openPractice('speaking')} />
       <main className="student-main" ref={mainRef}>
-        {view === 'home' && <StudentHome session={session} subject={subject} onSubject={(id) => navigate('home', id)} onOpen={openPractice} onToast={onToast} />}
+        {view === 'home' && <StudentHome session={session} subject={subject} onOpen={openPractice} onToast={onToast} />}
         {view === 'reading' && <ReadingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'writing' && <WritingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'speaking' && <SpeakingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
