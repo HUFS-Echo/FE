@@ -52,3 +52,16 @@
 @media(max-width:760px) { .workspace__head{height:auto;min-height:66px;flex-wrap:wrap;padding:10px 14px;gap:8px}.workspace__tools{width:100%;justify-content:flex-end;flex-wrap:wrap}.workspace__brand{width:100%;justify-content:space-between}.header-select select{max-width:132px;height:33px;font-size:11px}.header-select--week select{max-width:140px}.user-menu{margin-left:auto}.user-chip__text{display:none} }
 @media(max-width:560px) { .auth-progress{margin-bottom:28px}.login__card .login__sub{margin-bottom:21px}.auth-roles{gap:8px}.auth-roles button{min-height:64px;padding:9px 11px}.auth-roles button span{font-size:9px}.auth-demo-note{align-items:flex-start} }
 @media(prefers-reduced-motion:reduce) { .workspace *, .login * { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+
+.auth-switch { margin-top:18px; color:var(--ink-mute); font-size:11px; text-align:center; }
+.auth-switch button { margin-left:4px; color:var(--sky); font-size:11px; font-weight:650; }
+.auth-switch button:hover { text-decoration:underline; text-underline-offset:3px; }
+.login__card--signup { max-width:430px; margin-top:28px; margin-bottom:28px; }
+.login__card--signup .auth-roles { margin-bottom:16px; }
+.login__card--signup .login__field { margin-top:10px; }
+.login__card--signup .login__field input,.login__card--signup .auth-email { min-height:46px; }
+@media(max-width:560px) {
+  .login__card--signup { margin-top:20px; margin-bottom:20px; }
+  .login__card--signup .auth-roles { margin-bottom:12px; }
+  .login__card--signup .login__field { margin-top:8px; }
+}

@@ -116,9 +116,9 @@ export function GreetingTitle({ hoveredLanguageId, started, reducedMotion }: Pro
         </span>
         <span className="line-mask line-mask--fixed">
           <span className="line-inner hero__title-fixed">
-            AI와 말하고,
+            수업에서 배운 외국어,
             <br />
-            <em>바로 교정받기</em>
+            <em>직접 써 보세요.</em>
           </span>
         </span>
       </h1>

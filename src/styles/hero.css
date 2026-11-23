@@ -351,6 +351,38 @@
   margin-top: 30px;
 }
 
+.hero__auth-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hero__login-button {
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 18px;
+  border: 1px solid rgba(169, 205, 245, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.hero__login-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.hero__login-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(169, 205, 245, 0.62);
+  background: rgba(91, 141, 239, 0.1);
+}
+
 .hero__note {
   padding-left: 14px;
   border-left: 1px solid var(--line);
@@ -740,10 +772,20 @@
     margin-top: 24px;
   }
 
+  .hero__auth-actions {
+    gap: 6px;
+  }
+
   .magnetic__button {
     height: 52px;
     padding: 0 18px 0 22px;
     font-size: 13.5px;
+  }
+
+  .hero__login-button {
+    min-height: 52px;
+    padding: 0 15px;
+    font-size: 12px;
   }
 
   .hero__note {
