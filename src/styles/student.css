@@ -485,43 +485,6 @@
   font-weight: 550;
 }
 
-.hero-card__progress {
-  max-width: 370px;
-  margin-top: 18px;
-}
-
-.hero-card__progress-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  color: rgba(226, 238, 253, 0.72);
-  font-size: 9.5px;
-}
-
-.hero-card__progress-top b {
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-}
-
-.hero-card__bar {
-  height: 5px;
-  margin-top: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.hero-card__bar i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #7fb0ef, var(--sky));
-  box-shadow: 0 0 12px rgba(169, 205, 245, 0.5);
-}
-
 .hero-card__actions {
   display: flex;
   gap: 7px;

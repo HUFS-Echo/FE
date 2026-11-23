@@ -42,16 +42,6 @@ export function StudentHome({ session, subject, onOpen }: Props) {
             </div>
           </div>
 
-          <div className="hero-card__progress">
-            <div className="hero-card__progress-top">
-              <span>이번 주 진행률</span>
-              <b>{current.progress}%</b>
-            </div>
-            <div className="hero-card__bar">
-              <i style={{ width: `${current.progress}%` }} />
-            </div>
-          </div>
-
           <div className="hero-card__actions">
             <button type="button" className="hero-card__cta" onClick={() => onOpen(current.id)}>
               {current.cta}
