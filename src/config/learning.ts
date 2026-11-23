@@ -30,7 +30,7 @@ export const SUBJECTS: Subject[] = [
     pdf: 'PDF 29–30쪽',
     deadline: '11.23(일)까지',
     progress: 64,
-    cta: '이어서 풀기',
+    cta: '학습하기',
     tone: 'blue',
   },
   {
@@ -42,7 +42,7 @@ export const SUBJECTS: Subject[] = [
     pdf: 'PDF 93쪽',
     deadline: '11.23(일)까지',
     progress: 35,
-    cta: '이어서 쓰기',
+    cta: '학습하기',
     tone: 'amber',
   },
   {
@@ -54,7 +54,7 @@ export const SUBJECTS: Subject[] = [
     pdf: 'PDF 48–49쪽',
     deadline: '11.23(일)까지',
     progress: 20,
-    cta: '이어서 말하기',
+    cta: '학습하기',
     tone: 'mint',
   },
 ];

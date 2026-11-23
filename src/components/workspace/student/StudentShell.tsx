@@ -100,7 +100,7 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
     <div className="student-shell">
       <StudentSidebar subject={subject} active={active} onNavigate={handleNavigate} onSubjectChange={(id) => navigate('home', id)} />
       <main className="student-main" ref={mainRef}>
-        {view === 'home' && <StudentHome session={session} subject={subject} onOpen={openPractice} onToast={onToast} />}
+        {view === 'home' && <StudentHome session={session} subject={subject} onOpen={openPractice} />}
         {view === 'reading' && <ReadingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'writing' && <WritingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'speaking' && <SpeakingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
@@ -108,7 +108,7 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
         {view === 'history' && <CorrectionHistory onPractice={openPractice} />}
         {view === 'progress' && <ProgressView />}
         {view === 'weeks' && <WeekList onOpen={openPractice} />}
-        {view === 'me' && <StudentProfile session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
+        {view === 'me' && <StudentProfile session={session} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
       </main>
     </div>
   );

@@ -7,10 +7,9 @@ type Props = {
   session: Session;
   subject: SubjectId;
   onOpen: (id: SubjectId) => void;
-  onToast: (message: string) => void;
 };
 
-export function StudentHome({ session, subject, onOpen, onToast }: Props) {
+export function StudentHome({ session, subject, onOpen }: Props) {
   const current = getSubject(subject);
 
   return (
@@ -30,15 +29,18 @@ export function StudentHome({ session, subject, onOpen, onToast }: Props) {
       <section className={`hero-card hero-card--${current.tone}`}>
         <span className="hero-card__grid" aria-hidden="true" />
         <div className="hero-card__copy">
-          <p className="hero-card__eyebrow">THIS WEEK · {WEEK.label}</p>
+          <p className="hero-card__eyebrow">{WEEK.label} · 이번 주 학습 범위</p>
           <h2>{current.rangeTitle}</h2>
-          <p className="hero-card__meta">
-            <span>{current.pdf}</span>
-            <i aria-hidden="true" />
-            <span>{current.deadline}</span>
-            <i aria-hidden="true" />
-            <span>A1</span>
-          </p>
+          <div className="hero-card__details">
+            <div className="hero-card__detail">
+              <span>학습 범위</span>
+              <b>{current.pdf}</b>
+            </div>
+            <div className="hero-card__detail">
+              <span>기한</span>
+              <b>{current.deadline}</b>
+            </div>
+          </div>
 
           <div className="hero-card__progress">
             <div className="hero-card__progress-top">
@@ -54,13 +56,6 @@ export function StudentHome({ session, subject, onOpen, onToast }: Props) {
             <button type="button" className="hero-card__cta" onClick={() => onOpen(current.id)}>
               {current.cta}
               <ArrowIcon />
-            </button>
-            <button
-              type="button"
-              className="hero-card__ghost"
-              onClick={() => onToast('이번 주 교재 범위를 확인했어요. (데모)')}
-            >
-              범위 보기
             </button>
           </div>
         </div>

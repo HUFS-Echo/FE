@@ -14,7 +14,6 @@ const NAV: { key: StudentNavKey; label: string; icon: 'home' | 'practice' | 'his
   { key: 'home', label: '홈', icon: 'home' },
   { key: 'practice', label: '연습하기', icon: 'practice' },
   { key: 'history', label: '교정 기록', icon: 'history' },
-  { key: 'weeks', label: '주차 목록', icon: 'weeks' },
   { key: 'me', label: '마이페이지', icon: 'profile' },
 ];
 
