@@ -12,6 +12,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
   const [name, setName] = useState('');
   const [mailId, setMailId] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [professorId, setProfessorId] = useState('');
   const [department, setDepartment] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -21,7 +22,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedId = mailId.trim();
-    if (!name.trim() || !department.trim() || (role === 'student' && !studentId.trim())) {
+    if (!name.trim() || !department.trim() || (role === 'student' && !studentId.trim()) || (role === 'professor' && !professorId.trim())) {
       setError('필수 정보를 모두 입력해 주세요.');
       return;
     }
@@ -44,7 +45,9 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
       name: name.trim(),
       email,
       department: department.trim(),
-      ...(role === 'student' ? { studentId: studentId.trim() } : {}),
+      ...(role === 'student'
+        ? { studentId: studentId.trim() }
+        : { studentId: '', professorId: professorId.trim() }),
       setupComplete: true,
     };
     // 데모 계정 정보만 저장하고 비밀번호는 저장·전송하지 않습니다.
@@ -82,6 +85,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
               </span>
             </label>
             {role === 'student' && <label className="login__field"><span>학번</span><input value={studentId} onChange={(event) => { setStudentId(event.target.value); setError(''); }} placeholder="예: 202503356" autoComplete="off" /></label>}
+            {role === 'professor' && <label className="login__field"><span>교번</span><input value={professorId} onChange={(event) => { setProfessorId(event.target.value); setError(''); }} placeholder="교번" autoComplete="off" /></label>}
             <label className="login__field"><span>학과</span><input value={department} onChange={(event) => { setDepartment(event.target.value); setError(''); }} placeholder="소속 학과" autoComplete="organization-title" /></label>
             <label className="login__field"><span>비밀번호</span><input type="password" value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} placeholder="8자 이상" autoComplete="new-password" /></label>
             <label className="login__field"><span>비밀번호 확인</span><input type="password" value={passwordConfirm} onChange={(event) => { setPasswordConfirm(event.target.value); setError(''); }} placeholder="비밀번호를 다시 입력해 주세요" autoComplete="new-password" /></label>

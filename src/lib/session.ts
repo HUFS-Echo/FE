@@ -5,6 +5,7 @@ export type Session = {
   role: Role;
   email: string;
   studentId: string;
+  professorId?: string;
   department: string;
   year?: string;
   room?: string;
