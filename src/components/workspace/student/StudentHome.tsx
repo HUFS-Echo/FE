@@ -26,23 +26,33 @@ export function StudentHome({ session, subject, onOpen }: Props) {
         </div>
       </header>
 
-      <section className={`hero-card hero-card--${current.tone}`}>
+      <section
+        className={`hero-card hero-card--${current.tone}`}
+        aria-labelledby="weekly-study-title"
+      >
         <span className="hero-card__grid" aria-hidden="true" />
         <div className="hero-card__copy">
-          <p className="hero-card__eyebrow">{WEEK.label} · 이번 주 학습 범위</p>
-          <h2>{current.rangeTitle}</h2>
-          <div className="hero-card__details">
-            <div className="hero-card__detail">
-              <span>학습 범위</span>
-              <b>{current.pdf}</b>
+          <div className="hero-card__heading">
+            <div className="hero-card__context">
+              <span className="hero-card__week">{WEEK.label}</span>
+              <p className="hero-card__eyebrow">이번 주 학습</p>
             </div>
-            <div className="hero-card__detail">
-              <span>기한</span>
-              <b>{current.deadline}</b>
-            </div>
+            <span className="hero-card__subject">
+              {current.name} <i aria-hidden="true">·</i> {current.type}
+            </span>
           </div>
-
-          <div className="hero-card__actions">
+          <h2 id="weekly-study-title">{current.rangeTitle}</h2>
+          <div className="hero-card__footer">
+            <div className="hero-card__details" role="group" aria-label="이번 주 학습 정보">
+              <div className="hero-card__detail">
+                <span>PDF 학습 범위</span>
+                <b>{current.pdf}</b>
+              </div>
+              <div className="hero-card__detail">
+                <span>학습 마감</span>
+                <b>{current.deadline}</b>
+              </div>
+            </div>
             <button type="button" className="hero-card__cta" onClick={() => onOpen(current.id)}>
               {current.cta}
               <ArrowIcon />
@@ -50,7 +60,7 @@ export function StudentHome({ session, subject, onOpen }: Props) {
           </div>
         </div>
 
-        <div className="hero-card__visual">
+        <div className="hero-card__visual" aria-hidden="true">
           <MiniGlobe />
           <p className="hero-card__caption">SEOUL → LISBOA</p>
         </div>
