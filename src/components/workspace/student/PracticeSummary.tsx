@@ -5,7 +5,7 @@ export type SummaryData = {
   title: string;
   message: string;
   stats: { label: string; value: string; suffix?: string }[];
-  corrections: { original: string; corrected: string; tag: string }[];
+  corrections: { original: string; corrected: string }[];
 };
 
 type Props = {
@@ -50,7 +50,6 @@ export function PracticeSummary({ data, onHome }: Props) {
             <div className="summary-corrections">
               {data.corrections.map((correction) => (
                 <div className="summary-correction" key={`${correction.original}-${correction.corrected}`}>
-                  <span className="tag">{correction.tag}</span>
                   <p>
                     <span className="strike">{correction.original}</span>
                     <ArrowIcon />

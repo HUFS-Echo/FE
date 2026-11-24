@@ -2,14 +2,13 @@ import { useState } from 'react';
 import {
   CORRECTION_HISTORY,
   HISTORY_WEEK_FILTERS,
-  type SubjectId,
 } from '../../../config/learning';
 
 type Props = {
-  onPractice: (subject: SubjectId) => void;
+  onCustomPractice: () => void;
 };
 
-export function CorrectionHistory({ onPractice }: Props) {
+export function CorrectionHistory({ onCustomPractice }: Props) {
   const [filter, setFilter] = useState<(typeof HISTORY_WEEK_FILTERS)[number]>('전체');
   const items =
     filter === '전체'
@@ -24,7 +23,7 @@ export function CorrectionHistory({ onPractice }: Props) {
           <h1>교정 기록</h1>
           <p className="page-head__sub">다시 틀리지 않도록, 고친 문장을 모아봤어요.</p>
         </div>
-        <button type="button" className="btn-solid" onClick={() => onPractice('reading')}>
+        <button type="button" className="btn-solid" onClick={onCustomPractice}>
           맞춤 연습 시작
           <ArrowIcon />
         </button>

@@ -74,7 +74,6 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
       const wrongCorrections = wrong.map((item) => ({
         original: item.type === 'rewrite' ? item.prompt ?? '' : `${item.before}___${item.after}`,
         corrected: item.type === 'rewrite' ? item.answer : `${item.before}${item.answer}${item.after}`,
-        tag: '관사',
       }));
       const total = READING_QUESTIONS.length;
       const accuracy = Math.round((correctCount / total) * 100);

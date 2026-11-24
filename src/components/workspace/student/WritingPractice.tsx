@@ -79,7 +79,6 @@ export function WritingPractice({ onBack, onComplete, onToast }: Props) {
       corrections: WRITING_TASK.corrections.map((correction) => ({
         original: correction.original,
         corrected: correction.corrected,
-        tag: correction.tag,
       })),
     });
   }

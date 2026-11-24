@@ -34,6 +34,7 @@ HUFS Echo는 한국외국어대학교 특수외국어 학습자를 위한 데모
 | 문법 연습 | `/student/practice/reading` | 선택 과목이 문법일 때 문항을 풀고 제출 |
 | 작문 연습 | `/student/practice/writing` | 선택 과목의 작문 과제를 작성하고 제출 |
 | 회화 연습 | `/student/practice/speaking` | 선택 과목의 회화 상황과 말하기 연습 |
+| 맞춤 연습 | `/student/practice/custom` | 교정 기록의 반복 오류를 우선한 최대 5개 문제, 채점·해설·완료 점수 |
 | 연습 결과 | `/student/summary/{reading\|writing\|speaking}` | 정답·정확도·연습 시간, 오늘 고친 문장, 홈으로 이동하는 동선 |
 | 교정 기록 | `/student/history` | 전체/주차별 필터와 고친 문장 목록 |
 | 마이페이지 | `/student/me` | 프로필, 수강 과목, 알림, 개인정보·데이터 안내, 로그아웃 |
@@ -42,7 +43,7 @@ HUFS Echo는 한국외국어대학교 특수외국어 학습자를 위한 데모
 
 학생 홈에는 이번 주 진행률, 이번 주 목표, 다른 과목 미션, 오늘의 팁, 별도 연습 세트 카드가 없습니다. 이번 주 카드 중앙에는 학습 주제와 PDF 범위·기한이 표시되고 CTA는 `학습하기`입니다. 주차 목록은 홈 카드 아래에서 제공됩니다.
 
-교정 기록은 `전체 · 1주차 · 2주차 · 3주차` 필터를 사용합니다. 자주 틀리는 유형 요약, 부엉이 팁 카드, 오류 유형 칩 필터, 반복 배지, 각 문장별 `다시 연습`은 현재 화면에 없습니다. 다만 화면 상단에는 연습 화면으로 이동하는 `맞춤 연습 시작` CTA가 있어, 이전의 “다시 연습” 제거 요청에 포함되는지는 사용자 확인을 기다립니다.
+교정 기록은 `전체 · 1주차 · 2주차 · 3주차` 필터를 사용합니다. 자주 틀리는 유형 요약, 부엉이 팁 카드, 오류 유형 칩 필터, 반복 배지, 각 문장별 `다시 연습`은 현재 화면에 없습니다. 상단의 `맞춤 연습 시작` CTA는 교정 기록 기반의 별도 맞춤 연습 화면으로 연결됩니다.
 
 연습 결과 화면에는 통계와 `오늘 고친 문장` 영역이 있습니다. 교정 데이터의 파란 태그/카드 표현이 남아 있어, 사용자가 요청한 “오늘 고친 문장 아래 파란 카드”와 같은 요소인지 확인 전까지 변경하지 않습니다. 새로 만난 단어와 `한 번 더` 버튼은 현재 결과 화면에서 확인되지 않았습니다.
 
@@ -80,7 +81,7 @@ AI 오류 신고 화면은 `/prof/feedback`에서 처리합니다. 사이드바 
 현재 앱이 실제 화면으로 처리하는 경로는 다음과 같습니다.
 
 - 공통: `/`
-- 학생: `/student`, `/student/course/{reading|writing|speaking}`, `/student/practice/{reading|writing|speaking}`, `/student/summary/{reading|writing|speaking}`, `/student/history`, `/student/me`
+- 학생: `/student`, `/student/course/{reading|writing|speaking}`, `/student/practice/{reading|writing|speaking}`, `/student/practice/custom`, `/student/summary/{reading|writing|speaking}`, `/student/history`, `/student/me`
 - 교수: `/prof`, `/prof/scope/new`, `/prof/scope/new/edit/{id}`, `/prof/report`, `/prof/feedback`, `/prof/me`
 
 `public/manus-routes.json`은 아직 현행 구조와 완전히 일치하지 않습니다. 이 파일에는 렌더링되지 않는 `/prof/students`와 `/prof/scopes`가 남아 있고, 실제로 쓰이는 결과 상세 경로와 범위 편집 경로는 동적 경로로 충분히 표현되지 않았습니다. `/prof/students`를 향하는 현황 화면의 `전체 보기` 링크도 남아 있으나, `ProfessorShell`에는 해당 경로 분기가 없어서 클릭/직접 진입 시 학생별 화면 대신 기본 반 현황이 표시됩니다. 해당 항목을 실제로 제거할지는 아래 감사 후보에서 사용자 확인을 받습니다.
@@ -94,9 +95,9 @@ AI 오류 신고 화면은 `/prof/feedback`에서 처리합니다. 사이드바 
 - **프로필:** 학생과 교수는 축구 유니폼 부엉이 아바타를 공유합니다.
 - **접근성/반응형:** 인트로 모션은 저사양·`prefers-reduced-motion` 설정을 고려하고, 학생·교수 셸은 화면 폭에 맞춰 내비게이션과 표를 조정합니다.
 
-## 7. 삭제 전 사용자 확인이 필요한 잔존 후보
+## 7. 승인 전 감사 기록 — A–D 정리 완료
 
-아래는 읽기 전용 감사 결과입니다. 어떤 항목도 이 문서 갱신 과정에서 삭제하지 않았습니다.
+아래 항목별 서술은 승인 전 감사 시점의 기록입니다. 사용자가 A–D를 승인해 정리했고, E의 맞춤 연습 CTA는 삭제하지 않고 별도 화면으로 기능화했습니다. 현재 상태는 아래 후속 업데이트를 기준으로 합니다.
 
 1. **교수 학생별 진행률 흔적:** `src/components/workspace/professor/StudentProgress.tsx`는 import되지 않고 라우트 분기도 없습니다. 반 현황의 `전체 보기` 링크와 `public/manus-routes.json`의 `/prof/students` 선언은 남아 있지만 실제 목적 화면은 동작하지 않습니다. 파일, 링크, 경로 선언을 함께 제거할지 확인이 필요합니다.
 2. **별도 범위 관리 선언:** `/prof/scopes`는 매니페스트에만 남아 있습니다. 별도 페이지는 없고 학습 범위 목록은 현재 작성 화면에서 쓰입니다. 삭제 후보는 매니페스트의 별도 경로 항목뿐이며 `ScopeLibrary.tsx`는 보존해야 합니다.
@@ -122,3 +123,13 @@ AI 오류 신고 화면은 `/prof/feedback`에서 처리합니다. 사이드바 
 - 마이페이지: `src/components/workspace/profile/MyPages.tsx`
 - 데모/저장 상태: `src/config/learning.ts`, `src/lib/session.ts`, `src/lib/demoStore.ts`
 - 경로 메타데이터: `public/manus-routes.json` (현재 감사 후보 반영 전)
+
+
+## 구현 후속 업데이트 — 승인된 정리와 맞춤 연습 (2026-11-24)
+
+- 학생 교정 기록의 `맞춤 연습 시작`은 별도 화면 `/student/practice/custom`으로 연결한다. `CORRECTION_HISTORY`에서 반복 횟수가 높은 오류를 우선해 중복 문장을 제외한 최대 5개 문제를 구성한다.
+- 각 문제는 교정 전 문장을 직접 고쳐 쓰는 방식이며, 정답 확인 후 정오 결과와 저장된 설명을 보여준다. 마지막에는 점수와 문장별 결과를 표시한다. 현재 앱은 데모 데이터 기반이며 외부 AI 서비스나 서버 호출은 추가하지 않는다.
+- 해당 경로는 `StudentShell`의 뷰 분기와 `public/manus-routes.json`에 함께 선언한다. 맞춤 연습은 과목 선택이 필요한 정규 연습과 별도로 진입한다.
+- 연습 완료 화면은 `오늘 고친 문장` 제목과 틀린 문장→교정 문장 행을 유지하고, 파란 오류 유형 태그와 완료 데이터 필드만 제거한다.
+- 사용자가 승인한 A–D를 완료했다: `/prof/students` 링크·선언과 `StudentProgress.tsx` 제거, `/prof/scopes` 선언 제거(범위 라이브러리는 보존), 미참조 레거시 4개 제거, 결과 화면의 파란 교정 태그 제거.
+- 코드와 문서는 GitHub 원격 `main`에 동기화하되 라이브 배포하지 않는다.

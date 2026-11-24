@@ -9,12 +9,14 @@ import { WritingPractice } from './WritingPractice';
 import { SpeakingPractice } from './SpeakingPractice';
 import { PracticeSummary, type SummaryData } from './PracticeSummary';
 import { CorrectionHistory } from './CorrectionHistory';
+import { CustomPractice } from './CustomPractice';
 import { StudentProfile } from '../profile/MyPages';
-type View = 'home' | 'reading' | 'writing' | 'speaking' | 'summary' | 'history' | 'me';
+type View = 'home' | 'reading' | 'writing' | 'speaking' | 'summary' | 'history' | 'me' | 'customPractice';
 type Props = { session: Session; path: string; onNavigate: (path: string) => void; onToast: (message: string) => void; onSessionUpdate: (session: Session) => void; onLogout: () => void; onReset: () => void; onReplay: () => void };
 
 function viewFromPath(path: string): View {
   if (path.startsWith('/student/course/')) return 'home';
+  if (path === '/student/practice/custom') return 'customPractice';
   if (path.startsWith('/student/practice/')) {
     const subject = path.split('/')[3];
     return subject === 'writing' || subject === 'speaking' ? subject : 'reading';
@@ -31,6 +33,7 @@ function subjectFromPath(path: string): SubjectId | null {
 }
 function pathForView(view: View, subject: SubjectId): string {
   if (view === 'home') return `/student/course/${subject}`;
+  if (view === 'customPractice') return '/student/practice/custom';
   if (view === 'reading' || view === 'writing' || view === 'speaking') return `/student/practice/${view}`;
   if (view === 'summary') return `/student/summary/${subject}`;
   return `/student/${view}`;
@@ -98,7 +101,8 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
         {view === 'writing' && <WritingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'speaking' && <SpeakingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} />}
-        {view === 'history' && <CorrectionHistory onPractice={openPractice} />}
+        {view === 'customPractice' && <CustomPractice onBack={() => navigate('history')} onHome={() => navigate('home')} />}
+        {view === 'history' && <CorrectionHistory onCustomPractice={() => navigate('customPractice')} />}
         {view === 'me' && <StudentProfile session={session} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
       </main>
     </div>

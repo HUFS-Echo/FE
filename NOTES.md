@@ -43,3 +43,12 @@
 - 로그인 후: 따뜻한 아이보리 배경, 흰 카드, 남색과 절제된 파란색 포인트
 - 축구 유니폼 부엉이: 학생·교수 프로필 공통 아바타
 - 인트로 조정값: `src/config/tuning.ts`; 언어 핀/인사말: `src/config/languages.ts`
+
+
+## 맞춤 연습 후속 변경 (2026-11-24)
+
+- 새 화면 `src/components/workspace/student/CustomPractice.tsx`는 학생 셸의 `/student/practice/custom` 경로로 진입한다.
+- 문항 원천은 `CORRECTION_HISTORY`. 반복 횟수 내림차순으로 정렬하고 원문/정답이 같은 항목은 합쳐 최대 5개를 제공한다. 외부 AI/백엔드 호출 없이 저장된 데모 기록으로 구성한다.
+- 동작은 교정문 입력, 포르투갈어 대소문자·공백·문장부호 비교, 결과 설명, 문제 진행, 최종 점수/문장별 복습이다.
+- 연습 완료 데이터 타입은 원문과 교정문만 포함한다. 오류 유형은 요약 UI에서 사용하지 않으며, 문제/교정 데이터의 원본 유형은 유지한다.
+- `public/manus-routes.json`에 새 경로를 추가하고 `/prof/students`, `/prof/scopes`는 제거한다.

@@ -141,7 +141,6 @@ export function SpeakingPractice({ onBack, onComplete, onToast }: Props) {
             {
               original: message.correction.original,
               corrected: message.correction.corrected,
-              tag: message.correction.tag,
             },
           ]
         : [],

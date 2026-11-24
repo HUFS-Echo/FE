@@ -121,7 +121,6 @@ export function Overview({ onNavigate }: Props) {
             <h2>학생별 연습 현황</h2>
             <p>{subject} · {filters.section}분반 · 이름·학번 일부 가림</p>
           </div>
-          <button className="text-link" onClick={() => onNavigate('/prof/students')}>전체 보기 →</button>
         </div>
         <div className="table-scroll">
           <table className="prof-table">
