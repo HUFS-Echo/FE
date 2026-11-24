@@ -22,8 +22,8 @@ const nav = [
   ['/prof', '반 현황', '◫'],
   ['/prof/scope/new', '학습 범위 설정', '＋'],
   ['/prof/report', '취약점 리포트', '⌁'],
-  ['/prof/feedback', '피드백 신고', '◌'],
-  ['/prof/me', '마이페이지', '◎'],
+  ['/prof/feedback', 'AI 오류 신고', 'aiError'],
+  ['/prof/me', '마이페이지', 'profile'],
 ] as const;
 
 export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onToast, onLogout, onReset, onReplay }: Props) {
@@ -53,7 +53,17 @@ export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onT
       <nav aria-label="교수 메뉴">
         {nav.map(([to, label, icon]) => <button key={to} className={current === to ? 'is-active' : ''}
           aria-current={current === to ? 'page' : undefined} onClick={() => onNavigate(to)}>
-          <i>{icon}</i><span>{label}</span>
+          <i aria-hidden="true">{icon === 'profile' ? (
+            <svg viewBox="0 0 20 20" width="18" height="18">
+              <circle cx="10" cy="6.4" r="3" fill="none" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M4.2 17c.5-3.1 2.4-4.8 5.8-4.8s5.3 1.7 5.8 4.8" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          ) : icon === 'aiError' ? (
+            <svg viewBox="0 0 20 20" width="18" height="18">
+              <path d="M4.1 3.8h11.8a1.3 1.3 0 0 1 1.3 1.3v6.8a1.3 1.3 0 0 1-1.3 1.3H9l-3.7 3v-3h-1a1.3 1.3 0 0 1-1.3-1.3V5.1a1.3 1.3 0 0 1 1.1-1.3Z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+              <path d="M10 6.2v3.3m0 2v.1" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          ) : icon}</i><span>{label}</span>
           {to === '/prof/feedback' && openCount > 0 && <b className="nav-badge">{openCount}</b>}
         </button>)}
       </nav>
