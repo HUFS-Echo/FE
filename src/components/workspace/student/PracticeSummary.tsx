@@ -5,18 +5,15 @@ export type SummaryData = {
   title: string;
   message: string;
   stats: { label: string; value: string; suffix?: string }[];
-  next?: { title: string; desc: string; cta: string; subject: SubjectId };
+  corrections: { original: string; corrected: string; tag: string }[];
 };
 
 type Props = {
   data: SummaryData;
   onHome: () => void;
-  onNext: (subject: SubjectId) => void;
 };
 
-export function PracticeSummary({ data, onHome, onNext }: Props) {
-  const next = data.subject === 'reading' ? undefined : data.next;
-
+export function PracticeSummary({ data, onHome }: Props) {
   return (
     <div className="summary">
       <section className="summary__hero">
@@ -40,19 +37,33 @@ export function PracticeSummary({ data, onHome, onNext }: Props) {
         ))}
       </div>
 
-      {next && (
-        <div className="summary__grid summary__grid--single">
-          <section className="summary-next">
-            <p className="eyebrow">PRÓXIMO PASSO</p>
-            <h3>{next.title}</h3>
-            <p>{next.desc}</p>
-            <button type="button" onClick={() => onNext(next.subject)}>
-              {next.cta}
-              <ArrowIcon />
-            </button>
-          </section>
-        </div>
-      )}
+      <div className="summary__grid">
+        <section className="summary__card">
+          <header className="block-head block-head--small">
+            <div>
+              <p className="eyebrow">REVISÃO</p>
+              <h2>오늘 고친 문장</h2>
+            </div>
+            <span className="block-head__meta">{data.corrections.length}개</span>
+          </header>
+          {data.corrections.length > 0 ? (
+            <div className="summary-corrections">
+              {data.corrections.map((correction) => (
+                <div className="summary-correction" key={`${correction.original}-${correction.corrected}`}>
+                  <span className="tag">{correction.tag}</span>
+                  <p>
+                    <span className="strike">{correction.original}</span>
+                    <ArrowIcon />
+                    <b>{correction.corrected}</b>
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="summary__empty">새로 고친 문장이 없어요. 깔끔하게 잘했어요!</p>
+          )}
+        </section>
+      </div>
 
       <div className="summary__actions">
         <button type="button" className="btn-ghost" onClick={onHome}>

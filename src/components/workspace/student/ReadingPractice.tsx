@@ -3,6 +3,7 @@ import {
   PDF_EXCERPT,
   READING_QUESTIONS,
   WEEK,
+  type ReadingQuestion,
 } from '../../../config/learning';
 import type { SummaryData } from './PracticeSummary';
 
@@ -28,6 +29,7 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
   const [choice, setChoice] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [correctCount, setCorrectCount] = useState(0);
+  const [wrong, setWrong] = useState<ReadingQuestion[]>([]);
   const [flashPdf, setFlashPdf] = useState(false);
   const pdfRef = useRef<HTMLElement | null>(null);
   const flashTimer = useRef<number | null>(null);
@@ -61,12 +63,19 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
     setStatus(ok ? 'correct' : 'wrong');
     if (ok) {
       setCorrectCount((count) => count + 1);
+    } else {
+      setWrong((items) => (items.some((item) => item.id === current.id) ? items : [...items, current]));
     }
   }
 
   function goNext() {
     if (status === 'idle') return;
     if (isLast) {
+      const wrongCorrections = wrong.map((item) => ({
+        original: item.type === 'rewrite' ? item.prompt ?? '' : `${item.before}___${item.after}`,
+        corrected: item.type === 'rewrite' ? item.answer : `${item.before}${item.answer}${item.after}`,
+        tag: '관사',
+      }));
       const total = READING_QUESTIONS.length;
       const accuracy = Math.round((correctCount / total) * 100);
       onComplete({
@@ -78,6 +87,7 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
           { label: '정확도', value: `${accuracy}`, suffix: '%' },
           { label: '연습 시간', value: '8', suffix: '분' },
         ],
+        corrections: wrongCorrections,
       });
       return;
     }

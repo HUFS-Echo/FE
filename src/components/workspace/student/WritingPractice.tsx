@@ -76,12 +76,11 @@ export function WritingPractice({ onBack, onComplete, onToast }: Props) {
           { label: '교정', value: `${WRITING_TASK.corrections.length}`, suffix: '개' },
           { label: '정확도', value: `${accuracy}`, suffix: '%' },
         ],
-      next: {
-        title: '회화 · 카페 미션',
-        desc: '오늘 쓴 표현을 말로도 연습해 보세요.',
-        cta: '회화로 이동',
-        subject: 'speaking',
-      },
+      corrections: WRITING_TASK.corrections.map((correction) => ({
+        original: correction.original,
+        corrected: correction.corrected,
+        tag: correction.tag,
+      })),
     });
   }
 

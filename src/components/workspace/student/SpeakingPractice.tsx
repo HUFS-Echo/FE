@@ -159,12 +159,7 @@ export function SpeakingPractice({ onBack, onComplete, onToast }: Props) {
           { label: '교정', value: `${corrections.length}`, suffix: '개' },
           { label: '정확도', value: `${accuracy}`, suffix: '%' },
         ],
-      next: {
-        title: '문법 · 빈칸 채우기',
-        desc: '관사 표현을 다시 확인해 볼까요?',
-        cta: '문법으로 이동',
-        subject: 'reading',
-      },
+      corrections,
     });
   }
 

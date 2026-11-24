@@ -21,18 +21,18 @@ function viewFromPath(path: string): View {
   }
   if (path === '/student/history') return 'history';
   if (path === '/student/me') return 'me';
-  if (path === '/student/summary') return 'summary';
+  if (path === '/student/summary' || path.startsWith('/student/summary/')) return 'summary';
   return 'home';
 }
 function subjectFromPath(path: string): SubjectId | null {
   const subject = path.split('/')[3];
-  return (path.startsWith('/student/practice/') || path.startsWith('/student/course/')) && (subject === 'reading' || subject === 'writing' || subject === 'speaking')
+  return (path.startsWith('/student/practice/') || path.startsWith('/student/course/') || path.startsWith('/student/summary/')) && (subject === 'reading' || subject === 'writing' || subject === 'speaking')
     ? subject : null;
 }
 function pathForView(view: View, subject: SubjectId): string {
   if (view === 'home') return `/student/course/${subject}`;
   if (view === 'reading' || view === 'writing' || view === 'speaking') return `/student/practice/${view}`;
-  if (view === 'summary') return '/student/summary';
+  if (view === 'summary') return `/student/summary/${subject}`;
   return `/student/${view}`;
 }
 
@@ -97,7 +97,7 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
         {view === 'reading' && <ReadingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'writing' && <WritingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'speaking' && <SpeakingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
-        {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} onNext={openPractice} />}
+        {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} />}
         {view === 'history' && <CorrectionHistory onPractice={openPractice} />}
         {view === 'me' && <StudentProfile session={session} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
       </main>
