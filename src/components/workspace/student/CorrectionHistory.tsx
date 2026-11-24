@@ -52,7 +52,6 @@ export function CorrectionHistory({ onPractice }: Props) {
                 <div className="history-item__meta">
                   <span>{item.date}</span>
                   <span>{item.week}</span>
-                  <span className="tag">{item.tag}</span>
                 </div>
                 <p className="history-item__line">
                   <span className="strike">{item.original}</span>

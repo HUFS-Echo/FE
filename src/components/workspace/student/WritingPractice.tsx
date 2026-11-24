@@ -69,19 +69,13 @@ export function WritingPractice({ onBack, onComplete, onToast }: Props) {
     const accuracy = Math.max(60, 100 - WRITING_TASK.corrections.length * 8);
     onComplete({
       subject: 'writing',
-      eyebrow: `ESCRITA · ${WEEK.label}`,
       title: 'Muito bem!',
       message: '학교 파티 일기를 완성했어요. 교정 결과를 확인해 보세요.',
       stats: [
         { label: '작성 문장', value: `${sentences}`, suffix: '문장' },
-        { label: '교정', value: `${WRITING_TASK.corrections.length}`, suffix: '개' },
-        { label: '정확도', value: `${accuracy}`, suffix: '%' },
-      ],
-      corrections: WRITING_TASK.corrections.map((correction) => ({
-        original: correction.original,
-        corrected: correction.corrected,
-        tag: correction.tag,
-      })),
+          { label: '교정', value: `${WRITING_TASK.corrections.length}`, suffix: '개' },
+          { label: '정확도', value: `${accuracy}`, suffix: '%' },
+        ],
       next: {
         title: '회화 · 카페 미션',
         desc: '오늘 쓴 표현을 말로도 연습해 보세요.',

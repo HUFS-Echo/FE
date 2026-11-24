@@ -152,15 +152,13 @@ export function SpeakingPractice({ onBack, onComplete, onToast }: Props) {
     );
     onComplete({
       subject: 'speaking',
-      eyebrow: `CONVERSA · ${WEEK.label}`,
       title: 'Muito bem!',
       message: '카페 미션을 마쳤어요. 연습 결과를 확인해 보세요.',
       stats: [
         { label: '말한 문장', value: `${userMessages.length}`, suffix: '문장' },
-        { label: '교정', value: `${corrections.length}`, suffix: '개' },
-        { label: '정확도', value: `${accuracy}`, suffix: '%' },
-      ],
-      corrections,
+          { label: '교정', value: `${corrections.length}`, suffix: '개' },
+          { label: '정확도', value: `${accuracy}`, suffix: '%' },
+        ],
       next: {
         title: '문법 · 빈칸 채우기',
         desc: '관사 표현을 다시 확인해 볼까요?',

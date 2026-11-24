@@ -2895,55 +2895,6 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.summary__card {
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.summary-corrections {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.summary-correction {
-  padding: 9px 10px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--surface-soft);
-}
-
-.summary-correction .tag {
-  margin-bottom: 4px;
-}
-
-.summary-correction p {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 5px;
-  font-size: 11.5px;
-  line-height: 1.5;
-}
-
-.summary-correction svg {
-  width: 11px;
-  height: 11px;
-  color: var(--mute);
-}
-
-.summary-correction b {
-  color: var(--mint);
-}
-
-.summary__empty {
-  color: var(--mute);
-  font-size: 10.5px;
-}
-
 .summary-next {
   margin-top: 0;
   padding: 14px;

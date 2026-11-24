@@ -1,12 +1,10 @@
-import type { SubjectId } from '../../../config/learning';
+import { WEEK, getSubject, type SubjectId } from '../../../config/learning';
 
 export type SummaryData = {
   subject: SubjectId;
-  eyebrow: string;
   title: string;
   message: string;
   stats: { label: string; value: string; suffix?: string }[];
-  corrections: { original: string; corrected: string; tag: string }[];
   next?: { title: string; desc: string; cta: string; subject: SubjectId };
 };
 
@@ -23,7 +21,7 @@ export function PracticeSummary({ data, onHome, onNext }: Props) {
     <div className="summary">
       <section className="summary__hero">
         <div className="summary__hero-copy">
-          <p className="eyebrow">{data.eyebrow}</p>
+          <p className="eyebrow">{getSubject(data.subject).name} · {WEEK.label}</p>
           <h1>{data.title}</h1>
           <p>{data.message}</p>
         </div>
@@ -42,34 +40,8 @@ export function PracticeSummary({ data, onHome, onNext }: Props) {
         ))}
       </div>
 
-      <div className={`summary__grid${next ? '' : ' summary__grid--single'}`}>
-        <section className="summary__card">
-          <header className="block-head block-head--small">
-            <div>
-              <p className="eyebrow">REVISÃO</p>
-              <h2>오늘 고친 문장</h2>
-            </div>
-            <span className="block-head__meta">{data.corrections.length}개</span>
-          </header>
-          {data.corrections.length > 0 ? (
-            <div className="summary-corrections">
-              {data.corrections.map((correction) => (
-                <div className="summary-correction" key={`${correction.original}-${correction.corrected}`}>
-                  <span className="tag">{correction.tag}</span>
-                  <p>
-                    <span className="strike">{correction.original}</span>
-                    <ArrowIcon />
-                    <b>{correction.corrected}</b>
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="summary__empty">새로 고친 문장이 없어요. 깔끔하게 잘했어요!</p>
-          )}
-        </section>
-
-        {next && (
+      {next && (
+        <div className="summary__grid summary__grid--single">
           <section className="summary-next">
             <p className="eyebrow">PRÓXIMO PASSO</p>
             <h3>{next.title}</h3>
@@ -79,8 +51,8 @@ export function PracticeSummary({ data, onHome, onNext }: Props) {
               <ArrowIcon />
             </button>
           </section>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="summary__actions">
         <button type="button" className="btn-ghost" onClick={onHome}>
