@@ -701,7 +701,8 @@
   gap: 8px;
   width: min(242px, 100%);
   min-width: 0;
-  min-height: 56px;
+  height: 55px;
+  min-height: 55px;
   justify-content: flex-start;
   padding: 0 26px;
   border-radius: 11px;
@@ -3721,6 +3722,7 @@
 
   .hero-card__cta {
     min-height: 44px;
+    height: auto;
     width: 100%;
   }
 
