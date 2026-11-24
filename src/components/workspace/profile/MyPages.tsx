@@ -25,4 +25,4 @@ export function ProfessorProfile({session,onSessionUpdate,onToast,onLogout}:Prop
 <div className="profile-column">
 
 
-<Section title="개인정보"><Toggle label="학생 이름·학번 가리기 (기본 켜짐)" checked={settings.hideStudent!==false} onChange={()=>change('hideStudent',settings.hideStudent===false)}/><p className="profile-info">학습 데이터는 수업 지원 목적에 한해 이용하며 보관 기간이 종료되면 삭제합니다. 데모에서는 모든 학생 식별 정보를 일부 가려 보여줍니다.</p></Section><Section title="계정"><button className="btn-danger" onClick={onLogout}>로그아웃</button></Section></div></div></div>}
+<Section title="계정"><button className="btn-danger" onClick={onLogout}>로그아웃</button></Section></div></div></div>}
