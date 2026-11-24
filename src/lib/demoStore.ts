@@ -5,7 +5,7 @@ export type FeedbackCase = {
 };
 export type LearningScope = {
   id: string; subject: string; week: number; dates: string; pages: string; topic: string;
-  section?: '01' | '02'; status: 'ended' | 'active' | 'scheduled' | 'draft' | 'private'; previousStatus?: 'ended' | 'active' | 'scheduled' | 'draft'; participation: number; accuracy: number;
+  section?: '01' | '02'; status: 'ended' | 'active' | 'scheduled'; participation: number; accuracy: number;
   exercises: Array<{ id: string; prompt: string; answer: string; explanation: string; page: number }>;
 };
 export type DemoState = {
@@ -27,7 +27,7 @@ const initial: DemoState = {
     { id: 's2', section: '01', subject: '포르투갈어 읽기와 쓰기', week: 2, dates: '11.10–11.16', pages: '18–22', topic: '길 묻고 답하기', status: 'ended', participation: 88, accuracy: 82, exercises: [] },
     { id: 's3', section: '01', subject: '포르투갈어 문법', week: 3, dates: '11.17–11.23', pages: '29–30', topic: '부정관사와 명사의 성·수 일치', status: 'active', participation: 85, accuracy: 78, exercises: [] },
     { id: 's4', section: '01', subject: '포르투갈어 회화', week: 4, dates: '11.24–11.30', pages: '38–42', topic: '시장에서 가격 묻기', status: 'scheduled', participation: 0, accuracy: 0, exercises: [] },
-    { id: 's5', section: '01', subject: '포르투갈어 읽기와 쓰기', week: 5, dates: '12.01–12.07', pages: '52–58', topic: '리스본 여행', status: 'draft', participation: 0, accuracy: 0, exercises: [] },
+    { id: 's5', section: '01', subject: '포르투갈어 읽기와 쓰기', week: 5, dates: '12.01–12.07', pages: '52–58', topic: '리스본 여행', status: 'scheduled', participation: 0, accuracy: 0, exercises: [] },
   ],
   feedback: initialFeedback, scopeDraft: null,
   studentSettings: { goal: 10, detail: 'detailed', translation: true, voice: false, outsideWords: true, notifications: { release: true, deadline: true, report: false } },

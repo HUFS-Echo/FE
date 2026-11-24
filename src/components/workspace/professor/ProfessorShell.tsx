@@ -4,7 +4,6 @@ import { useProfFilters } from './ProfFilterContext';
 import { Overview } from './Overview';
 import { ScopeBuilder } from './ScopeBuilder';
 import { WeaknessReport } from './WeaknessReport';
-import { StudentProgress } from './StudentProgress';
 import { FeedbackInbox } from './FeedbackInbox';
 
 type Props = { path: string; onNavigate: (path: string) => void; onToast: (message: string) => void };
@@ -12,7 +11,6 @@ const nav = [
   ['/prof', '반 현황', '◫'],
   ['/prof/scope/new', '학습 범위 설정', '＋'],
   ['/prof/report', '취약점 리포트', '⌁'],
-  ['/prof/students', '학생별 진행률', '♧'],
   ['/prof/feedback', '피드백 신고', '◌'],
 ] as const;
 
@@ -54,9 +52,9 @@ export function ProfessorShell({ path, onNavigate, onToast }: Props) {
       {route === '/prof' && <Overview onNavigate={onNavigate} onToast={onToast}/>}
       {isScopeBuilderPath && <ScopeBuilder onNavigate={onNavigate} onToast={onToast}/>}
       {route === '/prof/report' && <WeaknessReport onToast={onToast}/>}
-      {route === '/prof/students' && <StudentProgress onToast={onToast}/>}
+
       {route === '/prof/feedback' && <FeedbackInbox onToast={onToast}/>}
-      {!['/prof', '/prof/scope/new', '/prof/report', '/prof/students', '/prof/feedback'].includes(route) &&
+      {!['/prof', '/prof/scope/new', '/prof/report', '/prof/feedback'].includes(route) &&
         <Overview onNavigate={onNavigate} onToast={onToast}/>}
     </main>
   </div>;

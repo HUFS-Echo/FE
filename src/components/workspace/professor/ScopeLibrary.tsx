@@ -3,7 +3,7 @@ import { getDemoState, updateDemoState } from '../../../lib/demoStore';
 import { useProfFilters } from './ProfFilterContext';
 
 type Props = { onNavigate: (path: string) => void; onToast: (message: string) => void };
-const statusLabel = { ended: '종료', active: '진행 중', scheduled: '예약됨', draft: '임시 저장', private: '비공개' } as const;
+const statusLabel = { ended: '종료', active: '진행 중', scheduled: '예정' } as const;
 const subjectName = { reading: '포르투갈어 문법', writing: '포르투갈어 읽기와 쓰기', speaking: '포르투갈어 회화' };
 const courseKey: Record<string, 'reading' | 'writing' | 'speaking'> = {
   '포르투갈어 문법': 'reading',
@@ -19,27 +19,23 @@ export function ScopeListCard({ onNavigate, onToast }: Props) {
   );
   const sectionSize = filters.section === '01' ? 48 : 32;
 
-  function change(id: string, mode: 'private' | 'clone') {
-    updateDemoState(state => ({
-      ...state,
-      scopes: mode === 'private'
-        ? state.scopes.map(scope => scope.id !== id ? scope : scope.status === 'private'
-          ? { ...scope, status: scope.previousStatus ?? 'active', previousStatus: undefined }
-          : { ...scope, previousStatus: scope.status, status: 'private' })
-        : (() => {
-          const source = state.scopes.find(scope => scope.id === id);
-          return source ? [...state.scopes, {
-            ...source,
-            id: `copy-${Date.now()}`,
-            week: Math.min(5, source.week + 1),
-            status: 'draft' as const,
-            participation: 0,
-            accuracy: 0,
-          }] : state.scopes;
-        })(),
-    }));
+  function clone(id: string) {
+    updateDemoState(state => {
+      const source = state.scopes.find(scope => scope.id === id);
+      return source ? {
+        ...state,
+        scopes: [...state.scopes, {
+          ...source,
+          id: `copy-${Date.now()}`,
+          week: Math.min(5, source.week + 1),
+          status: 'scheduled' as const,
+          participation: 0,
+          accuracy: 0,
+        }],
+      } : state;
+    });
     refresh(value => value + 1);
-    onToast(mode === 'private' ? '공개 상태를 변경했어요. (데모)' : '다음 주차 범위 초안을 복제했어요. (데모)');
+    onToast('다음 주차 범위를 복제했어요. (데모)');
   }
 
   function edit(scope: ReturnType<typeof getDemoState>['scopes'][number]) {
@@ -77,20 +73,22 @@ export function ScopeListCard({ onNavigate, onToast }: Props) {
       <table className="prof-table scope-table">
         <thead><tr><th>주차·기간</th><th>PDF 쪽</th><th>집중 범위</th><th>상태</th><th>참여</th><th>정확도</th><th>관리</th></tr></thead>
         <tbody>
-          {[...scopes].sort((a, b) => b.week - a.week).map(scope => <tr key={scope.id} className={scope.week === filters.week ? 'is-selected' : ''}>
-            <td><b>{scope.week}주차</b><small>{scope.dates}</small></td>
-            <td>{scope.pages}쪽</td>
-            <td>{scope.topic}</td>
-            <td><span className={`scope-status scope-status--${scope.status}`}>{statusLabel[scope.status]}</span></td>
-            <td>{scope.status === 'draft' ? '—' : `${scope.participation ? Math.round(sectionSize * scope.participation / 100) : 0}/${sectionSize}`}</td>
-            <td>{scope.accuracy ? `${scope.accuracy}%` : '—'}</td>
-            <td><div className="row-actions">
-              <button onClick={() => edit(scope)}>수정</button>
-              <button onClick={() => onToast(`${scope.week}주차 미리보기예요. (데모)`)}>미리보기</button>
-              <button onClick={() => change(scope.id, 'clone')}>복제</button>
-              <button onClick={() => change(scope.id, 'private')}>{scope.status === 'private' ? '공개' : '비공개'}</button>
-            </div></td>
-          </tr>)}
+          {[...scopes].sort((a, b) => b.week - a.week).map(scope => {
+            const status = scope.status === 'ended' || scope.status === 'active' ? scope.status : 'scheduled';
+            return <tr key={scope.id} className={scope.week === filters.week ? 'is-selected' : ''}>
+              <td><b>{scope.week}주차</b><small>{scope.dates}</small></td>
+              <td>{scope.pages}쪽</td>
+              <td>{scope.topic}</td>
+              <td><span className={`scope-status scope-status--${status}`}>{statusLabel[status]}</span></td>
+              <td>{status === 'scheduled' ? '—' : `${scope.participation ? Math.round(sectionSize * scope.participation / 100) : 0}/${sectionSize}`}</td>
+              <td>{scope.accuracy ? `${scope.accuracy}%` : '—'}</td>
+              <td><div className="row-actions">
+                <button onClick={() => edit(scope)}>수정</button>
+                <button onClick={() => onToast(`${scope.week}주차 미리보기예요. (데모)`)}>미리보기</button>
+                <button onClick={() => clone(scope.id)}>복제</button>
+              </div></td>
+            </tr>;
+          })}
           {!scopes.length && <tr><td colSpan={7}>선택한 과목·분반의 학습 범위가 아직 없어요.</td></tr>}
         </tbody>
       </table>
