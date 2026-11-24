@@ -4,8 +4,8 @@ import { useProfFilters } from './ProfFilterContext';
 
 type Props = { onNavigate: (path: string) => void; onToast: (message: string) => void };
 const statusLabel = { ended: '종료', active: '진행 중', scheduled: '예약됨', draft: '임시 저장', private: '비공개' } as const;
-const subjectName = { reading: '읽기와 쓰기', writing: '작문', speaking: '회화' };
-const courseKey: Record<string, 'reading' | 'writing' | 'speaking'> = { '읽기와 쓰기': 'reading', '작문': 'writing', '회화': 'speaking' };
+const subjectName = { reading: '포르투갈어 문법', writing: '포르투갈어 읽기와 쓰기', speaking: '포르투갈어 회화' };
+const courseKey: Record<string, 'reading' | 'writing' | 'speaking'> = { '포르투갈어 문법': 'reading', '포르투갈어 읽기와 쓰기': 'writing', '포르투갈어 회화': 'speaking' };
 
 export function ScopeLibrary({ onNavigate, onToast }: Props) {
   const [, refresh] = useState(0);

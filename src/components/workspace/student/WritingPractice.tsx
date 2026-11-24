@@ -100,7 +100,7 @@ export function WritingPractice({ onBack, onComplete, onToast }: Props) {
           연습 홈
         </button>
         <div className="writing__top-title">
-          <span className="chip chip--amber">작문</span>
+          <span className="chip chip--amber">포르투갈어 읽기와 쓰기</span>
           <b>{WRITING_TASK.title}</b>
           <span className="chip">{WRITING_TASK.range}</span>
         </div>
@@ -194,7 +194,7 @@ export function WritingPractice({ onBack, onComplete, onToast }: Props) {
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                aria-label="작문 초안"
+                aria-label="읽기와 쓰기 과목 작문 초안"
                 spellCheck={false}
               />
             ) : (

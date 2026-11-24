@@ -1,17 +1,11 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
-import { SUBJECTS, WEEK, getSubject, type SubjectId } from '../../../config/learning';
+import { SUBJECTS, WEEK, getSubject, isCourseDisabled, type SubjectId } from '../../../config/learning';
 import { getDemoState } from '../../../lib/demoStore';
 
 type Props = {
   subject: SubjectId;
   variant: 'header' | 'sidebar';
   onChange: (subject: SubjectId) => void;
-};
-
-const courseName: Record<SubjectId, string> = {
-  reading: '읽기와 쓰기',
-  writing: '작문',
-  speaking: '회화',
 };
 
 export function StudentCoursePicker({ subject, variant, onChange }: Props) {
@@ -75,7 +69,7 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
         ref={triggerRef}
         type="button"
         className="student-course-picker__trigger"
-        aria-label={`현재 과목: 포르투갈어 ${current.name}. 과목 선택`}
+        aria-label={`현재 과목: ${current.name}. 과목 선택`}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
@@ -112,14 +106,14 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
           <div className="student-course-picker__options">
             {SUBJECTS.map((item, index) => {
               const selected = item.id === subject;
-              const disabled = disabledCourses.includes(courseName[item.id]);
+              const disabled = isCourseDisabled(item.id, disabledCourses);
               return (
                 <button
                   key={item.id}
                   type="button"
                   role="menuitemradio"
                   aria-checked={selected}
-                  aria-label={`포르투갈어 ${item.name}, ${item.type}${disabled ? ', 연결 해제됨' : ''}`}
+                  aria-label={`${item.name}, ${item.type}${disabled ? ', 연결 해제됨' : ''}`}
                   data-course-option
                   disabled={disabled}
                   className={`student-course-picker__option${selected ? ' is-selected' : ''}`}
@@ -129,7 +123,7 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
                     0{index + 1}
                   </span>
                   <span className="student-course-picker__option-copy">
-                    <b>포르투갈어 {item.name}</b>
+                    <b>{item.name}</b>
                     <small>{item.type} · {item.course}</small>
                   </span>
                   {selected ? <CheckIcon /> : disabled ? <span className="student-course-picker__locked">연결 필요</span> : <ArrowIcon />}

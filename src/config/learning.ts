@@ -22,9 +22,9 @@ export type Subject = {
 export const SUBJECTS: Subject[] = [
   {
     id: 'reading',
-    name: '읽기와 쓰기',
-    type: '문법·독해',
-    course: 'PT-READ1',
+    name: '포르투갈어 문법',
+    type: '문법',
+    course: 'PT-GRAM1',
     rangeTitle: '부정관사와 명사의 성·수 일치',
     pdf: 'PDF 29–30쪽',
     deadline: '11.23(일)까지',
@@ -33,9 +33,9 @@ export const SUBJECTS: Subject[] = [
   },
   {
     id: 'writing',
-    name: '작문',
-    type: '글쓰기',
-    course: 'PT-WRITE1',
+    name: '포르투갈어 읽기와 쓰기',
+    type: '작문·교정',
+    course: 'PT-READ1',
     rangeTitle: '학교 파티 일기 쓰기',
     pdf: 'PDF 93쪽',
     deadline: '11.23(일)까지',
@@ -44,7 +44,7 @@ export const SUBJECTS: Subject[] = [
   },
   {
     id: 'speaking',
-    name: '회화',
+    name: '포르투갈어 회화',
     type: '말하기',
     course: 'PT-TALK1',
     rangeTitle: '카페에서 주문하고 가격 묻기',
@@ -75,6 +75,16 @@ export function getSubject(id: SubjectId): Subject {
   return SUBJECTS.find((subject) => subject.id === id) ?? SUBJECTS[0];
 }
 
+export const COURSE_LABELS: Record<SubjectId, string> = {
+  reading: '포르투갈어 문법',
+  writing: '포르투갈어 읽기와 쓰기',
+  speaking: '포르투갈어 회화',
+};
+
+export function isCourseDisabled(id: SubjectId, disabledCourses: readonly string[]): boolean {
+  return disabledCourses.includes(COURSE_LABELS[id]) || disabledCourses.includes(id);
+}
+
 export type PracticeSet = {
   id: string;
   subject: SubjectId;
@@ -103,9 +113,9 @@ export const PRACTICE_SETS: Record<SubjectId, PracticeSet[]> = {
     {
       id: 'r2',
       subject: 'reading',
-      kind: '독해',
+      kind: '문법',
       title: '선택형',
-      desc: '교재 지문을 읽고 알맞은 표현을 골라요.',
+      desc: '관사와 명사의 성·수에 맞는 표현을 골라요.',
       count: 8,
       done: 2,
       minutes: 6,
@@ -203,16 +213,16 @@ export type OtherMission = {
 
 export const OTHER_MISSIONS: Record<SubjectId, OtherMission[]> = {
   reading: [
-    { subject: 'writing', title: '학교 파티 일기', meta: '작문 · 80–120단어' },
+    { subject: 'writing', title: '학교 파티 일기', meta: '읽기와 쓰기 · 80–120단어' },
     { subject: 'speaking', title: '카페에서 주문하기', meta: '회화 · 역할극 10분' },
   ],
   writing: [
-    { subject: 'reading', title: '부정관사 빈칸 채우기', meta: '읽기와 쓰기 · 10문제' },
+    { subject: 'reading', title: '부정관사 빈칸 채우기', meta: '문법 · 10문제' },
     { subject: 'speaking', title: '카페에서 주문하기', meta: '회화 · 역할극 10분' },
   ],
   speaking: [
-    { subject: 'reading', title: '부정관사 빈칸 채우기', meta: '읽기와 쓰기 · 10문제' },
-    { subject: 'writing', title: '학교 파티 일기', meta: '작문 · 80–120단어' },
+    { subject: 'reading', title: '부정관사 빈칸 채우기', meta: '문법 · 10문제' },
+    { subject: 'writing', title: '학교 파티 일기', meta: '읽기와 쓰기 · 80–120단어' },
   ],
 };
 

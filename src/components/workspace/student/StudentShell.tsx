@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Session } from '../../../lib/session';
-import { SUBJECTS, type SubjectId } from '../../../config/learning';
+import { SUBJECTS, isCourseDisabled, type SubjectId } from '../../../config/learning';
 import { getDemoState } from '../../../lib/demoStore';
 import { StudentSidebar, type StudentNavKey } from './StudentSidebar';
 import { StudentHome } from './StudentHome';
@@ -51,11 +51,10 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
       return;
     }
     const disabled = (getDemoState().studentSettings.disabledCourses as string[] | undefined) ?? [];
-    const courseName: Record<SubjectId, string> = { reading: '읽기와 쓰기', writing: '작문', speaking: '회화' };
-    const available = SUBJECTS.filter((item) => !disabled.includes(courseName[item.id]));
+    const available = SUBJECTS.filter((item) => !isCourseDisabled(item.id, disabled));
     const requestedSubject = nextSubject ?? subject;
     const needsCourse = nextView === 'home' || nextView === 'reading' || nextView === 'writing' || nextView === 'speaking';
-    if (needsCourse && disabled.includes(courseName[requestedSubject])) {
+    if (needsCourse && isCourseDisabled(requestedSubject, disabled)) {
       const fallback = available[0]?.id ?? 'reading';
       setSubject(fallback);
       setView('home');
@@ -77,8 +76,7 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
   }
   function openPractice(id: SubjectId) {
     const disabled = (getDemoState().studentSettings.disabledCourses as string[] | undefined) ?? [];
-    const courseName: Record<SubjectId, string> = { reading: '읽기와 쓰기', writing: '작문', speaking: '회화' };
-    if (disabled.includes(courseName[id])) { onToast('연결되지 않은 과목이에요. 마이페이지에서 다시 연결해 주세요.'); navigate('home', subject); return; }
+    if (isCourseDisabled(id, disabled)) { onToast('연결되지 않은 과목이에요. 마이페이지에서 다시 연결해 주세요.'); navigate('home', subject); return; }
     navigate(id, id);
   }
   function handleNavigate(key: StudentNavKey) {

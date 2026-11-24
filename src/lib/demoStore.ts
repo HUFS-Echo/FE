@@ -23,11 +23,11 @@ const initialFeedback: FeedbackCase[] = [
 ];
 const initial: DemoState = {
   scopes: [
-    { id: 's1', section: '01', subject: '읽기와 쓰기', week: 1, dates: '11.03–11.09', pages: '8–12', topic: '인사와 자기소개', status: 'ended', participation: 92, accuracy: 88, exercises: [] },
-    { id: 's2', section: '01', subject: '작문', week: 2, dates: '11.10–11.16', pages: '18–22', topic: '길 묻고 답하기', status: 'ended', participation: 88, accuracy: 82, exercises: [] },
-    { id: 's3', section: '01', subject: '읽기와 쓰기', week: 3, dates: '11.17–11.23', pages: '29–30', topic: '부정관사와 명사의 성·수 일치', status: 'active', participation: 85, accuracy: 78, exercises: [] },
-    { id: 's4', section: '01', subject: '회화', week: 4, dates: '11.24–11.30', pages: '38–42', topic: '시장에서 가격 묻기', status: 'scheduled', participation: 0, accuracy: 0, exercises: [] },
-    { id: 's5', section: '01', subject: '작문', week: 5, dates: '12.01–12.07', pages: '52–58', topic: '리스본 여행', status: 'draft', participation: 0, accuracy: 0, exercises: [] },
+    { id: 's1', section: '01', subject: '포르투갈어 문법', week: 1, dates: '11.03–11.09', pages: '8–12', topic: '인사와 자기소개', status: 'ended', participation: 92, accuracy: 88, exercises: [] },
+    { id: 's2', section: '01', subject: '포르투갈어 읽기와 쓰기', week: 2, dates: '11.10–11.16', pages: '18–22', topic: '길 묻고 답하기', status: 'ended', participation: 88, accuracy: 82, exercises: [] },
+    { id: 's3', section: '01', subject: '포르투갈어 문법', week: 3, dates: '11.17–11.23', pages: '29–30', topic: '부정관사와 명사의 성·수 일치', status: 'active', participation: 85, accuracy: 78, exercises: [] },
+    { id: 's4', section: '01', subject: '포르투갈어 회화', week: 4, dates: '11.24–11.30', pages: '38–42', topic: '시장에서 가격 묻기', status: 'scheduled', participation: 0, accuracy: 0, exercises: [] },
+    { id: 's5', section: '01', subject: '포르투갈어 읽기와 쓰기', week: 5, dates: '12.01–12.07', pages: '52–58', topic: '리스본 여행', status: 'draft', participation: 0, accuracy: 0, exercises: [] },
   ],
   feedback: initialFeedback, scopeDraft: null,
   studentSettings: { goal: 10, detail: 'detailed', translation: true, voice: false, outsideWords: true, notifications: { release: true, deadline: true, report: false } },
@@ -36,7 +36,35 @@ const initial: DemoState = {
 export function getDemoState(): DemoState {
   try {
     const stored = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<DemoState> | null;
-    return stored ? { ...initial, ...stored, feedback: stored.feedback ?? initial.feedback, scopes: stored.scopes ?? initial.scopes } : structuredClone(initial);
+    const state = stored ? { ...initial, ...stored, feedback: stored.feedback ?? initial.feedback, scopes: stored.scopes ?? initial.scopes } : structuredClone(initial);
+    const migrateSubject = (subject: unknown) => subject === '읽기와 쓰기' ? '포르투갈어 문법'
+      : subject === '작문' ? '포르투갈어 읽기와 쓰기'
+        : subject === '회화' ? '포르투갈어 회화' : subject;
+    const disabled = Array.isArray(state.studentSettings.disabledCourses)
+      ? state.studentSettings.disabledCourses.map((name) => name === '읽기와 쓰기' ? '포르투갈어 문법'
+        : name === '작문' ? '포르투갈어 읽기와 쓰기'
+          : name === '회화' ? '포르투갈어 회화' : name)
+      : [];
+    const storedCourseCodes = state.professorSettings.courseCodes;
+    const migratedCourseCodes = storedCourseCodes && typeof storedCourseCodes === 'object'
+      ? { ...(storedCourseCodes as Record<string, string>) }
+      : null;
+    if (migratedCourseCodes?.['PT-READ1']) {
+      if (!migratedCourseCodes['PT-GRAM1']) migratedCourseCodes['PT-GRAM1'] = migratedCourseCodes['PT-READ1'];
+      delete migratedCourseCodes['PT-READ1'];
+    }
+    const professorSettings = migratedCourseCodes
+      ? { ...state.professorSettings, courseCodes: migratedCourseCodes }
+      : state.professorSettings;
+    return {
+      ...state,
+      scopes: state.scopes.map((scope) => ({ ...scope, subject: String(migrateSubject(scope.subject)) })),
+      scopeDraft: state.scopeDraft
+        ? { ...state.scopeDraft, subject: migrateSubject(state.scopeDraft.subject) }
+        : null,
+      studentSettings: { ...state.studentSettings, disabledCourses: disabled },
+      professorSettings,
+    };
   } catch { return structuredClone(initial); }
 }
 export function updateDemoState(update: (state: DemoState) => DemoState) {

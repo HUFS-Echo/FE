@@ -98,7 +98,7 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
         words: ['água', 'cerveja', 'maçã', 'sumo'],
         next: {
           title: '선택형 8문제',
-          desc: '이번 주 독해 세트를 이어서 풀어 보세요.',
+          desc: '이번 주 문법 연습을 이어서 풀어 보세요.',
           cta: '다음 세트',
           subject: 'reading',
         },
@@ -124,7 +124,7 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
           연습 홈
         </button>
         <div className="reading__top-meta">
-          <span className="chip chip--blue">문법 · {current.label}</span>
+          <span className="chip chip--blue">포르투갈어 문법 · {current.label}</span>
           <span className="chip">{WEEK.label}</span>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
           <header className="pdf-card__head">
             <div>
               <p className="eyebrow">TEXTBOOK · PDF</p>
-              <b>포르투갈어 읽기와 쓰기</b>
+              <b>포르투갈어 문법</b>
             </div>
             <span>{PDF_EXCERPT.page}쪽</span>
           </header>

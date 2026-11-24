@@ -163,9 +163,9 @@ export function SpeakingPractice({ onBack, onComplete, onToast }: Props) {
       corrections,
       words: ['café', 'pastel', 'conta', 'por favor'],
       next: {
-        title: '읽기와 쓰기 · 빈칸 채우기',
+        title: '문법 · 빈칸 채우기',
         desc: '관사 표현을 다시 확인해 볼까요?',
-        cta: '읽기로 이동',
+        cta: '문법으로 이동',
         subject: 'reading',
       },
     });
