@@ -1,20 +1,32 @@
 import { useEffect, useState } from 'react';
+import type { Session } from '../../../lib/session';
 import { getDemoState } from '../../../lib/demoStore';
 import { useProfFilters } from './ProfFilterContext';
 import { Overview } from './Overview';
 import { ScopeBuilder } from './ScopeBuilder';
 import { WeaknessReport } from './WeaknessReport';
 import { FeedbackInbox } from './FeedbackInbox';
+import { ProfessorProfile } from '../profile/MyPages';
 
-type Props = { path: string; onNavigate: (path: string) => void; onToast: (message: string) => void };
+type Props = {
+  path: string;
+  session: Session;
+  onNavigate: (path: string) => void;
+  onSessionUpdate: (session: Session) => void;
+  onToast: (message: string) => void;
+  onLogout: () => void;
+  onReset: () => void;
+  onReplay: () => void;
+};
 const nav = [
   ['/prof', '반 현황', '◫'],
   ['/prof/scope/new', '학습 범위 설정', '＋'],
   ['/prof/report', '취약점 리포트', '⌁'],
   ['/prof/feedback', '피드백 신고', '◌'],
+  ['/prof/me', '마이페이지', '◎'],
 ] as const;
 
-export function ProfessorShell({ path, onNavigate, onToast }: Props) {
+export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onToast, onLogout, onReset, onReplay }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const { filters } = useProfFilters();
   const countOpen = () => getDemoState().feedback.filter(x =>
@@ -51,10 +63,10 @@ export function ProfessorShell({ path, onNavigate, onToast }: Props) {
       <div className="prof-filter-context">현재 보기 기준 <b>{course}</b> · <b>{filters.section}분반</b> · <b>{filters.week}주차</b></div>
       {route === '/prof' && <Overview onNavigate={onNavigate} onToast={onToast}/>}
       {isScopeBuilderPath && <ScopeBuilder onNavigate={onNavigate} onToast={onToast}/>}
-      {route === '/prof/report' && <WeaknessReport onToast={onToast}/>}
-
+      {route === '/prof/report' && <WeaknessReport/>}
       {route === '/prof/feedback' && <FeedbackInbox onToast={onToast}/>}
-      {!['/prof', '/prof/scope/new', '/prof/report', '/prof/feedback'].includes(route) &&
+      {route === '/prof/me' && <ProfessorProfile session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay}/>}
+      {!['/prof', '/prof/scope/new', '/prof/report', '/prof/feedback', '/prof/me'].includes(route) &&
         <Overview onNavigate={onNavigate} onToast={onToast}/>}
     </main>
   </div>;
