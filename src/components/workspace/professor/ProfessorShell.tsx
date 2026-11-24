@@ -19,7 +19,7 @@ type Props = {
   onReplay: () => void;
 };
 const nav = [
-  ['/prof', '반 현황', '◫'],
+  ['/prof', '반 학습 현황', '◫'],
   ['/prof/scope/new', '학습 범위 설정', '＋'],
   ['/prof/report', '취약점 리포트', '⌁'],
   ['/prof/feedback', 'AI 오류 신고', 'aiError'],

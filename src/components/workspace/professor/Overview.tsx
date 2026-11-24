@@ -87,11 +87,8 @@ export function Overview({ onNavigate }: Props) {
       <header className="prof-page-head">
         <div>
           <span className="eyebrow">PORTUGUÊS A1 · {filters.section}분반</span>
-          <h1>
-            반 현황 · {scope?.topic || subject}
-            {scope?.status === 'active' ? ' · 진행 중' : scope?.status === 'scheduled' ? ' · 예약' : ''}
-          </h1>
-          <p>{filters.week}주차 · {weekDates[filters.week] ?? ''} · {subject} · 수강생 {sectionSize}명</p>
+          <h1>반 학습 현황 · {subject}</h1>
+          <p>{filters.week}주차 · {weekDates[filters.week] ?? ''} · {filters.section}분반 · 수강생 {sectionSize}명</p>
         </div>
       </header>
 
@@ -112,7 +109,7 @@ export function Overview({ onNavigate }: Props) {
           <em>선택한 범위 정확도 기준</em>
         </article>
         <button type="button" onClick={() => onNavigate('/prof/feedback')}>
-          <span>피드백 신고</span>
+          <span>AI 오류 신고</span>
           <b>{feedbackCount}<small>건</small></b>
           <em className="warn">확인 필요</em>
         </button>
