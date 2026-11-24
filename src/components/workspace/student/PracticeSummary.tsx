@@ -7,18 +7,18 @@ export type SummaryData = {
   message: string;
   stats: { label: string; value: string; suffix?: string }[];
   corrections: { original: string; corrected: string; tag: string }[];
-  words: string[];
-  next: { title: string; desc: string; cta: string; subject: SubjectId };
+  next?: { title: string; desc: string; cta: string; subject: SubjectId };
 };
 
 type Props = {
   data: SummaryData;
   onHome: () => void;
-  onRetry: () => void;
   onNext: (subject: SubjectId) => void;
 };
 
-export function PracticeSummary({ data, onHome, onRetry, onNext }: Props) {
+export function PracticeSummary({ data, onHome, onNext }: Props) {
+  const next = data.subject === 'reading' ? undefined : data.next;
+
   return (
     <div className="summary">
       <section className="summary__hero">
@@ -42,7 +42,7 @@ export function PracticeSummary({ data, onHome, onRetry, onNext }: Props) {
         ))}
       </div>
 
-      <div className="summary__grid">
+      <div className={`summary__grid${next ? '' : ' summary__grid--single'}`}>
         <section className="summary__card">
           <header className="block-head block-head--small">
             <div>
@@ -69,37 +69,22 @@ export function PracticeSummary({ data, onHome, onRetry, onNext }: Props) {
           )}
         </section>
 
-        <section className="summary__card">
-          <header className="block-head block-head--small">
-            <div>
-              <p className="eyebrow">VOCABULÁRIO</p>
-              <h2>새로 만난 단어</h2>
-            </div>
-          </header>
-          <div className="word-chips">
-            {data.words.map((word) => (
-              <span key={word}>{word}</span>
-            ))}
-          </div>
-          <div className="summary-next">
+        {next && (
+          <section className="summary-next">
             <p className="eyebrow">PRÓXIMO PASSO</p>
-            <h3>{data.next.title}</h3>
-            <p>{data.next.desc}</p>
-            <button type="button" onClick={() => onNext(data.next.subject)}>
-              {data.next.cta}
+            <h3>{next.title}</h3>
+            <p>{next.desc}</p>
+            <button type="button" onClick={() => onNext(next.subject)}>
+              {next.cta}
               <ArrowIcon />
             </button>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
 
       <div className="summary__actions">
         <button type="button" className="btn-ghost" onClick={onHome}>
           홈으로
-        </button>
-        <button type="button" className="btn-solid" onClick={onRetry}>
-          한 번 더
-          <ArrowIcon />
         </button>
       </div>
     </div>

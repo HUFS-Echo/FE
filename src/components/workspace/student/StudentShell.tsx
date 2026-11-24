@@ -97,7 +97,7 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
         {view === 'reading' && <ReadingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'writing' && <WritingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
         {view === 'speaking' && <SpeakingPractice onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
-        {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} onRetry={() => openPractice(summary.subject)} onNext={openPractice} />}
+        {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} onNext={openPractice} />}
         {view === 'history' && <CorrectionHistory onPractice={openPractice} />}
         {view === 'me' && <StudentProfile session={session} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
       </main>

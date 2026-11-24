@@ -88,20 +88,13 @@ export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
         subject: 'reading',
         eyebrow: `LEITURA · ${WEEK.label}`,
         title: 'Muito bem!',
-        message: `부정관사 ${total}문제를 모두 풀었어요. 오늘 고친 문장을 한 번 더 읽어 볼까요?`,
+        message: `부정관사 ${total}문제를 모두 풀었어요. 오늘의 결과를 확인해 보세요.`,
         stats: [
           { label: '정답', value: `${correctCount}`, suffix: `/ ${total}` },
           { label: '정확도', value: `${accuracy}`, suffix: '%' },
           { label: '연습 시간', value: '8', suffix: '분' },
         ],
         corrections: wrongCorrections,
-        words: ['água', 'cerveja', 'maçã', 'sumo'],
-        next: {
-          title: '선택형 8문제',
-          desc: '이번 주 문법 연습을 이어서 풀어 보세요.',
-          cta: '다음 세트',
-          subject: 'reading',
-        },
       });
       return;
     }

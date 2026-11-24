@@ -2891,6 +2891,10 @@
   margin-top: 14px;
 }
 
+.summary__grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .summary__card {
   padding: 18px;
   border: 1px solid var(--line);
@@ -2940,25 +2944,8 @@
   font-size: 10.5px;
 }
 
-.word-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
-}
-
-.word-chips span {
-  padding: 5px 9px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface-soft);
-  color: var(--ink-soft);
-  font-family: var(--font-serif);
-  font-size: 12px;
-}
-
 .summary-next {
-  margin-top: 16px;
+  margin-top: 0;
   padding: 14px;
   border: 1px solid #d8e5f3;
   border-radius: 12px;
@@ -4178,10 +4165,21 @@
 }
 
 .student-course-picker__header-icon svg,
-.side-course__mark svg {
+.side-course__mark svg,
+.student-course-picker__option-icon svg {
   width: 19px;
   height: 19px;
 }
+
+.student-course-picker__header-icon.student-course-picker__icon--blue,
+.side-course__mark.student-course-picker__icon--blue,
+.student-course-picker__option-icon--blue { background: #e8f0fc; color: #3469ad; }
+.student-course-picker__header-icon.student-course-picker__icon--amber,
+.side-course__mark.student-course-picker__icon--amber,
+.student-course-picker__option-icon--amber { background: #f8f0e2; color: #9b702d; }
+.student-course-picker__header-icon.student-course-picker__icon--mint,
+.side-course__mark.student-course-picker__icon--mint,
+.student-course-picker__option-icon--mint { background: #e6f3ee; color: #39846c; }
 
 .student-course-picker__current {
   display: flex;
@@ -4297,21 +4295,14 @@
   opacity: 0.55;
 }
 
-.student-course-picker__number {
+.student-course-picker__option-icon {
   display: grid;
   place-items: center;
   width: 32px;
   height: 32px;
   flex: none;
   border-radius: 9px;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 650;
 }
-
-.student-course-picker__number--blue { background: #e8f0fc; color: #3469ad; }
-.student-course-picker__number--amber { background: #f8f0e2; color: #9b702d; }
-.student-course-picker__number--mint { background: #e6f3ee; color: #39846c; }
 
 .student-course-picker__option-copy {
   display: flex;

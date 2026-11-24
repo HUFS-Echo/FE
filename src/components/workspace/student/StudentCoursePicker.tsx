@@ -61,8 +61,8 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
       onKeyDown={handleKeyDown}
     >
       {variant === 'sidebar' && (
-        <span className="side-course__mark" aria-hidden="true">
-          <BookIcon />
+        <span className={`side-course__mark student-course-picker__icon--${current.tone}`} aria-hidden="true">
+          <SubjectIcon subject={current.id} />
         </span>
       )}
       <button
@@ -76,8 +76,8 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
         onClick={() => setOpen((value) => !value)}
       >
         {variant === 'header' && (
-          <span className="student-course-picker__header-icon" aria-hidden="true">
-            <BookIcon />
+          <span className={`student-course-picker__header-icon student-course-picker__icon--${current.tone}`} aria-hidden="true">
+            <SubjectIcon subject={current.id} />
           </span>
         )}
         <span className="student-course-picker__current">
@@ -104,7 +104,7 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
             <small>PORTUGUÊS · A1</small>
           </div>
           <div className="student-course-picker__options">
-            {SUBJECTS.map((item, index) => {
+            {SUBJECTS.map((item) => {
               const selected = item.id === subject;
               const disabled = isCourseDisabled(item.id, disabledCourses);
               return (
@@ -119,8 +119,8 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
                   className={`student-course-picker__option${selected ? ' is-selected' : ''}`}
                   onClick={() => choose(item.id)}
                 >
-                  <span className={`student-course-picker__number student-course-picker__number--${item.tone}`} aria-hidden="true">
-                    0{index + 1}
+                  <span className={`student-course-picker__option-icon student-course-picker__option-icon--${item.tone}`} aria-hidden="true">
+                    <SubjectIcon subject={item.id} />
                   </span>
                   <span className="student-course-picker__option-copy">
                     <b>{item.name}</b>
@@ -138,10 +138,27 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
   );
 }
 
-function BookIcon() {
+function SubjectIcon({ subject }: { subject: SubjectId }) {
+  if (subject === 'reading') {
+    return (
+      <svg viewBox="0 0 20 20">
+        <text x="10" y="13.8" textAnchor="middle" fill="currentColor" fontFamily="Georgia, serif" fontSize="11" fontWeight="700">Aa</text>
+        <path d="M4 16.5h12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (subject === 'writing') {
+    return (
+      <svg viewBox="0 0 20 20">
+        <path d="m4 14.8 9.7-9.7 2.2 2.2-9.7 9.7L3.5 17z" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinejoin="round" />
+        <path d="m12.4 6.4 2.2 2.2M4.2 14.7l2.2 2.2" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 20 20">
-      <path d="M3.5 4.5h5.2c.8 0 1.3.5 1.3 1.2v9.8c0-.8-.6-1.3-1.4-1.3H3.5ZM16.5 4.5h-5.2c-.8 0-1.3.5-1.3 1.2v9.8c0-.8.6-1.3 1.4-1.3h5.1Z" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M3.5 4.5h13v9H9l-4.5 3v-3H3.5z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M6.5 8h7M6.5 10.5h4.5" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
     </svg>
   );
 }
