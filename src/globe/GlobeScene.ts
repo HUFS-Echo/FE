@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { ALL_PINS, type PinWithLanguage } from '../config/languages';
+import { ALL_PINS, SEOUL, type PinWithLanguage } from '../config/languages';
 import { COLORS, TUNING, type Quality } from '../config/tuning';
 import landDots from './landDots.json';
-import { DEG, easeOutCubic, latLonToVector3 } from './geo';
+import { DEG, buildArcCurve, easeOutCubic, latLonToVector3 } from './geo';
 
 export type PinScreen = {
   id: string;
@@ -22,7 +22,6 @@ type PinObject = {
   pin: PinWithLanguage;
   group: THREE.Group;
   hit: THREE.Mesh;
-  core: THREE.Mesh;
   ring?: THREE.Mesh;
   phase: number;
   front: boolean;
@@ -74,23 +73,20 @@ const DOTS_FRAGMENT = /* glsl */ `
     vec2 p = gl_PointCoord - vec2(0.5);
     float d = length(p);
     float alpha = smoothstep(0.5, 0.16, d);
-    float twinkle = 1.0;
+    float twinkle = 0.92 + 0.08 * sin(uTime * 0.55 + vSeed * 31.4);
     vec3 color = mix(uFar, uNear, smoothstep(0.0, 0.92, vFacing));
-    float facingOpacity = mix(0.21, 0.80, smoothstep(0.0, 0.92, vFacing));
-    gl_FragColor = vec4(color, alpha * facingOpacity * twinkle);
+    gl_FragColor = vec4(color, alpha * (0.34 + 0.66 * vFacing) * twinkle);
   }
 `;
 
 const OCEAN_VERTEX = /* glsl */ `
   varying vec3 vNormal;
   varying vec3 vView;
-  varying vec3 vPosition;
 
   void main() {
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vNormal = normalize(normalMatrix * normal);
     vView = normalize(-mv.xyz);
-    vPosition = mv.xyz;
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -101,14 +97,13 @@ const OCEAN_FRAGMENT = /* glsl */ `
   uniform vec3 uRim;
   varying vec3 vNormal;
   varying vec3 vView;
-  varying vec3 vPosition;
 
   void main() {
-    float radius = length(vPosition.xy - vec2(-0.46, 0.49));
-    float gradient = clamp(radius / 1.95, 0.0, 1.0);
-    vec3 color = mix(uDeep, uLift, smoothstep(0.0, 0.65, gradient));
-    color = mix(color, uRim, smoothstep(0.65, 0.97, gradient));
-    color = mix(color, vec3(0.5451, 0.7255, 0.6980), smoothstep(0.97, 1.0, gradient));
+    vec3 n = normalize(vNormal);
+    float light = clamp(dot(n, normalize(vec3(-0.42, 0.58, 0.72))), 0.0, 1.0);
+    vec3 color = mix(uDeep, uLift, pow(light, 1.7) * 0.85);
+    float rim = pow(1.0 - clamp(dot(n, normalize(vView)), 0.0, 1.0), 3.0);
+    color += uRim * rim * 0.3;
     gl_FragColor = vec4(color, 1.0);
   }
 `;
@@ -136,6 +131,52 @@ const ATMOSPHERE_FRAGMENT = /* glsl */ `
     float rim = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 3.1);
     vec3 color = mix(uInner, uOuter, smoothstep(0.0, 0.85, rim));
     gl_FragColor = vec4(color, rim * uOpacity);
+  }
+`;
+
+const ARC_VERTEX = /* glsl */ `
+  varying float vT;
+  void main() {
+    vT = uv.x;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const ARC_FRAGMENT = /* glsl */ `
+  varying float vT;
+  uniform float uTime;
+  uniform float uProgress;
+  uniform float uActive;
+  uniform float uBase;
+  uniform float uOpacity;
+  uniform float uTrail;
+  uniform vec3 uColor;
+  uniform vec3 uHeadColor;
+  uniform float uSpeed;
+  uniform float uPhase;
+
+  void main() {
+    float glow = 0.0;
+
+    if (uActive > 0.5) {
+      for (int i = 0; i < ${TUNING.arcs.activePackets}; i++) {
+        float head = fract(uTime * uSpeed + uPhase + float(i) / ${TUNING.arcs.activePackets}.0);
+        float d = head - vT;
+        float body = smoothstep(uTrail, 0.0, d) * step(0.0, d);
+        glow += body * 0.42;
+        glow += exp(-abs(d) * 150.0) * 0.9;
+      }
+    } else {
+      float d = uProgress - vT;
+      float body = smoothstep(uTrail, 0.0, d) * step(0.0, d);
+      glow += body * 0.72;
+      glow += exp(-abs(d) * 170.0) * 1.0;
+    }
+
+    float alpha = uBase + glow * uOpacity;
+    if (alpha < 0.004) discard;
+    vec3 color = mix(uColor, uHeadColor, clamp(glow, 0.0, 1.0));
+    gl_FragColor = vec4(color, alpha);
   }
 `;
 
@@ -271,7 +312,9 @@ export class GlobeScene {
     this.disposables.push(this.glowTexture);
 
     this.buildGlobe();
+    this.buildArcs();
     this.buildPins();
+    this.buildSeoul();
     this.bindEvents();
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -303,7 +346,7 @@ export class GlobeScene {
         uniforms: {
           uDeep: { value: new THREE.Color(COLORS.ocean) },
           uLift: { value: new THREE.Color(COLORS.oceanLift) },
-          uRim: { value: new THREE.Color(COLORS.atmosphereInner) },
+          uRim: { value: new THREE.Color(COLORS.atmosphereOuter) },
         },
         depthWrite: true,
       }),
@@ -368,7 +411,7 @@ export class GlobeScene {
         uniforms: {
           uInner: { value: new THREE.Color(COLORS.atmosphereInner) },
           uOuter: { value: new THREE.Color(COLORS.atmosphereOuter) },
-          uOpacity: { value: 0 },
+          uOpacity: { value: 0.92 },
         },
         transparent: true,
         depthWrite: false,
@@ -386,7 +429,7 @@ export class GlobeScene {
           map: this.glowTexture,
           color: new THREE.Color(COLORS.atmosphereOuter),
           transparent: true,
-          opacity: 0,
+          opacity: 0.32,
           depthWrite: false,
           depthTest: true,
           blending: THREE.AdditiveBlending,
@@ -399,11 +442,72 @@ export class GlobeScene {
     this.yawGroup.add(halo);
   }
 
+  private buildArcs(): void {
+    let activeIndex = 0;
+
+    ALL_PINS.forEach((pin) => {
+      const included = pin.language.official;
+      // Keep Portugal as the single featured route; other official routes stay subtle.
+      const active = pin.id === 'pt' && included;
+      const curve = buildArcCurve(SEOUL, { lat: pin.lat, lon: pin.lon }, TUNING.arcs.lift);
+      const radius = active ? TUNING.arcs.activeRadius : TUNING.arcs.idleRadius;
+      const geometry = this.track(new THREE.TubeGeometry(curve, 128, radius, 6, false));
+
+      const uniforms: Record<string, THREE.IUniform> = {
+        uTime: { value: 0 },
+        uProgress: { value: -1 },
+        uActive: { value: active ? 1 : 0 },
+        uBase: {
+          value: active ? TUNING.arcs.activeBaseOpacity : included ? 0.065 : 0,
+        },
+        uOpacity: { value: active ? 0.95 : 0.85 },
+        uTrail: { value: active ? TUNING.arcs.activeTrail : 0.2 },
+        uColor: { value: new THREE.Color(active ? COLORS.arcActive : COLORS.arcIdle) },
+        uHeadColor: { value: new THREE.Color('#F4FAFF') },
+        uSpeed: { value: TUNING.arcs.activeSpeed },
+        uPhase: { value: active ? activeIndex * 0.19 : 0 },
+      };
+
+      const material = this.track(
+        new THREE.ShaderMaterial({
+          vertexShader: ARC_VERTEX,
+          fragmentShader: ARC_FRAGMENT,
+          uniforms,
+          transparent: true,
+          depthWrite: false,
+          depthTest: true,
+          blending: THREE.AdditiveBlending,
+          side: THREE.DoubleSide,
+        }),
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.renderOrder = 2;
+      this.yawGroup.add(mesh);
+      this.arcs.push({
+        pinId: pin.id,
+        included,
+        mesh,
+        uniforms,
+        active,
+        launchAt: null,
+        progress: -1,
+      });
+      this.arcTimeUniforms.push(uniforms.uTime);
+      if (active) activeIndex += 1;
+    });
+  }
+
   private buildPins(): void {
-    const ringGeometry = this.track(new THREE.RingGeometry(0.018, 0.021, 48));
+    const ringGeometry = this.track(new THREE.RingGeometry(0.014, 0.018, 48));
     const hitGeometry = this.track(new THREE.SphereGeometry(TUNING.pins.hitRadius, 8, 8));
     const hitMaterial = this.track(
-      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false }),
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        colorWrite: false,
+      }),
     );
 
     ALL_PINS.forEach((pin, index) => {
@@ -413,41 +517,175 @@ export class GlobeScene {
       group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
       group.renderOrder = 4;
 
+      const active = pin.language.official;
+      const featured = pin.languageId === 'pt';
+      const coreRadius = featured ? TUNING.pins.activeRadius : active ? TUNING.pins.activeRadius * 0.72 : TUNING.pins.comingRadius;
+
+      const glow = new THREE.Sprite(
+        this.track(
+          new THREE.SpriteMaterial({
+            map: this.glowTexture,
+            color: new THREE.Color(active ? COLORS.pinActive : COLORS.pinComing),
+            transparent: true,
+            opacity: active ? (featured ? 0.85 : 0.58) : 0.34,
+            depthWrite: false,
+            depthTest: true,
+            blending: THREE.AdditiveBlending,
+          }),
+        ),
+      );
+      glow.scale.setScalar(active ? (featured ? TUNING.pins.activeGlow : TUNING.pins.activeGlow * 0.68) : TUNING.pins.comingGlow);
+      glow.position.z = 0.002;
+      group.add(glow);
+
       const core = new THREE.Mesh(
-        this.track(new THREE.SphereGeometry(TUNING.pins.comingRadius, 18, 18)),
-        this.track(new THREE.MeshBasicMaterial({ color: '#8D7150', toneMapped: false })),
+        this.track(new THREE.SphereGeometry(coreRadius, 18, 18)),
+        this.track(
+          new THREE.MeshBasicMaterial({
+            color: active ? COLORS.pinActiveCore : COLORS.pinComing,
+            toneMapped: false,
+          }),
+        ),
       );
       group.add(core);
 
-      const ring = new THREE.Mesh(
-        ringGeometry,
-        this.track(new THREE.MeshBasicMaterial({
-          color: '#002D56',
-          transparent: true,
-          opacity: 0.5,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-        })),
-      );
-      ring.position.z = 0.001;
-      ring.visible = false;
-      group.add(ring);
+      if (featured) {
+        const inner = new THREE.Mesh(
+          this.track(new THREE.SphereGeometry(TUNING.pins.activeCoreRadius, 16, 16)),
+          this.track(new THREE.MeshBasicMaterial({ color: COLORS.pinActive, toneMapped: false })),
+        );
+        inner.position.z = 0.004;
+        group.add(inner);
+      }
+
+      let ring: THREE.Mesh | undefined;
+      if (active) {
+        ring = new THREE.Mesh(
+          ringGeometry,
+          this.track(
+            new THREE.MeshBasicMaterial({
+              color: COLORS.echoBright,
+              transparent: true,
+              opacity: featured ? 0.4 : 0.24,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+              side: THREE.DoubleSide,
+            }),
+          ),
+        );
+        ring.position.z = 0.001;
+        group.add(ring);
+      }
 
       const hit = new THREE.Mesh(hitGeometry, hitMaterial);
       hit.userData.pinId = pin.id;
       group.add(hit);
+
       this.yawGroup.add(group);
-      this.pins.push({ pin, group, hit, core, ring, phase: (index * 0.37) % 1, front: false });
+      this.pins.push({
+        pin,
+        group,
+        hit,
+        ring,
+        phase: (index * 0.37) % 1,
+        front: false,
+      });
     });
   }
 
-  setActivePin(id: string | null): void {
-    this.pins.forEach((pin) => {
-      const active = pin.pin.id === id;
-      pin.core.scale.setScalar(active ? TUNING.pins.activeRadius / TUNING.pins.comingRadius : 1);
-      (pin.core.material as THREE.MeshBasicMaterial).color.set(active ? '#002D56' : '#8D7150');
-      if (pin.ring) pin.ring.visible = active;
-    });
+  private buildSeoul(): void {
+    const normal = latLonToVector3(SEOUL.lat, SEOUL.lon, 1).normalize();
+    const group = new THREE.Group();
+    this.seoulAnchor = group;
+    group.position.copy(normal).multiplyScalar(1.004);
+    group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+    group.renderOrder = 4;
+
+    const glow = new THREE.Sprite(
+      this.track(
+        new THREE.SpriteMaterial({
+          map: this.glowTexture,
+          color: new THREE.Color(COLORS.echoBright),
+          transparent: true,
+          opacity: 0.9,
+          depthWrite: false,
+          depthTest: true,
+          blending: THREE.AdditiveBlending,
+        }),
+      ),
+    );
+    glow.scale.setScalar(0.16);
+    group.add(glow);
+
+    const core = new THREE.Mesh(
+      this.track(new THREE.SphereGeometry(0.0105, 20, 20)),
+      this.track(new THREE.MeshBasicMaterial({ color: '#F2FAFF', toneMapped: false })),
+    );
+    group.add(core);
+
+    const stem = new THREE.Mesh(
+      this.track(new THREE.CylinderGeometry(0.0012, 0.0012, 0.05, 6)),
+      this.track(
+        new THREE.MeshBasicMaterial({
+          color: COLORS.echoBright,
+          transparent: true,
+          opacity: 0.45,
+          depthWrite: false,
+        }),
+      ),
+    );
+    stem.rotation.x = Math.PI / 2;
+    stem.position.set(0, 0, 0.025);
+    group.add(stem);
+
+    const labelCanvas = document.createElement('canvas');
+    labelCanvas.width = 512;
+    labelCanvas.height = 128;
+    drawSeoulLabel(labelCanvas);
+    const labelTexture = new THREE.CanvasTexture(labelCanvas);
+    labelTexture.colorSpace = THREE.SRGBColorSpace;
+    labelTexture.minFilter = THREE.LinearFilter;
+    this.seoulCanvas = labelCanvas;
+    this.seoulTexture = this.track(labelTexture);
+
+    const label = new THREE.Sprite(
+      this.track(
+        new THREE.SpriteMaterial({
+          map: labelTexture,
+          transparent: true,
+          depthWrite: false,
+          depthTest: true,
+        }),
+      ),
+    );
+    label.scale.set(0.3, 0.075, 1);
+    label.center.set(0.5, 0);
+    label.position.set(0, 0.052, 0.008);
+    group.add(label);
+    label.visible = false;
+
+    const rippleGeometry = this.track(new THREE.RingGeometry(0.92, 1, 72));
+    for (let i = 0; i < TUNING.ripple.count; i += 1) {
+      const mesh = new THREE.Mesh(
+        rippleGeometry,
+        this.track(
+          new THREE.MeshBasicMaterial({
+            color: COLORS.echoBright,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide,
+          }),
+        ),
+      );
+      mesh.position.z = 0.003;
+      mesh.visible = false;
+      group.add(mesh);
+      this.ripples.push({ mesh, startAt: null, phase: i / TUNING.ripple.count });
+    }
+
+    this.yawGroup.add(group);
   }
 
   private bindEvents(): void {
@@ -637,6 +875,11 @@ export class GlobeScene {
       pin.front = facing > TUNING.pins.frontThreshold;
       pin.group.visible = pin.front;
 
+      if (pin.ring && pin.front && motion) {
+        const pulse = (t / TUNING.pins.pulseDuration + pin.phase) % 1;
+        pin.ring.scale.setScalar(1 + pulse * (TUNING.pins.pulseMaxScale - 1));
+        (pin.ring.material as THREE.MeshBasicMaterial).opacity = (1 - pulse) * (pin.pin.languageId === 'pt' ? 0.46 : 0.28);
+      }
     });
 
     // arcs

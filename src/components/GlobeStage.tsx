@@ -20,7 +20,6 @@ export type GlobeStageHandle = {
 type Props = {
   quality: Quality;
   activePinId: string | null;
-  highlightPinId: string | null;
   started: boolean;
   paused?: boolean;
   onHoverPin: (id: string | null) => void;
@@ -29,7 +28,7 @@ type Props = {
 };
 
 export const GlobeStage = forwardRef<GlobeStageHandle, Props>(function GlobeStage(
-  { quality, activePinId, highlightPinId, started, paused = false, onHoverPin, onSelectPin, onReady },
+  { quality, activePinId, started, paused = false, onHoverPin, onSelectPin, onReady },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -84,10 +83,6 @@ export const GlobeStage = forwardRef<GlobeStageHandle, Props>(function GlobeStag
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [quality]);
-
-  useEffect(() => {
-    sceneRef.current?.setActivePin(highlightPinId);
-  }, [highlightPinId, quality]);
 
   useEffect(() => {
     sceneRef.current?.setPaused(paused);

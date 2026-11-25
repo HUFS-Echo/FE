@@ -6,12 +6,11 @@ type Props = {
   hoveredLanguageId: string | null;
   started: boolean;
   reducedMotion: boolean;
-  onLanguageChange?: (languageId: string) => void;
 };
 
 const FIRST = GREETING_CYCLE[0];
 
-export function GreetingTitle({ hoveredLanguageId, started, reducedMotion, onLanguageChange }: Props) {
+export function GreetingTitle({ hoveredLanguageId, started, reducedMotion }: Props) {
   const [text, setText] = useState(FIRST.greeting);
   const [language, setLanguage] = useState<Language>(FIRST);
   const [override, setOverride] = useState<Language | null>(null);
@@ -94,10 +93,6 @@ export function GreetingTitle({ hoveredLanguageId, started, reducedMotion, onLan
   const displayText = override ? override.greeting : text;
   const isOverride = Boolean(override);
   const greetingScale = displayText.length > 10 ? 0.76 : displayText.length > 7 ? 0.88 : 1;
-
-  useEffect(() => {
-    onLanguageChange?.(displayLanguage.id);
-  }, [displayLanguage.id, onLanguageChange]);
 
   return (
     <div className="greeting-block">
