@@ -7,3 +7,117 @@
 @media(max-width:1180px){.scope-layout{grid-template-columns:minmax(250px,1fr) minmax(220px,.9fr)}.scope-student-col{grid-column:1/-1;grid-template-columns:minmax(0,1fr) 1fr;align-items:start}.scope-student-col .publish-trigger,.scope-student-col .autosave-note{grid-column:2}.scope-student-col .student-preview-card{grid-row:1/4}}
 @media(max-width:760px){.scope-layout{grid-template-columns:1fr}.scope-student-col{grid-column:auto;grid-template-columns:1fr}.scope-student-col .student-preview-card,.scope-student-col .publish-trigger,.scope-student-col .autosave-note{grid-column:auto;grid-row:auto}.pdf-page-wrap{min-height:320px}}
 .prof-filter-context{padding:8px 32px 0;color:#8290a3;font-size:10px}.prof-filter-context b{color:#52637b;font-weight:650}
+
+
+/* Scope builder: setup and saved scope list share a two-column teaching workspace. */
+.scope-layout {
+  grid-template-columns: minmax(290px, 0.88fr) minmax(430px, 1.12fr);
+  align-items: start;
+  gap: 16px;
+}
+.scope-form-col,
+.scope-student-col {
+  min-width: 0;
+}
+.scope-student-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.scope-student-col:not(.has-exercises) .student-preview-card,
+.scope-student-col:not(.has-exercises) .publish-trigger,
+.scope-student-col:not(.has-exercises) .autosave-note {
+  display: none;
+}
+.scope-student-col .scope-list-card {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+}
+.scope-student-col .student-preview-card {
+  width: 100%;
+}
+.scope-list-card .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.scope-list-card .scope-table {
+  min-width: 620px;
+}
+.exercise-type-picker {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid #e8edf4;
+}
+.exercise-type-picker > .form-label {
+  margin: 0;
+}
+.exercise-type-picker__options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.exercise-type-picker__options button {
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 1px solid #dce4f0;
+  border-radius: 9px;
+  background: #fff;
+  color: #6b7a90;
+  font-size: 10px;
+  font-weight: 600;
+  transition: border-color .18s ease, background .18s ease, color .18s ease;
+}
+.exercise-type-picker__options button:hover {
+  border-color: #a8c0e8;
+  color: #2856a8;
+}
+.exercise-type-picker__options button.is-selected {
+  border-color: #2856a8;
+  background: #edf3ff;
+  color: #2856a8;
+  box-shadow: inset 0 0 0 1px #2856a8;
+}
+.exercise-type-picker > small {
+  color: #8794a7;
+  font-size: 9px;
+  line-height: 1.45;
+}
+.preview-toggle {
+  align-self: flex-start;
+  margin-top: 3px;
+  padding: 6px 0;
+  color: #2856a8;
+  font-size: 10px;
+  font-weight: 650;
+}
+.preview-toggle:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 1180px) {
+  .scope-layout {
+    grid-template-columns: minmax(270px, .9fr) minmax(360px, 1.1fr);
+  }
+  .scope-student-col {
+    grid-column: auto;
+  }
+}
+@media (max-width: 900px) {
+  .scope-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .scope-student-col {
+    grid-column: auto;
+  }
+}
+@media (max-width: 600px) {
+  .scope-form-col > .scope-step {
+    padding: 13px;
+  }
+  .scope-student-col .scope-list-card {
+    padding: 13px;
+  }
+}

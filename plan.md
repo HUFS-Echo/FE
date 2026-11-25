@@ -56,7 +56,7 @@ HUFS Echo는 한국외국어대학교 특수외국어 학습자를 위한 데모
 | 화면 | 경로 | 현재 구성 |
 | --- | --- | --- |
 | 반 학습 현황 | `/prof` | 선택한 과목·분반·주차 기준의 현황, 주간 요약, 오류 예시 및 반 학습 개요 |
-| 학습 범위 설정 | `/prof/scope/new` | 강의자료 메타데이터/쪽 범위 설정 → AI 연습 예시 생성 → 학생 미리보기 → 게시 |
+| 학습 범위 설정 | `/prof/scope/new` | 왼쪽 강의자료·주차/쪽 범위 카드, 문법·작문 독해·회화 유형 선택, 오른쪽 기존 범위 목록. 문제 생성 후 오른쪽 위에 학생 미리보기와 전체 보기 제공 |
 | 범위 편집 | `/prof/scope/new/edit/{id}` | 선택 범위를 같은 작성 화면에서 편집 |
 | 취약점 리포트 | `/prof/report` | 과목별 AI 주간 요약, 오류 유형 상세, 예시 펼치기, 전체 보기, 인쇄/PDF 내보내기 |
 | AI 오류 신고 | `/prof/feedback` | 신고 확인 필요/처리 완료 관리와 처리 동작 |
@@ -64,9 +64,9 @@ HUFS Echo는 한국외국어대학교 특수외국어 학습자를 위한 데모
 
 ### 학습 범위 설정 흐름
 
-현재 작성 화면은 좌측의 강의자료·주차 및 쪽 범위 설정과 `AI로 연습 만들기`, 우측의 학생 화면 미리보기로 구성됩니다. 입력은 자동 저장됩니다. 연습 예시는 수정·삭제할 수 있고, 게시 전 확인 모달에서 지금 게시 또는 예약 게시를 고릅니다. 게시된 범위 목록은 별도 관리 페이지가 아니라 작성 화면 하단에 표시됩니다.
+현재 작성 화면은 왼쪽의 강의자료·주차/쪽 범위 설정 및 문제 유형 선택과 오른쪽의 학습 범위 목록으로 시작합니다. `AI로 연습 만들기`를 누르면 학생 화면 미리보기 카드가 목록 위에 표시됩니다. 문제는 기본 3개까지 미리 보여주고 `전체 보기`로 펼칠 수 있습니다. 게시 전 확인 모달에서 지금 게시 또는 예약 게시를 고릅니다.
 
-`ScopeListCard`는 현재 `ScopeBuilder.tsx`가 가져와 사용하며, 목록의 수정은 다시 범위 작성 화면으로 연결됩니다. 따라서 `ScopeLibrary.tsx`는 폐기된 별도 범위 관리 화면이 아니며 삭제 대상으로 보면 안 됩니다. 별도 `/prof/scopes` 화면 자체는 렌더링되지 않습니다.
+`ScopeListCard`는 `ScopeBuilder.tsx`의 오른쪽 영역에서 기존 범위를 상태·참여·정확도와 함께 요약하며, `관리` 열과 행별 수정·미리보기·복제 버튼은 표시하지 않습니다. 이는 별도 `/prof/scopes` 페이지와는 구별되는 인라인 목록입니다.
 
 ### 취약점 리포트와 신고
 
@@ -84,7 +84,7 @@ AI 오류 신고 화면은 `/prof/feedback`에서 처리합니다. 사이드바 
 - 학생: `/student`, `/student/course/{reading|writing|speaking}`, `/student/practice/{reading|writing|speaking}`, `/student/practice/custom`, `/student/summary/{reading|writing|speaking}`, `/student/history`, `/student/me`
 - 교수: `/prof`, `/prof/scope/new`, `/prof/scope/new/edit/{id}`, `/prof/report`, `/prof/feedback`, `/prof/me`
 
-`public/manus-routes.json`은 아직 현행 구조와 완전히 일치하지 않습니다. 이 파일에는 렌더링되지 않는 `/prof/students`와 `/prof/scopes`가 남아 있고, 실제로 쓰이는 결과 상세 경로와 범위 편집 경로는 동적 경로로 충분히 표현되지 않았습니다. `/prof/students`를 향하는 현황 화면의 `전체 보기` 링크도 남아 있으나, `ProfessorShell`에는 해당 경로 분기가 없어서 클릭/직접 진입 시 학생별 화면 대신 기본 반 현황이 표시됩니다. 해당 항목을 실제로 제거할지는 아래 감사 후보에서 사용자 확인을 받습니다.
+`public/manus-routes.json`은 현재 실제 화면 경로와 동적 결과·편집 경로를 반영합니다. `/prof/students`, `/prof/scopes`의 사용 중단 선언은 제거되었고, 교정 기록 기반 맞춤 연습 경로 `/student/practice/custom`도 포함됩니다.
 
 로그인/회원가입은 URL 경로가 아닌 앱 화면 상태입니다. 알 수 없는 `/prof/...` 경로는 현재 교수 홈의 Overview로 돌아가며, 학생 역할은 학생 셸만 봅니다.
 
