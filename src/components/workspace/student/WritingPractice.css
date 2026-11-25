@@ -1,0 +1,551 @@
+.student-shell:has(.writing-flow),
+.student-shell:has(.writing-review),
+.student-main:has(> .writing-flow),
+.student-main:has(> .writing-review) {
+  background: #fff;
+}
+
+.writing-flow,
+.writing-review {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  color: #002d56;
+}
+
+.writing-flow__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: #146e7a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.writing-flow__top i,
+.writing-review__eyebrow i {
+  padding: 0 3px;
+  font-style: normal;
+  opacity: 0.65;
+}
+
+.writing-flow__top b {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.writing-flow__progress {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 17px;
+}
+
+.writing-flow__progress span {
+  height: 4px;
+  border-radius: 999px;
+  background: #dadad3;
+  transition: background-color 180ms ease;
+}
+
+.writing-flow__progress span.is-complete {
+  background: #146e7a;
+}
+
+.writing-flow__heading {
+  margin-top: 29px;
+}
+
+.writing-flow__heading h1,
+.writing-review h1 {
+  color: #002d56;
+  font-size: clamp(28px, 3.1vw, 38px);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+  word-break: keep-all;
+}
+
+.writing-flow__heading p {
+  margin-top: 10px;
+  color: #25415e;
+  font-size: clamp(14px, 1.55vw, 19px);
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.writing-flow__boo-prompt {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
+  min-height: 148px;
+  margin-top: 24px;
+}
+
+.writing-flow__boo-prompt > img {
+  display: block;
+  width: 102px;
+  max-height: 134px;
+  justify-self: center;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(6, 24, 40, 0.13));
+}
+
+.writing-flow__bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 136px;
+  padding: 20px 25px;
+  border: 1px solid #c7ddd6;
+  border-radius: 20px;
+  background: #f2f8f5;
+}
+
+.writing-flow__bubble::before {
+  position: absolute;
+  top: 50%;
+  left: -9px;
+  width: 16px;
+  height: 16px;
+  border-bottom: 1px solid #c7ddd6;
+  border-left: 1px solid #c7ddd6;
+  background: #f2f8f5;
+  content: '';
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.writing-flow__bubble > span,
+.writing-flow__reading-prompt > span {
+  color: #146e7a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.writing-flow__bubble p,
+.writing-flow__reading-prompt p {
+  margin-top: 10px;
+  color: #002d56;
+  font-size: clamp(17px, 2vw, 23px);
+  font-weight: 700;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.writing-flow__reading-prompt {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 148px;
+  margin-top: 24px;
+  padding: 20px 26px;
+  border: 1px solid #dadad3;
+  border-radius: 17px;
+  background: #f8f9f6;
+}
+
+.writing-flow__reading-prompt p {
+  margin-top: 12px;
+}
+
+.writing-flow__answer {
+  min-width: 0;
+  margin: 26px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.writing-flow__answer > label,
+.writing-flow__answer > legend {
+  display: block;
+  margin: 0 0 12px;
+  padding: 0;
+  color: #002d56;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.writing-flow__answer textarea {
+  display: block;
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  padding: 17px 20px;
+  border: 1px solid #dadad3;
+  border-radius: 13px;
+  outline: none;
+  background: #fff;
+  color: #002d56;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.6;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.writing-flow__answer textarea::placeholder {
+  color: #8292a1;
+  opacity: 1;
+}
+
+.writing-flow__answer textarea:focus-visible {
+  border-color: #146e7a;
+  box-shadow: 0 0 0 3px rgba(20, 110, 122, 0.13);
+}
+
+.writing-flow__answer--choices {
+  margin-top: 25px;
+}
+
+.writing-flow__choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.writing-flow__choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 54px;
+  padding: 10px 17px;
+  border: 1px solid #dadad3;
+  border-radius: 10px;
+  background: #fff;
+  color: #002d56;
+  font-size: 17px;
+  text-align: left;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.writing-flow__choice:hover {
+  border-color: #8bb9bb;
+  background: #fbfdfc;
+}
+
+.writing-flow__choice.is-selected {
+  border-color: #146e7a;
+  background: #f0f8f6;
+  box-shadow: 0 0 0 2px rgba(20, 110, 122, 0.08);
+}
+
+.writing-flow__radio {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: 1px solid #9d9fa2;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.writing-flow__choice.is-selected .writing-flow__radio {
+  border-color: #146e7a;
+}
+
+.writing-flow__radio i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #146e7a;
+}
+
+.writing-flow__footer,
+.writing-review__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 34px;
+  padding-top: 22px;
+  border-top: 1px solid #dadad3;
+}
+
+.writing-flow__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 145px;
+  min-height: 50px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.writing-flow__button:hover {
+  transform: translateY(-1px);
+}
+
+.writing-flow__button:focus-visible,
+.writing-flow__choice:focus-visible {
+  outline: 3px solid rgba(20, 110, 122, 0.25);
+  outline-offset: 2px;
+}
+
+.writing-flow__button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.writing-flow__button--secondary {
+  border-color: #dadad3;
+  background: #fff;
+  color: #002d56;
+}
+
+.writing-flow__button--secondary:hover {
+  border-color: #b4c4c3;
+  background: #f8faf9;
+}
+
+.writing-flow__button--primary {
+  min-width: 210px;
+  background: #146e7a;
+  color: #fff;
+}
+
+.writing-flow__button--primary:hover {
+  background: #0d5d68;
+}
+
+.writing-review__eyebrow {
+  color: #146e7a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.writing-review h1 {
+  margin-top: 22px;
+}
+
+.writing-review__intro {
+  margin-top: 10px;
+  color: #25415e;
+  font-size: 17px;
+}
+
+.writing-review__list {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin: 25px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.writing-review__card {
+  display: grid;
+  grid-template-columns: 164px minmax(0, 1fr);
+  gap: 18px;
+  min-height: 91px;
+  padding: 13px 17px;
+  border: 1px solid #dadad3;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.writing-review__label {
+  color: #146e7a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.writing-review__label span {
+  display: block;
+  margin-top: 3px;
+}
+
+.writing-review__answer strong {
+  display: block;
+  color: #002d56;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.writing-review__answer p {
+  margin-top: 7px;
+  color: #25415e;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.writing-review__actions {
+  justify-content: flex-start;
+  margin-top: 26px;
+}
+
+@media (max-width: 720px) {
+  .writing-flow__top,
+  .writing-review__eyebrow {
+    font-size: 12px;
+  }
+
+  .writing-flow__progress {
+    gap: 6px;
+    margin-top: 13px;
+  }
+
+  .writing-flow__heading {
+    margin-top: 24px;
+  }
+
+  .writing-flow__heading p {
+    font-size: 14px;
+  }
+
+  .writing-flow__boo-prompt {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 11px;
+    min-height: 124px;
+    margin-top: 20px;
+  }
+
+  .writing-flow__boo-prompt > img {
+    width: 66px;
+    max-height: 102px;
+  }
+
+  .writing-flow__bubble {
+    min-height: 118px;
+    padding: 15px 16px;
+    border-radius: 15px;
+  }
+
+  .writing-flow__bubble p,
+  .writing-flow__reading-prompt p {
+    font-size: 16px;
+  }
+
+  .writing-flow__reading-prompt {
+    min-height: 124px;
+    margin-top: 20px;
+    padding: 16px 17px;
+  }
+
+  .writing-flow__answer {
+    margin-top: 22px;
+  }
+
+  .writing-flow__answer > label,
+  .writing-flow__answer > legend {
+    margin-bottom: 9px;
+    font-size: 14px;
+  }
+
+  .writing-flow__answer textarea {
+    min-height: 122px;
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .writing-flow__choice {
+    min-height: 52px;
+    font-size: 15px;
+  }
+
+  .writing-flow__footer,
+  .writing-review__actions {
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 17px;
+  }
+
+  .writing-flow__button {
+    min-width: 0;
+    min-height: 46px;
+    padding: 0 13px;
+    font-size: 12px;
+  }
+
+  .writing-flow__button--primary {
+    min-width: 0;
+  }
+
+  .writing-review h1 {
+    margin-top: 19px;
+    font-size: 30px;
+  }
+
+  .writing-review__intro {
+    font-size: 14px;
+  }
+
+  .writing-review__list {
+    gap: 9px;
+    margin-top: 18px;
+  }
+
+  .writing-review__card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    min-height: 0;
+    padding: 13px;
+  }
+
+  .writing-review__label {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .writing-review__label span {
+    margin-top: 0;
+  }
+
+  .writing-review__answer strong {
+    font-size: 15px;
+  }
+
+  .writing-review__answer p {
+    margin-top: 4px;
+    font-size: 13px;
+  }
+
+  .writing-review__actions .writing-flow__button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .writing-flow__boo-prompt {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .writing-flow__boo-prompt > img {
+    width: 54px;
+  }
+
+  .writing-flow__bubble {
+    padding: 13px;
+  }
+
+  .writing-flow__button {
+    gap: 5px;
+    padding: 0 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .writing-flow *,
+  .writing-flow *::before,
+  .writing-flow *::after,
+  .writing-review *,
+  .writing-review *::before,
+  .writing-review *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -5,6 +5,8 @@ export type SummaryData = {
   title: string;
   message: string;
   stats: { label: string; value: string; suffix?: string }[];
+  correctionsTitle?: string;
+  emptyCorrectionsMessage?: string;
   corrections: { original: string; corrected: string }[];
 };
 
@@ -42,7 +44,7 @@ export function PracticeSummary({ data, onHome }: Props) {
           <header className="block-head block-head--small">
             <div>
               <p className="eyebrow">REVISÃO</p>
-              <h2>오늘 고친 문장</h2>
+                  <h2>{data.correctionsTitle ?? '오늘 고친 문장'}</h2>
             </div>
             <span className="block-head__meta">{data.corrections.length}개</span>
           </header>
@@ -59,7 +61,7 @@ export function PracticeSummary({ data, onHome }: Props) {
               ))}
             </div>
           ) : (
-            <p className="summary__empty">새로 고친 문장이 없어요. 깔끔하게 잘했어요!</p>
+            <p className="summary__empty">{data.emptyCorrectionsMessage ?? '새로 고친 문장이 없어요. 깔끔하게 잘했어요!'}</p>
           )}
         </section>
       </div>
