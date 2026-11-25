@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Wordmark } from '../Wordmark';
 import { WEEK } from '../../config/learning';
 import type { Session } from '../../lib/session';
@@ -37,6 +37,65 @@ function initialProfessorLanguage(): ProfessorLanguage {
   } catch {
     return 'ko';
   }
+}
+
+const languageOptions = [
+  { value: 'ko', code: 'KO', label: '한국어', hint: 'Korean' },
+  { value: 'en', code: 'EN', label: 'English', hint: 'English' },
+] as const;
+
+function ProfessorLanguagePicker({ language, label, onChange }: {
+  language: ProfessorLanguage;
+  label: string;
+  onChange: (language: ProfessorLanguage) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const selected = languageOptions.find(option => option.value === language) ?? languageOptions[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
+  return <div className={`header-language ${open ? 'is-open' : ''}`} ref={rootRef}>
+    <button ref={triggerRef} type="button" className="header-language__trigger"
+      aria-label={`${label}: ${selected.label}`} aria-expanded={open} aria-controls="professor-language-menu"
+      onClick={() => setOpen(value => !value)}>
+      <span className="header-language__mark" aria-hidden="true">文</span>
+      <span>{selected.label}</span>
+      <svg className="header-language__chevron" viewBox="0 0 12 12" aria-hidden="true">
+        <path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+    {open && <div id="professor-language-menu" className="header-language__menu" role="group" aria-label={label}>
+      <div className="header-language__menu-heading"><b>{label}</b><span>DISPLAY LANGUAGE</span></div>
+      {languageOptions.map(option => <button key={option.value} type="button"
+        className={`header-language__option ${language === option.value ? 'is-active' : ''}`}
+        aria-pressed={language === option.value} onClick={() => { onChange(option.value); setOpen(false); }}>
+        <span className="header-language__option-code" aria-hidden="true">{option.code}</span>
+        <span className="header-language__option-copy"><b>{option.label}</b><small>{option.hint}</small></span>
+        {language === option.value && <svg className="header-language__check" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="m3.5 8.2 3 3 6-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>}
+      </button>)}
+    </div>}
+  </div>;
 }
 
 export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout, onToast, onReset, onReplay }: Props) {
@@ -111,15 +170,7 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
                       <option value={5}>{t('5주차 · 임시 저장')}</option>
                     </select>
                   </label>
-                  <label className="header-language">
-                    <span className="sr-only">{t('화면 언어')}</span>
-                    <span className="header-language__mark" aria-hidden="true">文</span>
-                    <select aria-label={t('화면 언어')} value={professorLanguage}
-                      onChange={event => setProfessorLanguage(event.target.value as ProfessorLanguage)}>
-                      <option value="ko">한국어</option>
-                      <option value="en">English</option>
-                    </select>
-                  </label>
+                  <ProfessorLanguagePicker language={professorLanguage} label={t('화면 언어')} onChange={setProfessorLanguage} />
                 </>
               )}
               <div className="user-menu__identity">
