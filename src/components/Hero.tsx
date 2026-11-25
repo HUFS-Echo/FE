@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { getPinById } from '../config/languages';
 import { TUNING, getQuality } from '../config/tuning';
 import { GlobeStage } from './GlobeStage';
@@ -19,6 +19,7 @@ export function Hero({ onLogin, onSignup, onToast }: Props) {
   const [motionStarted, setMotionStarted] = useState(false);
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
+  const [greetingPinId, setGreetingPinId] = useState('pt');
 
   useEffect(() => {
     const reduced = quality.reducedMotion;
@@ -35,6 +36,8 @@ export function Hero({ onLogin, onSignup, onToast }: Props) {
 
   const activePinId = hoveredPin ?? selectedPin;
   const hoveredLanguageId = hoveredPin ? getPinById(hoveredPin)?.languageId ?? null : null;
+  const highlightPinId = activePinId ?? greetingPinId;
+  const handleGreetingLanguageChange = useCallback((id: string) => setGreetingPinId(id), []);
 
   const handleHover = (id: string | null) => {
     setHoveredPin(id);
@@ -64,6 +67,17 @@ export function Hero({ onLogin, onSignup, onToast }: Props) {
       </header>
 
       <div className="hero__content">
+        <div className="hero__globe">
+          <GlobeStage
+            quality={quality}
+            activePinId={activePinId}
+            highlightPinId={highlightPinId}
+            started={motionStarted}
+            onHoverPin={handleHover}
+            onSelectPin={handleSelect}
+          />
+        </div>
+
         <div className="hero__lead">
           <p className="hero__eyebrow reveal" style={{ '--delay': `${TUNING.intro.eyebrowDelay}ms` } as CSSProperties}>
             <span className="hero__eyebrow-line" aria-hidden="true" />
@@ -73,16 +87,7 @@ export function Hero({ onLogin, onSignup, onToast }: Props) {
             hoveredLanguageId={hoveredLanguageId}
             started={motionStarted}
             reducedMotion={quality.reducedMotion}
-          />
-        </div>
-
-        <div className="hero__globe">
-          <GlobeStage
-            quality={quality}
-            activePinId={activePinId}
-            started={motionStarted}
-            onHoverPin={handleHover}
-            onSelectPin={handleSelect}
+            onLanguageChange={handleGreetingLanguageChange}
           />
         </div>
 

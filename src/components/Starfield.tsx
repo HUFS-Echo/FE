@@ -70,14 +70,14 @@ export function Starfield({ count, reducedMotion }: Props) {
         const y = ((star.y + drift * 0.003) % 1) * height;
         const twinkle = reducedMotion ? 0.7 : 0.42 + 0.58 * (0.5 + 0.5 * Math.sin(time * star.speed + star.phase));
         const alpha = twinkle * (star.sparkle ? 0.85 : 0.6);
-        const color = star.tint === 1 ? `rgba(160, 205, 255, ${alpha})` : `rgba(214, 229, 255, ${alpha})`;
+        const color = star.tint === 1 ? `rgba(67, 137, 146, ${alpha})` : `rgba(20, 110, 122, ${alpha})`;
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(x, y, star.radius, 0, Math.PI * 2);
         ctx.fill();
 
         if (star.sparkle) {
-          ctx.strokeStyle = `rgba(210, 232, 255, ${alpha * 0.45})`;
+          ctx.strokeStyle = `rgba(0, 45, 86, ${alpha * 0.22})`;
           ctx.lineWidth = 0.6;
           ctx.beginPath();
           ctx.moveTo(x - star.radius * 3.2, y);
