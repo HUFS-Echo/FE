@@ -79,3 +79,9 @@
   .login__card { padding:22px 0; }
   .login__card--signup { margin:auto; }
 }
+
+/* Professor-only locale selector in the workspace header. */
+.header-language { display:inline-flex; align-items:center; }
+.header-language select { min-width:96px; max-width:112px; height:36px; padding:0 28px 0 11px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink-soft); font-size:12px; font-weight:700; }
+.header-language select:focus-visible { outline:2px solid var(--blue-bright); outline-offset:2px; }
+@media(max-width:760px) { .header-language select { max-width:108px; height:33px; font-size:11px; } }

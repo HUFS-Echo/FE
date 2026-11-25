@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Session } from '../../../lib/session';
 import { getDemoState } from '../../../lib/demoStore';
 import { useProfFilters } from './ProfFilterContext';
+import { useProfessorLanguage } from './ProfessorLanguageContext';
 import { Overview } from './Overview';
 import { ScopeBuilder } from './ScopeBuilder';
 import { WeaknessReport } from './WeaknessReport';
@@ -29,6 +30,7 @@ const nav = [
 export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onToast, onLogout, onReset, onReplay }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const { filters } = useProfFilters();
+  const { t, language } = useProfessorLanguage();
   const countOpen = () => getDemoState().feedback.filter(x =>
     x.status === 'open' && x.week === `${filters.week}주차` && filters.course === 'reading' && filters.section === '01',
   ).length;
@@ -37,6 +39,8 @@ export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onT
   const route = isScopeBuilderPath ? '/prof/scope/new' : path;
   const current = route === '/prof' ? '/prof' : route;
   const course = { reading: '포르투갈어 문법', writing: '포르투갈어 읽기와 쓰기', speaking: '포르투갈어 회화' }[filters.course];
+  const sectionLabel = t(filters.section === '01' ? '01분반' : '02분반');
+  const weekLabel = language === 'en' ? `Week ${filters.week}` : `${filters.week}주차`;
 
   useEffect(() => {
     const sync = () => setOpenCount(countOpen());
@@ -48,9 +52,9 @@ export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onT
     <aside className="prof-sidebar">
       <div className="prof-sidebar__top">
         <span className="prof-sidebar__eyebrow">TEACHING SPACE</span>
-        <button type="button" aria-label="사이드바 접기" onClick={() => setCollapsed(value => !value)}>‹</button>
+        <button type="button" aria-label={t('사이드바 접기')} onClick={() => setCollapsed(value => !value)}>‹</button>
       </div>
-      <nav aria-label="교수 메뉴">
+      <nav aria-label={t('교수 메뉴')}>
         {nav.map(([to, label, icon]) => <button key={to} className={current === to ? 'is-active' : ''}
           aria-current={current === to ? 'page' : undefined} onClick={() => onNavigate(to)}>
           <i aria-hidden="true">{icon === 'profile' ? (
@@ -63,14 +67,14 @@ export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onT
               <path d="M4.1 3.8h11.8a1.3 1.3 0 0 1 1.3 1.3v6.8a1.3 1.3 0 0 1-1.3 1.3H9l-3.7 3v-3h-1a1.3 1.3 0 0 1-1.3-1.3V5.1a1.3 1.3 0 0 1 1.1-1.3Z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
               <path d="M10 6.2v3.3m0 2v.1" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-          ) : icon}</i><span>{label}</span>
+          ) : icon}</i><span>{t(label)}</span>
           {to === '/prof/feedback' && openCount > 0 && <b className="nav-badge">{openCount}</b>}
         </button>)}
       </nav>
-      <div className="prof-sidebar__foot"><img src="/owls/football.png" alt=""/><span><b>에코 AI</b><small>이번 주 수업 준비를 도와드려요</small></span></div>
+      <div className="prof-sidebar__foot"><img src="/owls/football.png" alt=""/><span><b>에코 AI</b><small>{t('이번 주 수업 준비를 도와드려요')}</small></span></div>
     </aside>
     <main className="prof-main" key={path}>
-      <div className="prof-filter-context">현재 보기 기준 <b>{course}</b> · <b>{filters.section}분반</b> · <b>{filters.week}주차</b></div>
+      <div className="prof-filter-context">{t('현재 보기 기준')} <b>{t(course)}</b> · <b>{sectionLabel}</b> · <b>{weekLabel}</b></div>
       {route === '/prof' && <Overview onNavigate={onNavigate} onToast={onToast}/>}
       {isScopeBuilderPath && <ScopeBuilder onNavigate={onNavigate} onToast={onToast}/>}
       {route === '/prof/report' && <WeaknessReport/>}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useProfFilters } from './ProfFilterContext';
+import { useProfessorLanguage } from './ProfessorLanguageContext';
 
 type ReportRow = {
   name: string;
@@ -48,6 +49,7 @@ const summaries = {
 
 export function WeaknessReport() {
   const { filters } = useProfFilters();
+  const { t, language } = useProfessorLanguage();
   const [summaryReady, setSummaryReady] = useState(false);
   useEffect(() => {
     setSummaryReady(false);
@@ -55,11 +57,12 @@ export function WeaknessReport() {
     return () => window.clearTimeout(timer);
   }, [filters.course, filters.section, filters.week]);
 
-  const subjectLabel = {
+  const subjectLabel = t({
     reading: '포르투갈어 문법',
     writing: '포르투갈어 읽기와 쓰기',
     speaking: '포르투갈어 회화',
-  }[filters.course];
+  }[filters.course]);
+  const weekLabel = language === 'en' ? `Week ${filters.week}` : `${filters.week}주차`;
   const weekDates = { 1: '11.03–11.09', 2: '11.10–11.16', 3: '11.17–11.23', 4: '11.24–11.30', 5: '12.01–12.07' }[filters.week];
   const reportRows = filters.section === '02' ? [] : filters.course === 'reading' ? grammarRows : filters.course === 'writing' ? writingRows : speakingRows;
   const summary = summaries[filters.course];
@@ -76,19 +79,19 @@ export function WeaknessReport() {
       <header className="prof-page-head">
         <div>
           <span className="eyebrow">WEEKLY WEAKNESS REPORT</span>
-          <h1>취약점 리포트</h1>
-          <p>{filters.week}주차 · {weekDates} · {subjectLabel} · {filters.section}분반</p>
+          <h1>{t('취약점 리포트')}</h1>
+          <p>{weekLabel} · {weekDates} · {subjectLabel} · {t(filters.section === '01' ? '01분반' : '02분반')}</p>
         </div>
-        <button className="btn-ghost" onClick={() => window.print()}>인쇄 / PDF 내보내기</button>
+        <button className="btn-ghost" onClick={() => window.print()}>{t('인쇄 / PDF 내보내기')}</button>
       </header>
 
       {summaryReady ? (
         <section className="prof-ai-card report-summary">
           <div className="ai-avatar"><img src="/owls/football.png" alt=""/><b>AI</b></div>
           <div className="prof-ai-card__body">
-            <span className="eyebrow">AI 주간 분석</span>
-            <h2>{summary.title}</h2>
-            <p>{summary.description}</p>
+            <span className="eyebrow">{t('AI 주간 분석')}</span>
+            <h2>{t(summary.title)}</h2>
+            <p>{t(summary.description)}</p>
           </div>
         </section>
       ) : (
@@ -96,32 +99,32 @@ export function WeaknessReport() {
           <div className="ai-avatar"><img src="/owls/football.png" alt=""/><b>AI</b></div>
           <div className="prof-ai-card__body">
             <span className="eyebrow">AI 주간 분석</span>
-            <h2>AI가 선택한 조건을 분석하고 있어요…</h2>
-            <p>과목·분반·주차별 시연 데이터를 살펴보는 중입니다.</p>
+            <h2>{t('AI가 선택한 조건을 분석하고 있어요…')}</h2>
+            <p>{t('과목·분반·주차별 시연 데이터를 살펴보는 중입니다.')}</p>
           </div>
         </section>
       )}
 
       <section className="prof-card">
         <div className="section-title">
-          <div><h2>오류 유형 상세</h2><p>오류를 펼쳐 대표 예시를 확인하세요.</p></div>
-          <button className="btn-solid" onClick={() => setShowAll((current) => !current)}>{showAll ? '상위만 보기' : '전체 보기'}</button>
+          <div><h2>{t('오류 유형 상세')}</h2><p>{t('오류를 펼쳐 대표 예시를 확인하세요.')}</p></div>
+          <button className="btn-solid" onClick={() => setShowAll((current) => !current)}>{t(showAll ? '상위만 보기' : '전체 보기')}</button>
         </div>
         <div className="weakness-list">
           {reportRows.length ? visibleRows.map((row, index) => (
             <article className="weakness-item" key={row.name}>
               <button className="weakness-item__head" onClick={() => setOpen(open === index ? -1 : index)}>
-                <span className="rank">0{index + 1}</span><b>{row.name}</b><span>{row.count}명</span><strong>{row.rate}%</strong><i>{open === index ? '−' : '＋'}</i>
+                <span className="rank">0{index + 1}</span><b>{t(row.name)}</b><span>{row.count} {t('명')}</span><strong>{row.rate}%</strong><i>{open === index ? '−' : '＋'}</i>
               </button>
-              <div className="correction-pair"><span className="strike">{row.bad}</span><span>→</span><b>{row.good}</b><small>다음 수업에 반영</small></div>
+              <div className="correction-pair"><span className="strike">{row.bad}</span><span>→</span><b>{row.good}</b><small>{t('다음 수업에 반영')}</small></div>
               {open === index && (
                 <div className="weakness-examples">
-                  <b>추가 오답 예시</b>
+                  <b>{t('추가 오답 예시')}</b>
                   {row.examples.map((example) => <p key={example}>“{example}”</p>)}
                 </div>
               )}
             </article>
-          )) : <div className="prof-empty"><span>!</span><div><b>02분반 취약점 데이터가 아직 없어요</b><p>데이터가 준비되면 주차별 리포트가 표시됩니다.</p></div></div>}
+          )) : <div className="prof-empty"><span>!</span><div><b>{t('02분반 취약점 데이터가 아직 없어요')}</b><p>{t('데이터가 준비되면 주차별 리포트가 표시됩니다.')}</p></div></div>}
         </div>
       </section>
 

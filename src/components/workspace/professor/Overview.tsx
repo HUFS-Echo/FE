@@ -1,5 +1,6 @@
 import { getDemoState } from '../../../lib/demoStore';
 import { useProfFilters, type ProfFilters } from './ProfFilterContext';
+import { useProfessorLanguage } from './ProfessorLanguageContext';
 
 type Props = {
   onNavigate: (path: string) => void;
@@ -62,10 +63,14 @@ const studentsByCourse: Record<ProfFilters['course'], StudentRow[]> = {
 
 export function Overview({ onNavigate }: Props) {
   const { filters } = useProfFilters();
-  const subject = subjectNames[filters.course];
+  const { t, language } = useProfessorLanguage();
+  const sourceSubject = subjectNames[filters.course];
+  const subject = t(sourceSubject);
+  const sectionLabel = t(filters.section === '01' ? '01분반' : '02분반');
+  const weekLabel = language === 'en' ? `Week ${filters.week}` : `${filters.week}주차`;
   const scope = getDemoState().scopes.find(scope =>
     scope.week === filters.week &&
-    scope.subject === subject &&
+    scope.subject === sourceSubject &&
     (scope.section ?? '01') === filters.section &&
     ['active', 'ended', 'scheduled'].includes(scope.status),
   );
@@ -86,52 +91,52 @@ export function Overview({ onNavigate }: Props) {
     <div className="prof-page">
       <header className="prof-page-head">
         <div>
-          <span className="eyebrow">PORTUGUÊS A1 · {filters.section}분반</span>
-          <h1>반 학습 현황 · {subject}</h1>
-          <p>{filters.week}주차 · {weekDates[filters.week] ?? ''} · {filters.section}분반 · 수강생 {sectionSize}명</p>
+          <span className="eyebrow">PORTUGUÊS A1 · {sectionLabel}</span>
+          <h1>{t('반 학습 현황')} · {subject}</h1>
+          <p>{weekLabel} · {weekDates[filters.week] ?? ''} · {sectionLabel} · {language === 'en' ? `${sectionSize} students` : `수강생 ${sectionSize}명`}</p>
         </div>
       </header>
 
       <section className="prof-kpis">
         <article>
-          <span>참여 학생</span>
+          <span>{t('참여 학생')}</span>
           <b>{participation} <small>/ {sectionSize}</small></b>
-          <em className="good">선택한 과목·분반 기준</em>
+          <em className="good">{t('선택한 과목·분반 기준')}</em>
         </article>
         <article>
-          <span>평균 진행률</span>
+          <span>{t('평균 진행률')}</span>
           <b>{averageProgress}<small>%</small></b>
-          <em>선택 주차 평균</em>
+          <em>{t('선택 주차 평균')}</em>
         </article>
         <article>
-          <span>평균 오답률</span>
+          <span>{t('평균 오답률')}</span>
           <b>{averageError}<small>%</small></b>
-          <em>선택한 범위 정확도 기준</em>
+          <em>{t('선택한 범위 정확도 기준')}</em>
         </article>
         <button type="button" onClick={() => onNavigate('/prof/feedback')}>
-          <span>AI 오류 신고</span>
-          <b>{feedbackCount}<small>건</small></b>
-          <em className="warn">확인 필요</em>
+          <span>{t('AI 오류 신고')}</span>
+          <b>{feedbackCount}<small>{language==='en'?' reports':'건'}</small></b>
+          <em className="warn">{t('확인 필요')}</em>
         </button>
       </section>
 
       <section className="prof-card roster-card">
         <div className="section-title">
           <div>
-            <h2>학생별 연습 현황</h2>
-            <p>{subject} · {filters.section}분반 · 이름·학번 일부 가림</p>
+            <h2>{t('학생별 연습 현황')}</h2>
+            <p>{subject} · {sectionLabel} · {t('이름·학번 일부 가림')}</p>
           </div>
         </div>
         <div className="table-scroll">
           <table className="prof-table">
             <thead>
               <tr>
-                <th>학생</th>
-                <th>진행률</th>
-                <th>연습</th>
-                <th>오답률</th>
-                <th>주요 오류</th>
-                <th>최근 활동</th>
+                <th>{t('학생')}</th>
+                <th>{t('진행률')}</th>
+                <th>{t('연습')}</th>
+                <th>{t('오답률')}</th>
+                <th>{t('주요 오류')}</th>
+                <th>{t('최근 활동')}</th>
               </tr>
             </thead>
             <tbody>
@@ -139,20 +144,20 @@ export function Overview({ onNavigate }: Props) {
                 <tr key={id}>
                   <td><b>{name}</b><small>{id}</small></td>
                   <td><span className="mini-progress"><i style={{ width: `${progress}%` }} /></span>{progress}%</td>
-                  <td>{practices}회</td>
+                  <td>{practices} {t('회')}</td>
                   <td><strong className={error >= 30 ? 'text-danger' : ''}>{error}%</strong></td>
-                  <td>{weakness}</td>
-                  <td>{lastActivity}</td>
+                  <td>{t(weakness)}</td>
+                  <td>{t(lastActivity)}</td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={6}>선택한 분반의 시연 학생 기록이 아직 없어요.</td>
+                  <td colSpan={6}>{t('선택한 분반의 시연 학생 기록이 아직 없어요.')}</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        <p className="privacy-note">학생 데이터는 수업 지원 목적으로만 사용되며, 시범 사용에 동의한 학생만 표시돼요.</p>
+        <p className="privacy-note">{t('학생 데이터는 수업 지원 목적으로만 사용되며, 시범 사용에 동의한 학생만 표시돼요.')}</p>
       </section>
     </div>
   );
