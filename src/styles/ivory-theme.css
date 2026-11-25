@@ -7,6 +7,10 @@
 .prof-sidebar nav>button:hover { background:#f1ece2; }
 .prof-sidebar nav>button.is-active { background:#eaf1fa; color:#2e5fa3; }
 .prof-sidebar__foot { border-color:#e5ded1; }
+.student-shell > .student-main,
+.prof-shell > .prof-main {
+  background: #fff;
+}
 .prof-page-head p,.prof-filter-context { color:#817f79; }
 .prof-filter-context b { color:#4a5a6d; }
 .prof-kpis>article,.prof-kpis>button,.prof-card { border-color:#e5ded1; background:#fff; box-shadow:0 1px 2px rgba(20,36,59,.04),0 10px 24px -20px rgba(20,36,59,.3); }
