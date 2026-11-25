@@ -230,158 +230,50 @@ export const OTHER_MISSIONS: Record<SubjectId, OtherMission[]> = {
 /* Reading                                                             */
 /* ------------------------------------------------------------------ */
 
-export type ReadingQuestionType = 'fill' | 'choice' | 'rewrite';
+export type ReadingQuestionType = 'form' | 'fill' | 'correct' | 'choice' | 'rewrite';
 
 export type ReadingQuestion = {
   id: string;
   type: ReadingQuestionType;
   label: string;
   instruction: string;
-  before: string;
-  after: string;
+  prompt: string;
   answer: string;
   options?: string[];
   explanation: string;
-  page: string;
-  hint: string;
   source: string;
-  prompt?: string;
 };
 
 export const READING_QUESTIONS: ReadingQuestion[] = [
   {
-    id: 'q1',
-    type: 'fill',
-    label: '빈칸 채우기',
-    instruction: '빈칸에 알맞은 부정관사를 입력하세요.',
-    before: 'Eu quero ',
-    after: ' água, por favor.',
-    answer: 'uma',
-    explanation: 'água는 여성 명사라서 부정관사 uma를 씁니다.',
-    page: '29',
-    hint: 'água는 여성 명사예요.',
-    source: 'uma água',
+    id: 'grammar-form-ser-eu', type: 'form', label: '형태 쓰기',
+    instruction: '동사 ser를 주어 eu에 맞는 직설법 현재형으로 쓰세요.',
+    prompt: 'eu + ser', answer: 'sou',
+    explanation: '동사 ser는 eu와 함께 사용할 때 sou로 변화해요.', source: 'eu + ser',
   },
   {
-    id: 'q2',
-    type: 'choice',
-    label: '선택형',
-    instruction: '문장에 알맞은 표현을 고르세요.',
-    before: 'Eu quero ',
-    after: ' café, por favor.',
-    answer: 'um',
-    options: ['um', 'uma', 'uns'],
-    explanation: 'café는 남성 명사라서 부정관사 um을 씁니다.',
-    page: '29',
-    hint: 'café는 남성 명사예요.',
-    source: 'um café',
+    id: 'grammar-fill-varanda', type: 'fill', label: '빈칸 채우기',
+    instruction: '명사의 성과 수에 맞는 부정관사를 써 보세요.',
+    prompt: 'Na minha casa, tem ___ varanda.', answer: 'uma',
+    explanation: 'varanda는 여성 단수 명사이므로 부정관사 uma를 써요.', source: 'Na minha casa, tem uma varanda.',
   },
   {
-    id: 'q3',
-    type: 'rewrite',
-    label: '문장 바꿔 쓰기',
-    instruction: '부정관사를 넣어 문장을 다시 써 보세요.',
-    before: '',
-    after: '',
-    answer: 'Eu quero um café.',
-    explanation: '셀 수 있는 남성 명사 café 앞에는 um이 필요해요.',
-    page: '29',
-    hint: 'Eu quero + um café.',
-    source: 'Eu quero um café, por favor.',
-    prompt: 'Eu quero café.',
+    id: 'grammar-correct-estar', type: 'correct', label: '한 부분 고치기',
+    instruction: '지금의 상태를 나타내도록, 대괄호 안의 동사만 고쳐 쓰세요.',
+    prompt: 'O quarto [é] arrumado agora.', answer: 'está',
+    explanation: '정돈된 현재 상태를 나타내므로 ser가 아니라 estar를 써요.', source: 'O quarto está arrumado agora.',
   },
   {
-    id: 'q4',
-    type: 'fill',
-    label: '빈칸 채우기',
-    instruction: '빈칸에 알맞은 부정관사를 입력하세요.',
-    before: 'Ela pediu ',
-    after: ' bolo de chocolate.',
-    answer: 'um',
-    explanation: 'bolo는 남성 명사라서 um을 씁니다.',
-    page: '29',
-    hint: 'bolo는 남성 명사예요.',
-    source: 'um bolo',
+    id: 'grammar-rewrite-cozinha', type: 'rewrite', label: '문장 바꾸기',
+    instruction: '주어를 A cozinha로 바꾸고, 뜻이 유지되도록 문장 전체를 다시 쓰세요.',
+    prompt: 'O banheiro está sujo.', answer: 'A cozinha está suja.',
+    explanation: '주어가 여성형인 A cozinha로 바뀌므로 형용사도 suja로 일치시켜요.', source: 'A cozinha está suja.',
   },
   {
-    id: 'q5',
-    type: 'fill',
-    label: '빈칸 채우기',
-    instruction: '빈칸에 알맞은 부정관사를 입력하세요.',
-    before: 'Ele bebe ',
-    after: ' cerveja.',
-    answer: 'uma',
-    explanation: 'cerveja는 여성 명사라서 uma를 씁니다.',
-    page: '29',
-    hint: 'cerveja는 여성 명사예요.',
-    source: 'uma cerveja',
-  },
-  {
-    id: 'q6',
-    type: 'choice',
-    label: '선택형',
-    instruction: '문장에 알맞은 표현을 고르세요.',
-    before: 'O café está ',
-    after: ' da mesa.',
-    answer: 'na',
-    options: ['na', 'no', 'em'],
-    explanation: 'mesa는 여성 명사이고, em + a는 na로 축약됩니다.',
-    page: '30',
-    hint: 'em + a = ?',
-    source: 'na mesa',
-  },
-  {
-    id: 'q7',
-    type: 'fill',
-    label: '빈칸 채우기',
-    instruction: '빈칸에 알맞은 부정관사를 입력하세요.',
-    before: 'Nós queremos ',
-    after: ' sanduíche.',
-    answer: 'um',
-    explanation: 'sanduíche는 남성 명사라서 um을 씁니다.',
-    page: '29',
-    hint: 'sanduíche는 남성 명사예요.',
-    source: 'um sanduíche',
-  },
-  {
-    id: 'q8',
-    type: 'fill',
-    label: '빈칸 채우기',
-    instruction: '빈칸에 알맞은 부정관사를 입력하세요.',
-    before: 'A criança comeu ',
-    after: ' maçã.',
-    answer: 'uma',
-    explanation: 'maçã는 여성 명사라서 uma를 씁니다.',
-    page: '29',
-    hint: 'maçã는 여성 명사예요.',
-    source: 'uma maçã',
-  },
-  {
-    id: 'q9',
-    type: 'rewrite',
-    label: '문장 바꿔 쓰기',
-    instruction: '부정관사를 넣어 문장을 다시 써 보세요.',
-    before: '',
-    after: '',
-    answer: 'Ela quer uma água.',
-    explanation: 'água는 여성 명사라서 uma água라고 씁니다.',
-    page: '29',
-    hint: 'Ela quer + uma água.',
-    source: 'uma água',
-    prompt: 'Ela quer água.',
-  },
-  {
-    id: 'q10',
-    type: 'fill',
-    label: '빈칸 채우기',
-    instruction: '빈칸에 알맞은 부정관사를 입력하세요.',
-    before: 'Eu quero ',
-    after: ' sumo de laranja.',
-    answer: 'um',
-    explanation: 'sumo는 남성 명사라서 um을 씁니다.',
-    page: '29',
-    hint: 'sumo는 남성 명사예요.',
-    source: 'um sumo',
+    id: 'grammar-choice-escritorio', type: 'choice', label: '객관식',
+    instruction: '빈칸에 들어갈 부정관사를 골라 보세요.',
+    prompt: 'No meu apartamento, tem ___ escritório.', answer: 'um', options: ['uma', 'um', 'uns'],
+    explanation: 'escritório는 남성 단수 명사이므로 부정관사 um을 써요.', source: 'No meu apartamento, tem um escritório.',
   },
 ];
 

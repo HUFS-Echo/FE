@@ -1,10 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import {
-  PDF_EXCERPT,
-  READING_QUESTIONS,
-  WEEK,
-  type ReadingQuestion,
-} from '../../../config/learning';
+import { useRef, useState } from 'react';
+import { READING_QUESTIONS, WEEK, type ReadingQuestion } from '../../../config/learning';
 import type { SummaryData } from './PracticeSummary';
 
 type Props = {
@@ -13,354 +8,218 @@ type Props = {
   onToast: (message: string) => void;
 };
 
-type Status = 'idle' | 'correct' | 'wrong';
+type Submission = { value: string; correct: boolean };
+
+const REVIEW_EXPLANATIONS = [
+  'eu와 함께 쓰는 ser의 현재형은 sou예요.',
+  'varanda는 여성 단수 명사예요.',
+  '일시적인 상태를 나타낼 때는 estar를 써요.',
+  'cozinha는 여성 명사라 sujo가 suja로 바뀌어요.',
+  'escritório는 남성 단수 명사예요.',
+];
 
 function normalize(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/[.,!?]$/, '');
+  return value.trim().toLocaleLowerCase('pt-PT').normalize('NFC').replace(/\s+/g, ' ').replace(/[.!?…]+$/, '');
 }
 
-export function ReadingPractice({ onBack, onComplete, onToast }: Props) {
+function renderSolvedPrompt(question: ReadingQuestion, value: string, correctAnswer = false) {
+  if (question.type === 'form') return correctAnswer ? 'eu + sou' : question.prompt;
+  if (question.type === 'correct') {
+    const replacement = correctAnswer ? question.answer : value || '___';
+    return question.prompt.replace('[é]', `[${replacement}]`);
+  }
+  const replacement = correctAnswer ? question.answer : value || '___';
+  return question.prompt.replace('___', replacement);
+}
+
+export function ReadingPractice({ onBack, onComplete }: Props) {
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState('');
-  const [choice, setChoice] = useState<string | null>(null);
-  const [status, setStatus] = useState<Status>('idle');
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrong, setWrong] = useState<ReadingQuestion[]>([]);
-  const [flashPdf, setFlashPdf] = useState(false);
-  const pdfRef = useRef<HTMLElement | null>(null);
-  const flashTimer = useRef<number | null>(null);
-
+  const [submissions, setSubmissions] = useState<Record<string, Submission>>({});
+  const [showReview, setShowReview] = useState(false);
+  const startedAt = useRef(Date.now());
   const current = READING_QUESTIONS[index];
-  const next = READING_QUESTIONS[index + 1];
+  const currentSubmission = submissions[current.id];
   const isLast = index === READING_QUESTIONS.length - 1;
 
-  const highlightedLine = useMemo(() => {
-    const source = current.source.toLowerCase();
-    return PDF_EXCERPT.lines.find((line) => line.toLowerCase().includes(source)) ?? PDF_EXCERPT.lines[2];
-  }, [current.source]);
+  function submitAnswer() {
+    if (currentSubmission) return;
+    const correct = normalize(answer) === normalize(current.answer);
+    setSubmissions((previous) => ({ ...previous, [current.id]: { value: answer.trim(), correct } }));
+    if (isLast) setShowReview(true);
+  }
 
-  function resetQuestion() {
+  function goToQuestion(nextIndex: number) {
+    setIndex(nextIndex);
+    setAnswer(submissions[READING_QUESTIONS[nextIndex].id]?.value ?? '');
+  }
+
+  function resetCurrent() {
+    setSubmissions(({ [current.id]: _removed, ...remaining }) => remaining);
     setAnswer('');
-    setChoice(null);
-    setStatus('idle');
   }
 
-  function check() {
-    if (status !== 'idle') return;
-    let ok = false;
-    if (current.type === 'choice') {
-      ok = choice === current.answer;
-    } else if (current.type === 'rewrite') {
-      const key = current.id === 'q3' ? 'um café' : 'uma água';
-      ok = normalize(answer).includes(key);
-    } else {
-      ok = normalize(answer) === normalize(current.answer);
-    }
-    setStatus(ok ? 'correct' : 'wrong');
-    if (ok) {
-      setCorrectCount((count) => count + 1);
-    } else {
-      setWrong((items) => (items.some((item) => item.id === current.id) ? items : [...items, current]));
-    }
+  function completePractice() {
+    if (!currentSubmission || !isLast) return;
+    const total = READING_QUESTIONS.length;
+    const correctCount = Object.values(submissions).filter((submission) => submission.correct).length;
+    const corrections = READING_QUESTIONS.flatMap((question) => {
+      const submission = submissions[question.id];
+      if (!submission || submission.correct) return [];
+      return [{
+        original: renderSolvedPrompt(question, submission.value),
+        corrected: renderSolvedPrompt(question, submission.value, true),
+      }];
+    });
+    const accuracy = Math.round((correctCount / total) * 100);
+    const minutes = Math.max(1, Math.round((Date.now() - startedAt.current) / 60_000));
+    onComplete({
+      subject: 'reading',
+      title: 'Muito bem!',
+      message: `문법 ${total}문제를 모두 풀었어요. 오늘의 결과를 확인해 보세요.`,
+      stats: [
+        { label: '정답', value: String(correctCount), suffix: `/ ${total}` },
+        { label: '정확도', value: String(accuracy), suffix: '%' },
+        { label: '연습 시간', value: String(minutes), suffix: '분' },
+      ],
+      corrections,
+    });
   }
 
-  function goNext() {
-    if (status === 'idle') return;
-    if (isLast) {
-      const wrongCorrections = wrong.map((item) => ({
-        original: item.type === 'rewrite' ? item.prompt ?? '' : `${item.before}___${item.after}`,
-        corrected: item.type === 'rewrite' ? item.answer : `${item.before}${item.answer}${item.after}`,
-      }));
-      const total = READING_QUESTIONS.length;
-      const accuracy = Math.round((correctCount / total) * 100);
-      onComplete({
-        subject: 'reading',
-        title: 'Muito bem!',
-        message: `부정관사 ${total}문제를 모두 풀었어요. 오늘의 결과를 확인해 보세요.`,
-        stats: [
-          { label: '정답', value: `${correctCount}`, suffix: `/ ${total}` },
-          { label: '정확도', value: `${accuracy}`, suffix: '%' },
-          { label: '연습 시간', value: '8', suffix: '분' },
-        ],
-        corrections: wrongCorrections,
-      });
-      return;
-    }
-    setIndex((value) => value + 1);
-    resetQuestion();
-  }
+  const answerFieldLabel = current.type === 'rewrite' ? '문장을 다시 써 보세요' : '답을 입력하세요';
+  const inputPlaceholder = current.type === 'form' ? 'ser의 현재형을 입력하세요' : current.type === 'correct' ? '고친 동사를 입력하세요' : current.type === 'rewrite' ? 'A cozinha está ...' : '부정관사를 입력하세요';
 
-  function showPdf() {
-    pdfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setFlashPdf(true);
-    if (flashTimer.current) window.clearTimeout(flashTimer.current);
-    flashTimer.current = window.setTimeout(() => setFlashPdf(false), 1500);
+  if (showReview) {
+    return (
+      <section className="grammar-review" aria-labelledby="grammar-review-title">
+        <div className="grammar-review__eyebrow">{WEEK.label} <i aria-hidden="true">/</i> 문법</div>
+        <h1 id="grammar-review-title">정답과 예시 답안</h1>
+        <p className="grammar-review__intro">내 답변과 비교해 보세요.</p>
+        <ol className="grammar-review__list">
+          {READING_QUESTIONS.map((question, questionIndex) => (
+            <li className="grammar-review__card" key={question.id}>
+              <span className="grammar-review__label">{String(questionIndex + 1).padStart(2, '0')} {question.label}</span>
+              <div className="grammar-review__answer">
+                <strong>{question.answer}</strong>
+                <p>{REVIEW_EXPLANATIONS[questionIndex] ?? question.explanation}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <button type="button" className="grammar-review__exit" onClick={completePractice}>종료하기 <ArrowIcon /></button>
+      </section>
+    );
   }
 
   return (
-    <div className="reading">
-      <div className="reading__top">
-        <button type="button" className="back-link" onClick={onBack}>
-          <BackIcon />
-          연습 홈
-        </button>
-        <div className="reading__top-meta">
-          <span className="chip chip--blue">포르투갈어 문법 · {current.label}</span>
-          <span className="chip">{WEEK.label}</span>
+    <section className="grammar-practice" aria-label="포르투갈어 문법 연습">
+      <div className="grammar-practice__top">
+        <span>{WEEK.label} <i aria-hidden="true">/</i> 문법</span>
+        <b aria-live="polite">{String(index + 1).padStart(2, '0')} / {String(READING_QUESTIONS.length).padStart(2, '0')}</b>
+      </div>
+
+      <div className="grammar-progress" role="progressbar" aria-label="문법 연습 진행" aria-valuemin={0} aria-valuemax={READING_QUESTIONS.length} aria-valuenow={index + (currentSubmission ? 1 : 0)}>
+        {READING_QUESTIONS.map((question, step) => (
+          <span key={question.id} className={step < index || (step === index && currentSubmission) ? 'is-complete' : step === index ? 'is-current' : ''} />
+        ))}
+      </div>
+
+      <header className="grammar-practice__heading" key={current.id}>
+        <span className="grammar-practice__step">{String(index + 1).padStart(2, '0')} <i>/</i> 05</span>
+        <h1>{current.label}</h1>
+        <p>{current.instruction}</p>
+      </header>
+
+      {index < 3 ? (
+        <article className="grammar-prompt grammar-prompt--boo">
+          <div className="grammar-prompt__owl" aria-hidden="true"><img src="/grammar-assets/boo-guide.webp" alt="" draggable={false} /></div>
+          <img className="grammar-prompt__bubble" src="/grammar-assets/green-speech-bubble.svg" alt="" aria-hidden="true" />
+          <div className="grammar-prompt__copy">
+            <span>Boo <i aria-hidden="true">·</i> 제시문</span>
+            <p>{current.prompt}</p>
+          </div>
+        </article>
+      ) : (
+        <article className="grammar-prompt grammar-prompt--plain">
+          <span>제시 문장</span>
+          <p>{current.prompt}</p>
+        </article>
+      )}
+
+      {current.type === 'choice' ? (
+        <fieldset className="grammar-answer grammar-answer--choices" disabled={Boolean(currentSubmission)}>
+          <legend>응답 선택</legend>
+          <div className="grammar-choice-list">
+            {current.options?.map((option, optionIndex) => {
+              const selected = answer === option;
+              return (
+                <button key={option} type="button" className={`grammar-choice${selected ? ' is-selected' : ''}${currentSubmission && option === current.answer ? ' is-answer' : ''}`} aria-pressed={selected} onClick={() => setAnswer(option)}>
+                  <span className="grammar-choice__radio" aria-hidden="true">{selected ? '✓' : String.fromCharCode(65 + optionIndex)}</span>
+                  <span>{option}</span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      ) : (
+        <div className="grammar-answer">
+          <label htmlFor="grammar-answer-input">{current.type === 'form' || current.type === 'correct' ? '내 답변' : answerFieldLabel}</label>
+          <div className={`grammar-answer__field${currentSubmission ? currentSubmission.correct ? ' is-correct' : ' is-wrong' : ''}`}>
+            <input
+              id="grammar-answer-input"
+              value={answer}
+              onChange={(event) => setAnswer(event.target.value)}
+              onKeyDown={(event) => { if (event.key === 'Enter' && answer.trim() && !currentSubmission) submitAnswer(); }}
+              placeholder={inputPlaceholder}
+              disabled={Boolean(currentSubmission)}
+              autoComplete="off"
+              autoCapitalize={current.type === 'rewrite' ? 'sentences' : 'none'}
+              spellCheck={false}
+            />
+            {current.type === 'form' && <span className="grammar-answer__suffix">eu +</span>}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="reading__grid">
-        <aside className={`pdf-card ${flashPdf ? 'is-flash' : ''}`} ref={pdfRef}>
-          <header className="pdf-card__head">
-            <div>
-              <p className="eyebrow">TEXTBOOK · PDF</p>
-              <b>포르투갈어 문법</b>
-            </div>
-            <span>{PDF_EXCERPT.page}쪽</span>
-          </header>
-
-          <div className="pdf-sheet">
-            <div className="pdf-sheet__top">
-              <span>UNIDADE 03</span>
-              <span>29</span>
-            </div>
-            <p className="pdf-sheet__chapter">{PDF_EXCERPT.chapter}</p>
-            <h3>{PDF_EXCERPT.title}</h3>
-            <div className="pdf-sheet__rule" />
-            {PDF_EXCERPT.lines.map((line) => (
-              <p
-                key={line}
-                className={line === highlightedLine ? 'pdf-sheet__line is-hl' : 'pdf-sheet__line'}
-              >
-                {line}
-              </p>
-            ))}
-            <p className="pdf-sheet__note">{PDF_EXCERPT.note}</p>
-            <div className="pdf-sheet__foot">
-              <span>Gramática aplicada</span>
-              <span>29</span>
-            </div>
+      {currentSubmission && (
+        <div className={`grammar-feedback ${currentSubmission.correct ? 'is-correct' : 'is-wrong'}`} role="status">
+          <span className="grammar-feedback__mark" aria-hidden="true">{currentSubmission.correct ? '✓' : '!'}</span>
+          <div>
+            <b>{currentSubmission.correct ? 'Muito bem!' : '다시 확인해 보세요'}</b>
+            <p>정답은 <strong>{current.answer}</strong>예요. {current.explanation}</p>
           </div>
+          <button type="button" onClick={resetCurrent}>다시 풀기</button>
+        </div>
+      )}
 
-          <button type="button" className="pdf-card__link" onClick={showPdf}>
-            교재에서 크게 보기
-            <ArrowIcon />
+      <footer className="grammar-practice__footer">
+        {index > 0 ? (
+          <button type="button" className="grammar-button grammar-button--secondary" onClick={() => goToQuestion(index - 1)}>
+            <BackIcon /> 이전 문항
           </button>
-        </aside>
-
-        <main className="reading__main">
-          <div className="q-progress">
-            <div className="q-progress__dots" aria-hidden="true">
-              {READING_QUESTIONS.map((question, dotIndex) => (
-                <i
-                  key={question.id}
-                  className={
-                    dotIndex < index ? 'is-done' : dotIndex === index ? 'is-current' : ''
-                  }
-                />
-              ))}
-            </div>
-            <span>
-              {index + 1} / {READING_QUESTIONS.length}
-            </span>
-          </div>
-
-          <article className={`question-card is-${status}`}>
-            <header className="question-card__head">
-              <span className="question-card__label">{current.label}</span>
-              <span className="question-card__page">교재 {current.page}쪽</span>
-            </header>
-
-            <p className="question-card__instruction">{current.instruction}</p>
-
-            {current.type === 'rewrite' ? (
-              <div className="question-card__prompt">
-                <span>다시 쓰기</span>
-                <p>“{current.prompt}”</p>
-              </div>
-            ) : (
-              <p className="question-card__sentence">
-                {current.before}
-                <span className={`blank ${status === 'correct' ? 'is-filled' : ''}`}>
-                  {status === 'correct' ? current.answer : '____'}
-                </span>
-                {current.after}
-              </p>
-            )}
-
-            {current.type === 'choice' ? (
-              <>
-                <div className="choice-row" role="group" aria-label="답 선택">
-                  {current.options?.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={choice === option ? 'choice is-picked' : 'choice'}
-                      aria-pressed={choice === option}
-                      disabled={status !== 'idle'}
-                      onClick={() => setChoice(option)}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-                <div className="choice-submit">
-                  <button
-                    type="button"
-                    className="answer-row__check"
-                    onClick={check}
-                    disabled={status !== 'idle' || !choice}
-                  >
-                    채점하기
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="answer-row">
-                <label htmlFor="reading-answer">
-                  {current.type === 'rewrite' ? '문장을 다시 써 보세요' : '답을 입력하세요'}
-                </label>
-                <div className="answer-row__box">
-                  <input
-                    id="reading-answer"
-                    value={answer}
-                    onChange={(event) => setAnswer(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        check();
-                      }
-                    }}
-                    placeholder={current.type === 'rewrite' ? 'Eu quero ...' : 'um / uma'}
-                    disabled={status !== 'idle'}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    className="answer-row__check"
-                    onClick={check}
-                    disabled={status !== 'idle' || !answer.trim()}
-                  >
-                    채점하기
-                  </button>
-                </div>
-                <p className="answer-row__hint">{current.hint}</p>
-              </div>
-            )}
-
-            {status !== 'idle' && (
-              <div className={`feedback feedback--${status}`} role="status">
-                <div className="feedback__icon" aria-hidden="true">
-                  {status === 'correct' ? <CheckIcon /> : <CloseIcon />}
-                </div>
-                <div>
-                  <b>{status === 'correct' ? 'Muito bem!' : '아쉬워요!'}</b>
-                  <p>
-                    정답은 <strong>{current.answer}</strong>예요. {current.explanation}
-                  </p>
-                  {status === 'wrong' && (
-                    <button type="button" className="feedback__source" onClick={showPdf}>
-                      교재 {current.page}쪽에서 다시 보기
-                      <ArrowIcon />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <footer className={`question-card__foot ${status === 'idle' ? 'is-idle' : ''}`}>
-              {status !== 'idle' && (
-                <button type="button" className="text-link" onClick={() => onToast('피드백 신고가 접수되었어요. 교수님께 전달됩니다. (데모)')}>
-                  피드백이 이상해요
-                </button>
-              )}
-              <div className="question-card__actions">
-                <button type="button" className="btn-ghost" onClick={resetQuestion} disabled={status === 'idle'}>
-                  다시 풀기
-                </button>
-                <button type="button" className="btn-solid" onClick={goNext} disabled={status === 'idle'}>
-                  {isLast ? '결과 보기' : '다음 문제'}
-                  <ArrowIcon />
-                </button>
-              </div>
-            </footer>
-          </article>
-
-          <section className="next-preview">
-            <div className="next-preview__label">
-              <span className="eyebrow">A SEGUIR</span>
-              {next ? (
-                <span className="chip">{next.label}</span>
-              ) : (
-                <span className="chip chip--mint">세트 완료</span>
-              )}
-            </div>
-            {next ? (
-              <>
-                <p className="next-preview__sentence">
-                  {next.type === 'rewrite'
-                    ? `“${next.prompt}”`
-                    : `${next.before}____${next.after}`}
-                </p>
-                <p className="next-preview__note">다음 문제는 {next.label} 유형이에요.</p>
-              </>
-            ) : (
-              <p className="next-preview__note">마지막 문제예요. 결과를 확인해 보세요.</p>
-            )}
-          </section>
-        </main>
-      </div>
-    </div>
+        ) : (
+          <button type="button" className="grammar-button grammar-button--secondary" onClick={onBack}>
+            <BackIcon /> 연습 선택
+          </button>
+        )}
+        {currentSubmission ? (
+          <button type="button" className="grammar-button grammar-button--primary" onClick={isLast ? completePractice : () => goToQuestion(index + 1)}>
+            {isLast ? '학습 완료하고 결과 보기' : '다음 문항'} <ArrowIcon />
+          </button>
+        ) : (
+          <button type="button" className="grammar-button grammar-button--primary" onClick={submitAnswer} disabled={!answer.trim()}>
+            제출하고 해설 보기 <ArrowIcon />
+          </button>
+        )}
+      </footer>
+    </section>
   );
 }
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        d="M13 8H4M7.5 4.5 4 8l3.5 3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H4m3.5-3.5L4 8l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
 function ArrowIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path d="m4 10.5 4 4L16 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path d="m5 5 10 10M15 5 5 15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  );
+  return <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9m-3.5-3.5L12 8l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
