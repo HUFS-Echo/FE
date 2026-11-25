@@ -24,18 +24,16 @@
   flex-direction: column;
   gap: 12px;
 }
-.scope-student-col:not(.has-exercises) .student-preview-card,
-.scope-student-col:not(.has-exercises) .publish-trigger,
-.scope-student-col:not(.has-exercises) .autosave-note {
-  display: none;
-}
 .scope-student-col .scope-list-card {
   width: 100%;
   min-width: 0;
   margin-top: 0;
 }
-.scope-student-col .student-preview-card {
-  width: 100%;
+.scope-preview-step {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  min-width: 0;
 }
 .scope-list-card .table-scroll {
   max-width: 100%;
