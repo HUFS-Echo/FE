@@ -71,7 +71,6 @@ export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onT
           {to === '/prof/feedback' && openCount > 0 && <b className="nav-badge">{openCount}</b>}
         </button>)}
       </nav>
-      <div className="prof-sidebar__foot"><img src="/owls/football.png" alt=""/><span><b>에코 AI</b><small>{t('이번 주 수업 준비를 도와드려요')}</small></span></div>
     </aside>
     <main className="prof-main" key={path}>
       <div className="prof-filter-context">{t('현재 보기 기준')} <b>{t(course)}</b> · <b>{sectionLabel}</b> · <b>{weekLabel}</b></div>

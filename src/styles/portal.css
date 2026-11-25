@@ -80,8 +80,14 @@
   .login__card--signup { margin:auto; }
 }
 
-/* Professor-only locale selector in the workspace header. */
-.header-language { display:inline-flex; align-items:center; }
-.header-language select { min-width:96px; max-width:112px; height:36px; padding:0 28px 0 11px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink-soft); font-size:12px; font-weight:700; }
-.header-language select:focus-visible { outline:2px solid var(--blue-bright); outline-offset:2px; }
-@media(max-width:760px) { .header-language select { max-width:108px; height:33px; font-size:11px; } }
+/* Professor-only segmented locale control in the workspace header. */
+.header-language { display:inline-flex; align-items:center; gap:3px; padding:3px; border:1px solid #dce5f1; border-radius:12px; background:linear-gradient(180deg,#f9fbfe 0%,#edf3fa 100%); box-shadow:0 2px 8px rgba(29,55,94,.08),inset 0 1px 0 rgba(255,255,255,.9); }
+.header-language__button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:32px; padding:0 10px; border:0; border-radius:9px; background:transparent; color:#627189; font-size:11px; font-weight:700; line-height:1; white-space:nowrap; cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease; }
+.header-language__button:hover:not(.is-active) { background:rgba(255,255,255,.78); color:#2856a8; }
+.header-language__button:active { transform:scale(.97); }
+.header-language__button:focus-visible { outline:2px solid #5b8def; outline-offset:2px; }
+.header-language__button.is-active { background:linear-gradient(135deg,#2856a8 0%,#467be0 100%); color:#fff; box-shadow:0 2px 6px rgba(40,86,168,.26),inset 0 1px 0 rgba(255,255,255,.18); }
+.header-language__code { color:#8a98ad; font-size:9px; font-weight:800; letter-spacing:.045em; }
+.header-language__button.is-active .header-language__code { color:rgba(255,255,255,.76); }
+@media(max-width:760px) { .header-language { gap:2px; padding:2px; border-radius:10px; }.header-language__button { min-height:29px; gap:5px; padding:0 8px; border-radius:8px; font-size:10px; } }
+@media(prefers-reduced-motion:reduce) { .header-language__button { transition:none; } }
