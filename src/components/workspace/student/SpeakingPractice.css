@@ -1,0 +1,289 @@
+.student-shell:has(.conversation-flow),
+.student-shell:has(.conversation-review),
+.student-main:has(> .conversation-flow),
+.student-main:has(> .conversation-review) {
+  background: #fff;
+}
+
+.conversation-flow,
+.conversation-review {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  color: #002d56;
+}
+
+.conversation-audio-prompt {
+  grid-template-columns: 112px minmax(0, 1fr);
+}
+
+.conversation-audio-card {
+  display: grid;
+  grid-template-columns: minmax(160px, auto) minmax(115px, auto) minmax(160px, 1fr);
+  align-items: center;
+  gap: 14px 20px;
+  min-height: 136px;
+  padding: 19px 25px;
+  border: 1px solid #c7ddd6;
+  border-radius: 20px;
+  background: #f2f8f5;
+}
+
+.conversation-audio-card__label {
+  grid-column: 1 / -1;
+  align-self: end;
+  color: #146e7a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.conversation-audio-card__controls {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  grid-column: 1 / 3;
+}
+
+.conversation-audio-card__controls button,
+.conversation-recording__controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 21px;
+  border: 0;
+  border-radius: 11px;
+  background: #146e7a;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.conversation-audio-card__controls button:hover:not(:disabled),
+.conversation-recording__controls button:hover {
+  transform: translateY(-1px);
+  background: #0d5d68;
+}
+
+.conversation-audio-card__controls button:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.conversation-audio-card__controls button svg,
+.conversation-recording__controls button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.conversation-audio-card__controls > span {
+  color: #25415e;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.conversation-waveform {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  min-height: 34px;
+  overflow: hidden;
+}
+
+.conversation-waveform i {
+  display: block;
+  width: 4px;
+  flex: none;
+  border-radius: 2px;
+  background: #9d9fa2;
+  transform-origin: center;
+  transition: background-color 180ms ease;
+}
+
+.conversation-waveform i.is-active {
+  background: #146e7a;
+}
+
+.conversation-waveform.is-playing i {
+  animation: conversation-audio-wave 620ms ease-in-out infinite alternate;
+}
+
+.conversation-waveform.is-playing i.is-active { background: #0e6673; }
+.conversation-waveform.is-playing i.is-idle { background: #65aaa9; }
+
+.conversation-bubble-prompt > img,
+.conversation-audio-prompt > img {
+  filter: drop-shadow(0 2px 2px rgba(6, 24, 40, 0.13));
+}
+
+.conversation-sentence-prompt {
+  min-height: 148px;
+  margin-top: 24px;
+  background: #f8f9f6;
+}
+
+.conversation-recording {
+  min-height: 116px;
+  padding: 0;
+}
+
+.conversation-recording__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 25px;
+  min-height: 70px;
+  padding: 15px 20px;
+  border: 1px solid #dadad3;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.conversation-recording__controls time {
+  color: #146e7a;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.conversation-recording__status {
+  color: #146e7a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.conversation-recording__wave {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 35px;
+  margin: 12px 3px 0;
+  overflow: hidden;
+}
+
+.conversation-recording__wave i {
+  width: 4px;
+  min-height: 6px;
+  border-radius: 999px;
+  background: #16818a;
+  animation: conversation-recording-pulse 850ms ease-in-out infinite alternate;
+}
+
+.conversation-recording__transcript {
+  margin-top: 12px;
+  padding: 12px 15px;
+  border: 1px solid #dbe9e4;
+  border-radius: 10px;
+  background: #f5faf8;
+  color: #002d56;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.conversation-review .writing-review__card {
+  grid-template-columns: 164px minmax(0, 1fr);
+}
+
+.conversation-flow .writing-flow__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+@keyframes conversation-recording-pulse {
+  from { transform: scaleY(0.58); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes conversation-audio-wave {
+  from { transform: scaleY(0.62); }
+  to { transform: scaleY(1.1); }
+}
+
+@media (max-width: 720px) {
+  .conversation-audio-prompt {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 11px;
+    min-height: 124px;
+  }
+
+  .conversation-audio-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    min-height: 118px;
+    padding: 15px 16px;
+    border-radius: 15px;
+  }
+
+  .conversation-audio-card__label,
+  .conversation-audio-card__controls,
+  .conversation-waveform {
+    grid-column: 1;
+  }
+
+  .conversation-audio-card__controls {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+
+  .conversation-audio-card__controls button,
+  .conversation-recording__controls button {
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .conversation-waveform {
+    gap: 4px;
+    min-height: 28px;
+  }
+
+  .conversation-sentence-prompt {
+    min-height: 124px;
+    margin-top: 20px;
+  }
+
+  .conversation-recording__controls {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .conversation-recording__status {
+    flex-basis: 100%;
+  }
+
+  .conversation-review .writing-review__card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 390px) {
+  .conversation-audio-prompt > img {
+    width: 54px;
+  }
+
+  .conversation-audio-card__controls > span {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversation-flow *,
+  .conversation-flow *::before,
+  .conversation-flow *::after,
+  .conversation-review *,
+  .conversation-review *::before,
+  .conversation-review *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

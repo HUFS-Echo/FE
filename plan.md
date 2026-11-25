@@ -34,7 +34,7 @@ HUFS Echo는 한국외국어대학교 특수외국어 학습자를 위한 데모
 | 홈 | `/student` 및 `/student/course/{reading\|writing\|speaking}` | 환영 문구, 선택 과목의 이번 주 학습 카드, PDF 범위·마감, `학습하기` 버튼, 홈 안의 주차 목록 |
 | 문법 연습 | `/student/practice/reading` | Figma의 5개 형식(형태 쓰기·빈칸 채우기·한 부분 고치기·문장 바꾸기·객관식)을 한 흐름으로 풀고, 문제 풀이와 마지막 `정답과 예시 답안` 화면 모두 흰 배경으로 표시. 마지막 제출 후 답을 비교하고 `종료하기`를 누르면 기존 연습 결과 화면으로 이동 |
 | 작문·독해 연습 | `/student/practice/writing` | 제공된 Figma 작문·독해 5문항을 한 흐름으로 풀고, 마지막 제출 후 5개 예시 답안·해설을 확인한 뒤 `종료하기`로 기존 학습 완료 화면으로 이동 |
-| 회화 연습 | `/student/practice/speaking` | 선택 과목의 회화 상황과 말하기 연습 |
+| 회화 연습 | `/student/practice/speaking` | Figma의 듣고 이해하기·응답 한 줄 쓰기·직접 말하기·소리 내어 읽기·객관식 5문항을 순서대로 풀고 제출 후 해설을 확인. `종료하기`는 기존 학습 완료 화면으로 연결 |
 | 맞춤 연습 | `/student/practice/custom` | 교정 기록의 반복 오류를 우선한 최대 5개 문제, 채점·해설·완료 점수 |
 | 연습 결과 | `/student/summary/{reading\|writing\|speaking}` | 정답·정확도·연습 시간, 오늘 고친 문장, 홈으로 이동하는 동선 |
 | 교정 기록 | `/student/history` | 전체/주차별 필터와 고친 문장 목록 |
@@ -44,7 +44,11 @@ HUFS Echo는 한국외국어대학교 특수외국어 학습자를 위한 데모
 
 문법 연습은 다섯 개의 별도 페이지가 아니라 하나의 화면에서 `형태 쓰기 → 빈칸 채우기 → 한 부분 고치기 → 문장 바꾸기 → 객관식` 순서로 진행합니다. 문제 풀이와 마지막 해설 화면 모두 Figma와 같은 흰 배경을 사용하고, Boo 가이드 이미지는 흰 배경을 제거한 로컬 자산으로 표시합니다. 진행 표시와 이전·다음 동작을 제공하며, 다섯 번째 문항 제출 후에는 `정답과 예시 답안` 화면(5개 답·설명 카드)을 보여줍니다. 사용자가 `종료하기`를 누른 뒤 기존 `/student/summary/reading` 학습 완료 화면을 재사용합니다.
 
-작문·독해 연습도 별도의 다섯 페이지가 아니라 같은 `/student/practice/writing` 흐름 안에서 `핵심 정보 찾기 → 글의 목적 파악 → 필수 정보를 담아 쓰기 → 읽고 답장 쓰기 → 객관식` 순서로 진행합니다. Figma의 문항 문구와 포르투갈어 지문을 유지하고, 입력 답변은 이전/다음 이동 중 보존합니다. 사용자가 마지막 문항에서 제출하면 5개 예시 답·설명 카드를 표시하고, `종료하기`는 `WritingPractice.onComplete`를 호출해 기존 `/student/summary/writing` 학습 완료 화면으로 연결합니다. Boo 이미지는 사용자가 제공한 PNG의 흰 배경만 제거해 만든 로컬 투명 에셋을 사용합니다. 회화 연습은 기존 흐름을 유지합니다.
+작문·독해 연습도 별도의 다섯 페이지가 아니라 같은 `/student/practice/writing` 흐름 안에서 `핵심 정보 찾기 → 글의 목적 파악 → 필수 정보를 담아 쓰기 → 읽고 답장 쓰기 → 객관식` 순서로 진행합니다. Figma의 문항 문구와 포르투갈어 지문을 유지하고, 입력 답변은 이전/다음 이동 중 보존합니다. 사용자가 마지막 문항에서 제출하면 5개 예시 답·설명 카드를 표시하고, `종료하기`는 `WritingPractice.onComplete`를 호출해 기존 `/student/summary/writing` 학습 완료 화면으로 연결합니다. Boo 이미지는 사용자가 제공한 PNG의 흰 배경만 제거해 만든 로컬 투명 에셋을 사용합니다.
+
+회화도 별도 문항 경로 없이 `/student/practice/speaking` 한 흐름에서 `듣고 이해하기 → 응답 한 줄 쓰기 → 직접 말하기 → 소리 내어 읽기 → 객관식` 순으로 진행합니다. 사용자가 제공한 Figma 디자인의 6개 프레임(다섯 문항과 제출 후 해설, 각 2880×2000)을 기준으로 하며 출처는 [포로로 Figma 파일](https://www.figma.com/design/geak66inb8sG3SKsHoKcGE/%ED%8F%AC%EB%A1%9C%EB%A1%9C?node-id=241-3071&t=2jiNlroMbFRi8z3c-4)입니다. 해당 프레임 노드는 `241-3071`, `241-3120`, `241-3143`, `241-3194`, `241-3218`, `268-2940` 순서입니다. 핵심 학습 문구는 `A sua casa tem uma varanda?`, `O que você faz na sala de estar?`, `Como é o seu jardim?`, `A minha varanda é estreita.`, `Onde você joga no computador?`이며 마지막 객관식 정답은 `No quarto.`입니다. 해설은 발코니 질문 이해, 거실 활동 예시, 정원 응답 예시, 문장 낭독, `Onde`의 장소 의미를 설명합니다. 이전·다음 문항 이동 시 답변을 보존하고, 다섯 번째 제출 뒤 이 해설 프레임을 표시합니다. `종료하기`는 `SpeakingPractice.onComplete`를 통해 기존 `/student/summary/speaking` 완료 화면으로 연결합니다. Figma의 작은 인물·아이콘 등 필요한 이미지는 변환 스크립트가 로컬로 복사한 `public/figma-assets/` 파일만 사용하며 외부 이미지 URL은 사용하지 않습니다.
+
+회화 음성 질문은 Figma의 둥근 막대 24개와 청록·회색 색 구성을 CSS로 재현합니다. 질문 재생 중에는 막대 높이와 색이 반응하고, 직접 말하기 문항에서는 녹음 시작 시 별도 파형을 표시합니다. 음성 UI와 질문 문구의 캐릭터 이름은 `에코`로 통일하며 데모 녹음 안내 문구는 표시하지 않습니다. 문법 Boo 말풍선 제시문은 꼬리 끝에 붙지 않도록 본문 안쪽으로 여백을 조정합니다.
 
 학생 홈에는 이번 주 진행률, 이번 주 목표, 다른 과목 미션, 오늘의 팁, 별도 연습 세트 카드가 없습니다. 이번 주 카드 중앙에는 학습 주제와 PDF 범위·기한이 표시되고 CTA는 `학습하기`입니다. 주차 목록은 홈 카드 아래에서 제공됩니다.
 
@@ -72,6 +76,8 @@ HUFS Echo는 한국외국어대학교 특수외국어 학습자를 위한 데모
 현재 작성 화면은 왼쪽의 강의자료·주차/쪽 범위 설정 및 문제 유형 선택과 오른쪽의 학습 범위 목록으로 시작합니다. `AI로 연습 만들기`를 눌러 현재 화면에서 생성이 완료된 경우에만 왼쪽 1·2번 카드가 있던 영역이 학생 화면 미리보기 카드로 교체되고, 오른쪽 학습 범위 목록은 유지됩니다. 저장된 문제가 있더라도 새 화면에서는 AI 생성 버튼을 계속 표시합니다. 문제는 기본 3개까지 미리 보여주고 `전체 보기`로 펼칠 수 있습니다. 게시 전 확인 모달에서 지금 게시 또는 예약 게시를 고릅니다.
 
 `ScopeListCard`는 `ScopeBuilder.tsx`의 오른쪽 영역에서 기존 범위를 상태·참여·정확도와 함께 요약하며, `관리` 열과 행별 수정·미리보기·복제 버튼은 표시하지 않습니다. 이는 별도 `/prof/scopes` 페이지와는 구별되는 인라인 목록입니다.
+
+학생 미리보기의 예시 문제는 오래된 정적 샘플이나 과목 설명을 복제하지 않고 실제 학생 연습 데이터와 동일한 카탈로그를 사용합니다: 문법은 `READING_QUESTIONS`, 읽기와 쓰기는 `WRITING_READING_QUESTIONS`, 회화는 `SPEAKING_PRACTICE_QUESTIONS`에서 문항·정답·해설을 읽습니다. 미리보기 전체 보기에는 현재 학생에게 제공되는 5문항이 표시됩니다.
 
 ### 취약점 리포트와 신고
 
@@ -126,7 +132,7 @@ AI 오류 신고 화면은 `/prof/feedback`에서 처리합니다. 사이드바 
 - 학생 페이지: `StudentHome.tsx`, `WeekList.tsx`, `ReadingPractice.tsx`, `WritingPractice.tsx`, `SpeakingPractice.tsx`, `PracticeSummary.tsx`, `CorrectionHistory.tsx`
 - 교수 페이지: `professor/Overview.tsx`, `ScopeBuilder.tsx`, `ScopeLibrary.tsx`, `WeaknessReport.tsx`, `FeedbackInbox.tsx`
 - 마이페이지: `src/components/workspace/profile/MyPages.tsx`
-- 데모/저장 상태: `src/config/learning.ts`, `src/lib/session.ts`, `src/lib/demoStore.ts`
+- 연습 데이터/데모 저장 상태: `src/config/learning.ts`, `src/config/writingReadingPractice.ts`, `src/config/speakingPractice.ts`, `src/lib/session.ts`, `src/lib/demoStore.ts`
 - 경로 메타데이터: `public/manus-routes.json` (현재 감사 후보 반영 전)
 
 

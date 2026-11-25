@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  INITIAL_MESSAGES,
-  SUGGESTIONS,
-  mockReply,
-  type ChatMessage,
-  type Correction,
-} from '../../../config/demo';
-import { SPEAKING_MISSION, WEEK } from '../../../config/learning';
+import { SPEAKING_PRACTICE_QUESTIONS } from '../../../config/speakingPractice';
+import { WEEK } from '../../../config/learning';
 import type { SummaryData } from './PracticeSummary';
+import './WritingPractice.css';
+import './SpeakingPractice.css';
 
 type Props = {
   onBack: () => void;
@@ -15,51 +11,27 @@ type Props = {
   onToast: (message: string) => void;
 };
 
-type MissionState = { order: boolean; price: boolean };
-
-let sequence = 0;
-const nextId = () => `sm${Date.now()}-${sequence++}`;
-
-const WAVE = [10, 18, 26, 14, 30, 22, 12, 28, 18, 34, 16, 24, 12, 30, 20, 26, 14, 32, 18, 22, 10, 28, 16, 24];
+const total = SPEAKING_PRACTICE_QUESTIONS.length;
+const WAVEFORM = [8, 14, 22, 14, 30, 17, 9, 22, 34, 21, 13, 25, 15, 8, 17, 28, 19, 10, 24, 14, 8, 17, 12, 7];
 
 function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
-  const rest = seconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
 export function SpeakingPractice({ onBack, onComplete, onToast }: Props) {
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
-  const [input, setInput] = useState('');
-  const [typing, setTyping] = useState(false);
-  const [translations, setTranslations] = useState<Set<string>>(
-    () => new Set([INITIAL_MESSAGES[0].id]),
-  );
-  const [voiceIds, setVoiceIds] = useState<Set<string>>(() => new Set());
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState<string[]>(() => Array(total).fill(''));
+  const [recorded, setRecorded] = useState<boolean[]>(() => Array(total).fill(false));
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [mission, setMission] = useState<MissionState>({ order: false, price: false });
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const replyTimer = useRef<number | null>(null);
-
-  const doneCount = Number(mission.order) + Number(mission.price);
-  const allDone = doneCount === SPEAKING_MISSION.goals.length;
-
-  useEffect(() => {
-    const element = scrollRef.current;
-    if (!element) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    element.scrollTo({ top: element.scrollHeight, behavior: reduce ? 'auto' : 'smooth' });
-  }, [messages, typing, recording]);
-
-  useEffect(
-    () => () => {
-      if (replyTimer.current) window.clearTimeout(replyTimer.current);
-    },
-    [],
-  );
+  const [playing, setPlaying] = useState(false);
+  const [showReview, setShowReview] = useState(false);
+  const startedAt = useRef(Date.now());
+  const playbackFallback = useRef<number | null>(null);
+  const question = SPEAKING_PRACTICE_QUESTIONS[index];
+  const answer = answers[index] ?? '';
+  const lastQuestion = index === total - 1;
 
   useEffect(() => {
     if (!recording) return;
@@ -67,414 +39,270 @@ export function SpeakingPractice({ onBack, onComplete, onToast }: Props) {
     return () => window.clearInterval(timer);
   }, [recording]);
 
-  function send(text: string, viaVoice = false) {
-    const trimmed = text.trim();
-    if (!trimmed || typing) return;
-    const turn = messages.filter((message) => message.role === 'user').length + 1;
-    const id = nextId();
-    setMessages((prev) => [...prev, { id, role: 'user', pt: trimmed }]);
-    if (viaVoice) setVoiceIds((prev) => new Set(prev).add(id));
-    setInput('');
+  useEffect(() => () => {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (playbackFallback.current !== null) window.clearTimeout(playbackFallback.current);
+  }, []);
 
-    const lower = trimmed.toLowerCase();
-    setMission((prev) => ({
-      order: prev.order || SPEAKING_MISSION.goals[0].keywords.some((keyword) => lower.includes(keyword)),
-      price: prev.price || SPEAKING_MISSION.goals[1].keywords.some((keyword) => lower.includes(keyword)),
-    }));
+  function setAnswer(value: string) {
+    setAnswers((previous) => previous.map((item, answerIndex) => answerIndex === index ? value : item));
+  }
 
-    setTyping(true);
-    replyTimer.current = window.setTimeout(() => {
-      const reply = mockReply(trimmed, turn);
-      setMessages((prev) => [...prev, { id: nextId(), role: 'ai', ...reply }]);
-      setTyping(false);
-    }, 900);
+  function stopQuestionPlayback() {
+    if (playbackFallback.current !== null) {
+      window.clearTimeout(playbackFallback.current);
+      playbackFallback.current = null;
+    }
+    setPlaying(false);
+  }
+
+  function playQuestion() {
+    if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+      onToast('이 브라우저에서는 음성 재생을 지원하지 않아요.');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    stopQuestionPlayback();
+    const utterance = new SpeechSynthesisUtterance(question.prompt);
+    utterance.lang = 'pt-PT';
+    utterance.rate = 0.88;
+    utterance.onstart = () => setPlaying(true);
+    utterance.onend = stopQuestionPlayback;
+    utterance.onerror = () => {
+      if (window.speechSynthesis.getVoices().length > 0) stopQuestionPlayback();
+    };
+    setPlaying(true);
+    playbackFallback.current = window.setTimeout(stopQuestionPlayback, Math.max(2500, question.prompt.length * 100));
+    window.speechSynthesis.speak(utterance);
   }
 
   function startRecording() {
-    if (typing) {
-      onToast('에코가 답하는 중이에요. 잠시 후 다시 말해 주세요.');
-      return;
-    }
-    setRecording(true);
     setSeconds(0);
+    setRecording(true);
   }
 
   function stopRecording() {
     setRecording(false);
     if (seconds < 1) {
-      onToast('조금 더 길게 말해 주세요.');
+      onToast('조금 더 길게 녹음해 주세요.');
       return;
     }
-    const phrase = !mission.order
-      ? 'Eu quero um café, por favor.'
-      : !mission.price
-        ? 'Quanto custa o café?'
-        : 'Um pastel de nata, por favor.';
-    onToast('음성을 텍스트로 변환했어요. (데모)');
-    send(phrase, true);
+    setAnswer(question.answer);
+    setRecorded((previous) => previous.map((value, answerIndex) => answerIndex === index ? true : value));
+    onToast('예시 음성 답안을 기록했어요. (데모)');
   }
 
-  function cancelRecording() {
-    setRecording(false);
+  function goToQuestion(nextIndex: number) {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopQuestionPlayback();
     setSeconds(0);
-    onToast('녹음을 취소했어요.');
+    setIndex(Math.max(0, Math.min(total - 1, nextIndex)));
   }
 
-  function toggleTranslation(id: string) {
-    setTranslations((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function finish() {
-    const userMessages = messages.filter((message) => message.role === 'user');
-    if (userMessages.length === 0) {
-      onToast('먼저 한 문장 이상 말해 주세요.');
+  function continuePractice() {
+    if (recording) return;
+    if (!answer.trim()) {
+      onToast(question.responseType === 'choice' ? '보기 중 하나를 선택해 주세요.' : question.responseType === 'recording' ? '먼저 답변을 녹음해 주세요.' : '답을 입력해 주세요.');
       return;
     }
-    const corrections = messages.flatMap((message) =>
-      message.correction
-        ? [
-            {
-              original: message.correction.original,
-              corrected: message.correction.corrected,
-            },
-          ]
-        : [],
-    );
-    const accuracy = Math.max(
-      50,
-      Math.round(100 - (corrections.length / Math.max(1, userMessages.length)) * 100),
-    );
+    if (lastQuestion) setShowReview(true);
+    else goToQuestion(index + 1);
+  }
+
+  function completePractice() {
+    const minutes = Math.max(1, Math.round((Date.now() - startedAt.current) / 60_000));
+    const answeredCount = answers.filter((value) => value.trim()).length;
     onComplete({
       subject: 'speaking',
       title: 'Muito bem!',
-      message: '카페 미션을 마쳤어요. 연습 결과를 확인해 보세요.',
+      message: '회화 5문항을 풀고 예시 답안과 해설을 확인했어요.',
       stats: [
-        { label: '말한 문장', value: `${userMessages.length}`, suffix: '문장' },
-          { label: '교정', value: `${corrections.length}`, suffix: '개' },
-          { label: '정확도', value: `${accuracy}`, suffix: '%' },
-        ],
-      corrections,
+        { label: '제출 문항', value: String(total), suffix: `/ ${total}` },
+        { label: '답변 완료', value: String(answeredCount), suffix: '문항' },
+        { label: '연습 시간', value: String(minutes), suffix: '분' },
+      ],
+      corrections: [],
+      correctionsTitle: '학습 마무리',
+      emptyCorrectionsMessage: '다섯 문항의 예시 답안과 해설을 확인했어요.',
     });
   }
 
-  return (
-    <div className="speaking">
-      <div className="speaking__top">
-        <button type="button" className="back-link" onClick={onBack}>
-          <BackIcon />
-          연습 홈
-        </button>
-        <div className="speaking__top-title">
-          <span className="chip chip--mint">회화</span>
-          <b>카페에서 주문하기</b>
-          <span className="chip">약 10분</span>
+  if (showReview) {
+    return (
+      <section className="writing-review conversation-review" aria-labelledby="conversation-review-title">
+        <div className="writing-review__eyebrow">{WEEK.label} <i aria-hidden="true">/</i> 회화</div>
+        <h1 id="conversation-review-title">정답과 예시 답안</h1>
+        <p className="writing-review__intro">내 답변과 비교해 보세요.</p>
+        <ol className="writing-review__list">
+          {SPEAKING_PRACTICE_QUESTIONS.map((item, questionIndex) => (
+            <li className="writing-review__card" key={item.id}>
+              <span className="writing-review__label">
+                {String(questionIndex + 1).padStart(2, '0')} <span>{item.label}</span>
+              </span>
+              <div className="writing-review__answer">
+                <strong lang="pt">{item.answer}</strong>
+                <p>{item.explanation}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="writing-review__actions">
+          <button type="button" className="writing-flow__button writing-flow__button--primary" onClick={completePractice}>
+            종료하기 <ArrowIcon />
+          </button>
         </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="writing-flow conversation-flow" aria-label="포르투갈어 회화 연습">
+      <div className="writing-flow__top">
+        <span>{WEEK.label} <i aria-hidden="true">/</i> 회화</span>
+        <b aria-live="polite">{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</b>
+      </div>
+      <div
+        className="writing-flow__progress"
+        role="progressbar"
+        aria-label="회화 연습 진행"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={index + 1}
+      >
+        {SPEAKING_PRACTICE_QUESTIONS.map((item, step) => (
+          <span key={item.id} className={step <= index ? 'is-complete' : ''} />
+        ))}
       </div>
 
-      <section className={`mission-bar ${allDone ? 'is-done' : ''}`}>
-        <div className="mission-bar__role">
-          <p className="eyebrow">ROLE PLAY · {WEEK.label}</p>
-          <b>{SPEAKING_MISSION.role}</b>
-        </div>
-        <div className="mission-bar__goals">
-          {SPEAKING_MISSION.goals.map((goal, index) => {
-            const done = index === 0 ? mission.order : mission.price;
-            return (
-              <span key={goal.id} className={done ? 'is-done' : ''}>
-                <i aria-hidden="true">{done ? <CheckIcon /> : null}</i>
-                {goal.label}
-              </span>
-            );
-          })}
-        </div>
-        <div className="mission-bar__progress">
-          <span>
-            미션 {doneCount} / {SPEAKING_MISSION.goals.length}
-          </span>
-          <div>
-            <i style={{ width: `${(doneCount / SPEAKING_MISSION.goals.length) * 100}%` }} />
-          </div>
-        </div>
-        {allDone && <span className="mission-bar__badge">미션 완료</span>}
-      </section>
+      <header className="writing-flow__heading" key={question.id}>
+        <h1>{question.label}</h1>
+        <p>{question.instruction}</p>
+      </header>
 
-      <div className="speaking__grid">
-        <section className="sp-chat">
-          <header className="sp-chat__head">
-            <div className="sp-chat__who">
-              <img src="/owls/football.png" alt="" draggable={false} />
-              <div>
-                <b>에코</b>
-                <span>종업원 · AI 튜터</span>
-              </div>
-            </div>
-            <span className="sp-chat__status">
-              <i aria-hidden="true" />
-              온라인
-            </span>
-          </header>
-
-          <div className="sp-chat__scroll" ref={scrollRef}>
-            <div className="sp-chat__date">오늘 · {WEEK.label} 연습</div>
-            {messages.map((message) =>
-              message.role === 'user' ? (
-                <div className="sp-msg sp-msg--user" key={message.id}>
-                  <div className="sp-msg__bubble">
-                    <p>{message.pt}</p>
-                    {voiceIds.has(message.id) && (
-                      <span className="sp-msg__voice" aria-label="음성으로 입력">
-                        <VoiceIcon />
-                      </span>
-                    )}
-                  </div>
-                  <span className="sp-msg__who">나</span>
-                </div>
-              ) : (
-                <div className="sp-msg sp-msg--ai" key={message.id}>
-                  <span className="sp-msg__avatar">
-                    <img src="/owls/football.png" alt="" draggable={false} />
-                  </span>
-                  <div className="sp-msg__body">
-                    <div className="sp-msg__bubble">
-                      <p className="sp-msg__pt">{message.pt}</p>
-                      {message.ko && (
-                        <>
-                          <button
-                            type="button"
-                            className="sp-msg__translate"
-                            onClick={() => toggleTranslation(message.id)}
-                          >
-                            {translations.has(message.id) ? '번역 숨기기' : '번역 보기'}
-                          </button>
-                          {translations.has(message.id) && <p className="sp-msg__ko">{message.ko}</p>}
-                        </>
-                      )}
-                    </div>
-                    {message.correction && (
-                      <CorrectionCard
-                        correction={message.correction}
-                        onReport={() => onToast('피드백 신고가 접수되었어요. 교수님께 전달됩니다. (데모)')}
-                      />
-                    )}
-                    <span className="sp-msg__who">에코 · 종업원</span>
-                  </div>
-                </div>
-              ),
-            )}
-            {typing && (
-              <div className="sp-typing" aria-label="에코가 입력 중">
-                <span />
-                <span />
-                <span />
-              </div>
-            )}
-          </div>
-
-          {recording ? (
-            <div className="sp-recording">
-              <span className="sp-recording__dot" aria-hidden="true" />
-              <div className="sp-recording__wave" aria-hidden="true">
-                {WAVE.map((height, index) => (
-                  <i key={index} style={{ height: `${height}px`, animationDelay: `${index * 0.06}s` }} />
-                ))}
-              </div>
-              <b>{formatTime(seconds)}</b>
-              <button type="button" className="sp-recording__stop" onClick={stopRecording}>
-                녹음 멈추기
+      {question.promptType === 'audio' ? (
+        <article className="writing-flow__boo-prompt conversation-audio-prompt">
+          <img src="/owls/boo-writing.png" alt="" aria-hidden="true" draggable={false} />
+          <div className="conversation-audio-card">
+            <span className="conversation-audio-card__label">에코의 음성 질문</span>
+            <div className="conversation-audio-card__controls">
+              <button type="button" onClick={playQuestion} disabled={playing} aria-label={`${question.prompt} 포르투갈어 음성 듣기`}>
+                <PlayIcon /> {playing ? '재생 중' : '질문 듣기'}
               </button>
-              <button type="button" className="sp-recording__cancel" onClick={cancelRecording}>
-                취소
-              </button>
+              <span>포르투갈어 음성</span>
             </div>
-          ) : (
-            <form
-              className="sp-composer"
-              onSubmit={(event) => {
-                event.preventDefault();
-                send(input);
-              }}
-            >
-              <div className="sp-suggestions">
-                <span>이렇게 말해보세요</span>
-                {SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => send(suggestion)}
-                    disabled={typing}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-              <div className="sp-composer__box">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      send(input);
-                    }
-                  }}
-                  placeholder="포르투갈어로 입력하거나 말해보세요"
-                  rows={2}
-                  aria-label="포르투갈어 입력"
+            <div className={`conversation-waveform${playing ? ' is-playing' : ''}`} aria-hidden="true">
+              {WAVEFORM.map((height, waveIndex) => (
+                <i
+                  key={waveIndex}
+                  className={waveIndex < 11 ? 'is-active' : 'is-idle'}
+                  style={{ height: `${height}px`, animationDelay: `${(waveIndex % 7) * 0.08}s` }}
                 />
-                <div className="sp-composer__actions">
-                  <button
-                    type="button"
-                    className="sp-composer__mic"
-                    onClick={startRecording}
-                    aria-label="음성으로 말하기"
-                  >
-                    <MicIcon />
-                  </button>
-                  <span className="sp-composer__hint">Enter 전송 · Shift+Enter 줄바꿈</span>
-                  <button
-                    type="submit"
-                    className="sp-composer__send"
-                    disabled={!input.trim() || typing}
-                    aria-label="전송"
-                  >
-                    <ArrowIcon />
-                  </button>
-                </div>
-              </div>
-              <p className="sp-composer__note">음성은 텍스트로 바꾼 뒤 저장하지 않아요.</p>
-            </form>
-          )}
-        </section>
-
-        <aside className="sp-side">
-          <div className="sp-side__card">
-            <p className="eyebrow">이번 범위</p>
-            <b>{SPEAKING_MISSION.title}</b>
-            <span>{SPEAKING_MISSION.range} · {WEEK.label}</span>
-          </div>
-
-          <div className="sp-side__card">
-            <p className="eyebrow">핵심 표현</p>
-            <div className="sp-expressions">
-              {SPEAKING_MISSION.expressions.map((expression) => (
-                <button
-                  key={expression}
-                  type="button"
-                  onClick={() => {
-                    setInput(expression);
-                    inputRef.current?.focus();
-                  }}
-                >
-                  {expression}
-                </button>
               ))}
             </div>
+            <span className="sr-only" lang="pt">{question.prompt}</span>
           </div>
+        </article>
+      ) : question.promptType === 'boo' ? (
+        <article className="writing-flow__boo-prompt conversation-bubble-prompt">
+          <img src="/owls/boo-writing.png" alt="" aria-hidden="true" draggable={false} />
+          <div className="writing-flow__bubble">
+            <span>에코</span>
+            <p lang="pt">{question.prompt}</p>
+          </div>
+        </article>
+      ) : (
+        <article className="writing-flow__reading-prompt conversation-sentence-prompt">
+          <span>제시 문장</span>
+          <p lang="pt">{question.prompt}</p>
+        </article>
+      )}
 
-          <div className="sp-side__card">
-            <p className="eyebrow">미션 진행</p>
-            <ul className="sp-missions">
-              {SPEAKING_MISSION.goals.map((goal, index) => {
-                const done = index === 0 ? mission.order : mission.price;
-                return (
-                  <li key={goal.id} className={done ? 'is-done' : ''}>
-                    <span aria-hidden="true">{done ? <CheckIcon /> : null}</span>
-                    {goal.label}
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="sp-side__bar">
-              <i style={{ width: `${(doneCount / SPEAKING_MISSION.goals.length) * 100}%` }} />
+      {question.responseType === 'choice' ? (
+        <fieldset className="writing-flow__answer writing-flow__answer--choices">
+          <legend>응답 선택</legend>
+          <div className="writing-flow__choice-list">
+            {question.options?.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={`writing-flow__choice${answer === option ? ' is-selected' : ''}`}
+                aria-pressed={answer === option}
+                onClick={() => setAnswer(option)}
+              >
+                <span className="writing-flow__radio" aria-hidden="true">{answer === option && <i />}</span>
+                <span lang="pt">{option}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      ) : question.responseType === 'recording' ? (
+        <div className="writing-flow__answer conversation-recording">
+          <label>내 답변 녹음</label>
+          <div className="conversation-recording__controls">
+            <button type="button" onClick={recording ? stopRecording : startRecording} aria-pressed={recording}>
+              {recording ? <StopIcon /> : <RecordIcon />}
+              {recording ? '녹음 멈추기' : recorded[index] ? '다시 녹음' : '녹음 시작'}
+            </button>
+            <time aria-live="polite">{formatTime(seconds)}</time>
+            {recorded[index] && <span className="conversation-recording__status">녹음 완료 · 예시 답안이 기록됐어요</span>}
+          </div>
+          {recording && (
+            <div className="conversation-recording__wave" aria-hidden="true">
+              {WAVEFORM.slice(0, 18).map((height, waveIndex) => <i key={waveIndex} style={{ height: `${height}px`, animationDelay: `${waveIndex * 0.04}s` }} />)}
             </div>
-          </div>
+          )}
+          {recorded[index] && <p className="conversation-recording__transcript" lang="pt">{answer}</p>}
+        </div>
+      ) : (
+        <div className="writing-flow__answer conversation-text-answer">
+          <label htmlFor="conversation-answer">내 답변</label>
+          <textarea
+            id="conversation-answer"
+            value={answer}
+            onChange={(event) => setAnswer(event.target.value)}
+            placeholder={question.placeholder}
+            autoComplete="off"
+            autoCapitalize="sentences"
+            spellCheck={false}
+            rows={4}
+          />
+        </div>
+      )}
 
-          <button type="button" className="sp-finish" onClick={finish}>
-            대화 마치고 피드백 보기
-            <ArrowIcon />
+      <footer className="writing-flow__footer">
+        {index === 0 ? (
+          <button type="button" className="writing-flow__button writing-flow__button--secondary" onClick={onBack} disabled={recording}>
+            <BackIcon /> 연습 선택
           </button>
-          <p className="sp-beta">음성은 텍스트로 바꾼 뒤 저장하지 않아요. (베타)</p>
-        </aside>
-      </div>
-    </div>
-  );
-}
-
-function CorrectionCard({ correction, onReport }: { correction: Correction; onReport: () => void }) {
-  return (
-    <div className="sp-correction">
-      <div className="sp-correction__head">
-        <span className="tag">{correction.tag}</span>
-        <span>즉시 교정</span>
-      </div>
-      <p className="sp-correction__line">
-        <span className="strike">{correction.original}</span>
-        <ArrowIcon />
-        <b>{correction.corrected}</b>
-      </p>
-      <p className="sp-correction__note">{correction.explanation}</p>
-      <button type="button" className="text-link" onClick={onReport}>피드백이 이상해요</button>
-    </div>
+        ) : (
+          <button type="button" className="writing-flow__button writing-flow__button--secondary" onClick={() => goToQuestion(index - 1)} disabled={recording}>
+            <BackIcon /> 이전 문항
+          </button>
+        )}
+        <button type="button" className="writing-flow__button writing-flow__button--primary" onClick={continuePractice} disabled={recording}>
+          {lastQuestion ? '제출하고 해설 보기' : '다음 문항'} <ArrowIcon />
+        </button>
+      </footer>
+    </section>
   );
 }
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        d="M13 8H4M7.5 4.5 4 8l3.5 3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H4m3.5-3.5L4 8l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
 function ArrowIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9m-3.5-3.5L12 8l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path d="m3 8.5 3.2 3L13 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+function PlayIcon() {
+  return <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6L12.4 8 5 3.2Z" fill="currentColor" /></svg>;
 }
 
-function MicIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <rect x="7.2" y="2.6" width="5.6" height="9" rx="2.8" fill="none" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M4.8 9.4a5.2 5.2 0 0 0 10.4 0M10 14.6v3" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
-  );
+function RecordIcon() {
+  return <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.1" fill="currentColor" /></svg>;
 }
 
-function VoiceIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M2.5 8h2l2-3 3 6 2-3h2" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+function StopIcon() {
+  return <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4.3" y="4.3" width="7.4" height="7.4" rx="1" fill="currentColor" /></svg>;
 }
