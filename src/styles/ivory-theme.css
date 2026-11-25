@@ -1,5 +1,4 @@
-/* The original student workspace already owns the ivory canvas in workspace.css.
-   Apply that same study-desk palette only to the newly added professor/profile surfaces. */
+/* White learning canvas with softly tinted cards and clear academic typography. */
 .prof-shell { background:#f4f1ea; color:#14243b; }
 .prof-sidebar { border-color:#e5ded1; background:rgba(250,248,242,.94); }
 .prof-sidebar__top { color:#8a857d; }
@@ -9,43 +8,109 @@
 .prof-sidebar__foot { border-color:#e5ded1; }
 .student-shell > .student-main,
 .prof-shell > .prof-main {
-  background: #fff;
+  background:#fff;
 }
-.prof-page-head p,.prof-filter-context { color:#817f79; }
-.prof-filter-context b { color:#4a5a6d; }
-.prof-kpis>article,.prof-kpis>button,.prof-card { border-color:#e5ded1; background:#fff; box-shadow:0 1px 2px rgba(20,36,59,.04),0 10px 24px -20px rgba(20,36,59,.3); }
-.prof-kpis>article>span,.prof-kpis>button>span { color:#6b6a66; }
-.prof-ai-card { border-color:#e3dfd5; background:linear-gradient(120deg,#f7f4ec,#fff 72%); box-shadow:0 1px 2px rgba(20,36,59,.03),0 10px 24px -20px rgba(20,36,59,.24); }
-.ai-avatar { background:#fbf8f0; }
-.prof-shell .ai-pill,.prof-shell .tag,.profile-page .ai-pill,.profile-page .tag { background:#eaf1fa; color:#2e5fa3; }
-.prof-shell .error-bar>i,.prof-shell .mini-progress,.prof-shell .week-progress-list i { background:#f0ede6; }
-.prof-shell .error-bar>i>b,.prof-shell .mini-progress>i,.prof-shell .week-progress-list em { background:linear-gradient(90deg,#2e5fa3,#5b83bc); }
-.prof-empty { border-color:#d8cfbe; background:#fff; }
-.prof-shell .subject-tabs { border-color:#e5ded1; background:#fff; }
-.prof-shell .subject-tabs button.is-active { background:#eaf1fa; color:#2e5fa3; }
-.prof-shell .scope-status--active { background:#eaf1fa; color:#2e5fa3; }
-.prof-shell .scope-status--scheduled { background:#fbf0dc; color:#8c6228; }
-.prof-shell .scope-status--draft,.prof-shell .scope-status--private { background:#f4f1ea; color:#7e817f; }
-.prof-shell .prof-table th,.prof-shell .prof-table td { border-color:#eee9df; }
-.prof-shell .prof-table th { color:#88847c; }
-.prof-shell .weakness-item { border-color:#e5ded1; }
-.prof-shell .search-field,.prof-shell .roster-filters select,.prof-shell .form-label input,.prof-shell .form-label textarea,.prof-shell .form-label select,.prof-shell .count-fields input,.prof-shell .checklist-edit>input { border-color:#e5ded1; }
-.prof-shell .form-label input,.prof-shell .form-label textarea,.prof-shell .form-label select,.prof-shell .count-fields input,.prof-shell .checklist-edit>input { background:#fff; }
-.prof-shell .feedback-columns>div { background:#faf7f0; }
-.prof-shell .feedback-ai { background:#eef3f9!important; }
-.prof-shell .student-example,.prof-shell .student-preview-head,.prof-shell .publish-summary { background:#f7f4ed; }
-.prof-shell .pdf-page-wrap { background:#f0ede6; }
-.prof-shell .pdf-thumbnails button { border-color:#e5ded1; }
-.profile-page { color:#14243b; }
-.profile-hero { border-color:#e5ded1; background:linear-gradient(115deg,#f7f3e9,#fff 68%); box-shadow:0 1px 2px rgba(20,36,59,.04),0 10px 24px -20px rgba(20,36,59,.3); }
-.profile-card { border-color:#e5ded1; box-shadow:0 1px 2px rgba(20,36,59,.04),0 10px 24px -20px rgba(20,36,59,.3); }
-.profile-stat-grid article,.course-profile-list article,.file-list article { border-color:#eee9df; }
-.vocab-list article,.profile-data-grid input:disabled,.course-profile-list article:hover { background:#faf7f0; }
-.profile-data-grid input,.profile-select input,.profile-select select,.glossary-list input { border-color:#e5ded1; }
-.profile-route-note { border:1px solid #e5ded1; background:#fff; color:#4a5a6d; }
-.prof-shell .prof-kpis em.good,.prof-shell .good,.profile-page .good { color:#2f8f73!important; }
-.prof-shell .warn,.prof-shell .text-danger,.profile-page .warn,.profile-page .text-danger { color:#b4483f!important; }
-@media(max-width:680px) { .prof-filter-context { padding:7px 14px 0; } }
 
-.prof-shell .scope-table tbody tr.is-selected { background:#fcf8ef; }
-.prof-shell .scope-table tbody tr.is-selected td:first-child b { color:#2e5fa3; }
+/* The student canvas is pure white; cards sit one quiet step above it. */
+.student-shell > .student-main {
+  --paper:#fff;
+  --paper-deep:#f1f5f9;
+  --surface:#f8fafd;
+  --surface-soft:#f0f4f9;
+  --ink:#192b43;
+  --ink-soft:#4d6078;
+  --mute:#5d7088;
+  --line:#e1e9f2;
+  --line-strong:#c8d6e6;
+  --navy:#102b49;
+  --navy-2:#1b4168;
+  --blue:#2d5e9a;
+  --blue-bright:#3e78c3;
+  --blue-soft:#eaf2fb;
+  --sky:#a9cdf5;
+  --mint:#2f806f;
+  --mint-soft:#e7f4ef;
+  --amber:#95672d;
+  --amber-soft:#faf1e2;
+  --red:#ad4d45;
+  --red-soft:#faece9;
+  --shadow-sm:0 1px 2px rgba(16,43,73,.04),0 8px 20px -18px rgba(16,43,73,.28);
+  --shadow-md:0 2px 4px rgba(16,43,73,.05),0 20px 40px -28px rgba(16,43,73,.32);
+  color:var(--ink);
+}
+
+.prof-shell > .prof-main {
+  color:#192b43;
+}
+.prof-shell .prof-page-head h1,
+.prof-shell .section-title h2,
+.prof-shell .prof-card h3,
+.profile-page .profile-hero h1,
+.profile-page .profile-card h2 {
+  color:#192b43;
+}
+.prof-shell > .prof-main .prof-page-head p,
+.prof-shell > .prof-main .prof-filter-context { color:#5d7088; }
+.prof-filter-context b { color:#4d6078; }
+.prof-shell .prof-kpis>article,
+.prof-shell .prof-kpis>button,
+.prof-shell .prof-card {
+  border-color:#e1e9f2;
+  background:#f8fafd;
+  box-shadow:0 1px 2px rgba(16,43,73,.04),0 8px 20px -18px rgba(16,43,73,.28);
+}
+.prof-shell .prof-kpis>article>span,
+.prof-shell .prof-kpis>button>span { color:#5d7088; }
+.prof-shell .prof-kpis em { color:#5d7088; }
+.prof-shell .prof-ai-card {
+  border-color:#dce7f2;
+  background:linear-gradient(120deg,#f0f5fb,#fff 72%);
+  box-shadow:0 1px 2px rgba(16,43,73,.03),0 8px 20px -18px rgba(16,43,73,.25);
+}
+.prof-shell .prof-ai-card__body p { color:#52657d; }
+.prof-shell .ai-avatar { background:#edf3fa; }
+.prof-shell .ai-pill,.prof-shell .tag,.profile-page .ai-pill,.profile-page .tag { background:#eaf2fb; color:#2d5e9a; }
+.prof-shell .error-bar>i,.prof-shell .mini-progress,.prof-shell .week-progress-list i { background:#e9eef5; }
+.prof-shell .error-bar>i>b,.prof-shell .mini-progress>i,.prof-shell .week-progress-list em { background:linear-gradient(90deg,#2d5e9a,#5b83bc); }
+.prof-shell .prof-empty { border-color:#d4e0ed; background:#f8fafd; }
+.prof-shell .subject-tabs { border-color:#e1e9f2; background:#f8fafd; }
+.prof-shell .subject-tabs button.is-active { background:#eaf2fb; color:#2d5e9a; }
+.prof-shell .scope-status--active { background:#eaf2fb; color:#2d5e9a; }
+.prof-shell .scope-status--scheduled { background:#fbf0dc; color:#8c6228; }
+.prof-shell .scope-status--draft,.prof-shell .scope-status--private { background:#f0f3f7; color:#5d7088; }
+.prof-shell .prof-table th,.prof-shell .prof-table td { border-color:#e7edf4; }
+.prof-shell .prof-table th { color:#5d7088; }
+.prof-shell .section-title p,
+.prof-shell .section-title>span,
+.prof-shell .prof-table td:first-child small,
+.prof-shell .privacy-note,
+.prof-shell .scope-step__title small { color:#5d7088; }
+.prof-shell .weakness-item { border-color:#e1e9f2; background:#fff; }
+.prof-shell .search-field,.prof-shell .roster-filters select,.prof-shell .form-label input,.prof-shell .form-label textarea,.prof-shell .form-label select,.prof-shell .count-fields input,.prof-shell .checklist-edit>input { border-color:#d7e1ed; }
+.prof-shell .form-label input,.prof-shell .form-label textarea,.prof-shell .form-label select,.prof-shell .count-fields input,.prof-shell .checklist-edit>input { background:#fff; color:#233a55; }
+.prof-shell .feedback-columns>div { background:#f2f6fb; }
+.prof-shell .feedback-ai { background:#eaf2fb!important; }
+.prof-shell .student-example,.prof-shell .student-preview-head,.prof-shell .publish-summary { background:#f1f5fa; }
+.prof-shell .pdf-page-wrap { background:#edf2f7; }
+.prof-shell .pdf-thumbnails button { border-color:#dce5ef; }
+.profile-page { color:#192b43; }
+.profile-page .profile-hero p,
+.profile-page .profile-card>header p,
+.profile-page .profile-stat-grid span,
+.profile-page .course-profile-list article span,
+.profile-page .course-profile-list article small,
+.profile-page .file-list article small,
+.profile-page .profile-info,
+.profile-page .profile-data-grid label,
+.profile-page .profile-select { color:#5d7088; }
+.profile-hero { border-color:#dce7f2; background:linear-gradient(115deg,#f0f5fb,#fff 68%); box-shadow:0 1px 2px rgba(16,43,73,.04),0 8px 20px -18px rgba(16,43,73,.28); }
+.profile-card { border-color:#e1e9f2; background:#f8fafd; box-shadow:0 1px 2px rgba(16,43,73,.04),0 8px 20px -18px rgba(16,43,73,.28); }
+.profile-stat-grid article,.course-profile-list article,.file-list article { border-color:#e4ebf3; background:#fff; }
+.vocab-list article,.profile-data-grid input:disabled,.course-profile-list article:hover { background:#f0f4f9; }
+.profile-data-grid input,.profile-select input,.profile-select select,.glossary-list input { border-color:#d7e1ed; }
+.profile-route-note { border:1px solid #e1e9f2; background:#f8fafd; color:#4d6078; }
+.prof-shell .prof-kpis em.good,.prof-shell .good,.profile-page .good { color:#2f806f!important; }
+.prof-shell .warn,.prof-shell .text-danger,.profile-page .warn,.profile-page .text-danger { color:#ad4d45!important; }
+.prof-shell .scope-table tbody tr.is-selected { background:#edf3fa; }
+.prof-shell .scope-table tbody tr.is-selected td:first-child b { color:#2d5e9a; }
+@media(max-width:680px) { .prof-filter-context { padding:7px 14px 0; } }
