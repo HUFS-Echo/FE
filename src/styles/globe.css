@@ -28,63 +28,6 @@
   filter: drop-shadow(0 2px 2px rgba(6, 24, 40, 0.47));
 }
 
-.seoul-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 3;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.16s ease;
-}
-
-.seoul-overlay--fallback {
-  top: 32.8%;
-  left: 78.5%;
-  transform: translate(-50%, -50%);
-  opacity: 1;
-}
-
-.seoul-overlay__pin {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 8px;
-  height: 8px;
-  transform: translate(-50%, -50%);
-  border: 1px solid rgba(255, 255, 255, 0.96);
-  border-radius: 50%;
-  background: #f2faff;
-  box-shadow:
-    0 0 0 5px rgba(156, 203, 255, 0.22),
-    0 0 18px 5px rgba(91, 141, 239, 0.85);
-}
-
-.seoul-overlay__pin::before {
-  position: absolute;
-  inset: -5px;
-  border: 1px solid rgba(205, 228, 255, 0.62);
-  border-radius: 50%;
-  content: '';
-}
-
-.seoul-overlay__label {
-  position: absolute;
-  top: -25px;
-  left: 0;
-  transform: translateX(-50%);
-  color: #dce9ff;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-shadow: 0 0 12px rgba(91, 141, 239, 0.95);
-  white-space: nowrap;
-}
-
 .globe-fallback {
   width: 100%;
   height: 100%;
@@ -555,10 +498,4 @@
   .index-panel__foot {
     padding: 12px 20px 18px;
   }
-}
-
-
-/* The reference globe has no Seoul marker or outbound glow effect. */
-.seoul-overlay {
-  display: none;
 }

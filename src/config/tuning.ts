@@ -3,7 +3,7 @@
  *
  * 이 파일 하나에서 인트로의 속도, 개수, 색상을 조절합니다.
  * CSS는 `applyTheme()`이 주입하는 `--c-*` 변수를 사용하고,
- * WebGL은 `COLORS`를 직접 읽습니다. 값을 바꾸면 둘 다 함께 바뀝니다.
+ * Canvas 지구본과 인트로 CSS가 `COLORS`를 직접 읽습니다.
  */
 
 export const COLORS = {
@@ -76,6 +76,24 @@ export const TUNING = {
 
   /** 지구본 */
   globe: {
+    /** 첨부 HTML의 2D 캔버스 기준 비율·도트 샘플링 간격 */
+    referenceRadiusRatio: 0.405,
+    referenceDotRadius: 0.0057,
+    landMaskWidth: 720,
+    landMaskHeight: 360,
+    landMaskLatStep: 2,
+    landMaskLonStep: 2,
+    initialLongitude: 52,
+    referencePitch: 26,
+    referenceRotationEaseMs: 650,
+    referenceActiveCityRadius: 0.016,
+    referenceCityRadius: 0.008,
+    referenceCityHitRadius: 0.048,
+    referenceCityRingRadius: 0.034,
+    referenceCityRingPulse: 0.006,
+    referenceCityRingReducedRadius: 0.032,
+    referenceCityRingPeriodMs: 550,
+    referenceCityRingLine: 0.003,
     /** 화면에서 도트 하나의 크기(CSS px). 모바일은 자동으로 줄어듭니다. */
     dotPx: 3.1,
     dotPxMobile: 1.9,
