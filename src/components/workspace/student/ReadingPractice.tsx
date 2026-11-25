@@ -132,7 +132,7 @@ export function ReadingPractice({ onBack, onComplete }: Props) {
 
       {index < 3 ? (
         <article className="grammar-prompt grammar-prompt--boo">
-          <div className="grammar-prompt__owl" aria-hidden="true"><img src="/grammar-assets/boo-guide.webp" alt="" draggable={false} /></div>
+          <div className="grammar-prompt__owl" aria-hidden="true"><img src="/grammar-assets/boo-guide-transparent.png" alt="" draggable={false} /></div>
           <img className="grammar-prompt__bubble" src="/grammar-assets/green-speech-bubble.svg" alt="" aria-hidden="true" />
           <div className="grammar-prompt__copy">
             <span>Boo <i aria-hidden="true">·</i> 제시문</span>

@@ -4805,7 +4805,7 @@
 }
 .grammar-prompt--boo { background: #f4f9f8; }
 .grammar-prompt__owl { position: relative; z-index: 2; width: 144px; height: 148px; flex: 0 0 144px; overflow: hidden; }
-.grammar-prompt__owl img { position: absolute; top: -51px; left: -56px; width: 365px; max-width: none; height: auto; }
+.grammar-prompt__owl img { position: absolute; inset: 0; width: 100%; max-width: 100%; height: 100%; object-fit: contain; }
 .grammar-prompt__bubble { position: absolute; z-index: 1; top: 6px; right: 0; width: calc(100% - 144px); height: calc(100% - 12px); max-width: none; object-fit: fill; }
 .grammar-prompt__copy { position: relative; z-index: 3; min-width: 0; padding: 22px 26px 22px 20px; }
 .grammar-prompt__copy > span,
@@ -5055,6 +5055,8 @@
 
 
 .student-shell:has(.grammar-review),
+.student-shell:has(.grammar-practice),
+.student-main:has(> .grammar-practice),
 .student-main:has(> .grammar-review) {
   background: #fff;
 }
