@@ -1167,6 +1167,16 @@
   display: none;
 }
 
+.hero .site-header::after {
+  position: absolute;
+  right: 0;
+  bottom: -18px;
+  left: 0;
+  height: 1px;
+  background: #dadad3;
+  content: '';
+}
+
 .hero .wordmark__mark {
   filter: none;
 }
