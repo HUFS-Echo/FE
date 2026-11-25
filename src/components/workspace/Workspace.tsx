@@ -111,16 +111,15 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
                       <option value={5}>{t('5주차 · 임시 저장')}</option>
                     </select>
                   </label>
-                  <div className="header-language" role="group" aria-label={t('화면 언어')}>
-                    <button type="button" className={`header-language__button ${professorLanguage === 'ko' ? 'is-active' : ''}`}
-                      aria-pressed={professorLanguage === 'ko'} onClick={() => setProfessorLanguage('ko')}>
-                      <span className="header-language__code" aria-hidden="true">KO</span><span>한국어</span>
-                    </button>
-                    <button type="button" className={`header-language__button ${professorLanguage === 'en' ? 'is-active' : ''}`}
-                      aria-pressed={professorLanguage === 'en'} onClick={() => setProfessorLanguage('en')}>
-                      <span className="header-language__code" aria-hidden="true">EN</span><span>English</span>
-                    </button>
-                  </div>
+                  <label className="header-language">
+                    <span className="sr-only">{t('화면 언어')}</span>
+                    <span className="header-language__mark" aria-hidden="true">文</span>
+                    <select aria-label={t('화면 언어')} value={professorLanguage}
+                      onChange={event => setProfessorLanguage(event.target.value as ProfessorLanguage)}>
+                      <option value="ko">한국어</option>
+                      <option value="en">English</option>
+                    </select>
+                  </label>
                 </>
               )}
               <div className="user-menu__identity">
