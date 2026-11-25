@@ -4805,10 +4805,9 @@
   border-radius: 16px;
 }
 .grammar-prompt--boo { overflow: visible; background: transparent; }
-.grammar-prompt__owl { position: relative; z-index: 2; width: 144px; height: 148px; flex: 0 0 144px; overflow: hidden; }
+.grammar-prompt__owl { position: relative; z-index: 2; width: 116px; height: 148px; flex: 0 0 116px; overflow: visible; }
 .grammar-prompt__owl img { position: absolute; inset: 0; width: 100%; max-width: 100%; height: 100%; object-fit: contain; }
-.grammar-prompt__bubble { position: absolute; z-index: 1; top: 6px; right: 0; width: calc(100% - 144px); height: calc(100% - 12px); border: 1px solid #c7ddd6; border-radius: 20px; background: #f2f8f5; }
-.grammar-prompt__bubble::before { position: absolute; top: 50%; left: -9px; width: 16px; height: 16px; border-bottom: 1px solid #c7ddd6; border-left: 1px solid #c7ddd6; background: #f2f8f5; content: ''; transform: translateY(-50%) rotate(45deg); }
+.grammar-prompt__bubble { position: absolute; z-index: 1; top: 6px; right: 0; width: calc(100% - 116px); height: calc(100% - 12px); max-width: none; object-fit: fill; }
 .grammar-prompt__copy { position: relative; z-index: 3; min-width: 0; padding: 22px 26px 22px 20px; }
 .grammar-prompt__copy > span,
 .grammar-prompt--plain > span { color: var(--grammar-teal); font-size: 14px; font-weight: 730; }
@@ -4872,9 +4871,9 @@
   .grammar-practice__heading h1 { font-size: clamp(27px, 8vw, 34px); }
   .grammar-practice__heading p { margin-top: 8px; font-size: 14px; }
   .grammar-prompt { min-height: 126px; margin-bottom: 27px; }
-  .grammar-prompt__owl { width: 92px; height: 126px; flex-basis: 92px; }
-  .grammar-prompt__owl img { top: -40px; left: -43px; width: 274px; }
-  .grammar-prompt__bubble { top: 5px; width: calc(100% - 92px); height: calc(100% - 10px); }
+  .grammar-prompt__owl { width: 72px; height: 126px; flex-basis: 72px; }
+  .grammar-prompt__owl img { top: 0; left: 0; width: 100%; }
+  .grammar-prompt__bubble { top: 5px; width: calc(100% - 72px); height: calc(100% - 10px); }
   .grammar-prompt__copy { padding: 16px 13px 16px 5px; }
   .grammar-prompt__copy > span,
   .grammar-prompt--plain > span { font-size: 12px; }
@@ -4894,8 +4893,8 @@
 }
 
 @media (max-width: 390px) {
-  .grammar-prompt__owl { width: 76px; flex-basis: 76px; }
-  .grammar-prompt__bubble { width: calc(100% - 76px); }
+  .grammar-prompt__owl { width: 62px; flex-basis: 62px; }
+  .grammar-prompt__bubble { width: calc(100% - 62px); }
   .grammar-prompt__copy { padding-left: 1px; }
   .grammar-practice__footer { gap: 8px; }
   .grammar-button { gap: 5px; padding: 0 10px; }
