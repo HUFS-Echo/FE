@@ -53,25 +53,7 @@ export function PracticeSummary({ data, onHome }: Props) {
             </div>
           ) : <p className="summary__empty">{data.emptyCorrectionsMessage ?? '새로 고친 문장이 없어요. 깔끔하게 잘했어요!'}</p>}
         </section>
-        {data.responseData && (
-          <section className="summary__card" aria-label="연습 제출 결과">
-            <header className="block-head block-head--small">
-              <div><p className="eyebrow">SUBMISSION</p><h2>문항별 제출 결과</h2></div>
-              <span className="block-head__meta">{data.responseData.results.length}개</span>
-            </header>
-            <div className="summary-corrections">
-              {data.responseData.results.map((result) => (
-                <div className="summary-correction" key={result.questionId}>
-                  <p><b>{String(result.number).padStart(2, '0')} · {result.formatLabel}</b></p>
-                  <p>내 답변: {result.myAnswer || '미응답'}</p>
-                  <p>예시 답안: <strong>{result.answer}</strong></p>
-                  <p>{result.explanation}</p>
-                </div>
-              ))}
-            </div>
-            <p className="summary__empty">{data.responseData.completion.eyebrow ?? '완료'} · {data.responseData.completion.message}</p>
-          </section>
-        )}
+
       </div>
 
       <div className="summary__actions"><button type="button" className="btn-ghost" onClick={onHome}>홈으로</button></div>

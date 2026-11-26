@@ -20,15 +20,17 @@ const questionsForApi = (exercises: Exercise[]): Question[] => exercises.map((it
 const exerciseFromQuestion = (question: Question, index: number): Exercise => ({ id: String(question.questionId || index + 1), prompt: question.sentence, answer: question.answer, explanation: question.explanation ?? '', page: question.sourcePage ?? 1, ...(question.choices ? { options: question.choices } : {}) });
 export function ScopeBuilder({ onNavigate, onToast, editScopeId }: Props) {
   const { filters, setFilters } = useProfFilters(); const { t, language } = useProfessorLanguage();
-  const [subject, setSubject] = useState<Subject>(subjectForCourse[filters.course]);
+  const defaultSubject: Subject = subjectForCourse[filters.course] ?? '포르투갈어 문법';
+  const [subject, setSubject] = useState<Subject>(defaultSubject);
   const courseId = courseIdForSubject[subject]; const sectionId = Number(filters.section); const exerciseType = exerciseTypeForSubject[subject];
   const materialsApi = useApi(() => getMaterials(), []);
   const typesApi = useApi(() => getExerciseTypes(courseId), [courseId]);
   const scopeApi = useApi(() => editScopeId ? getScope(editScopeId) : Promise.resolve(null), [editScopeId]);
   const materials = materialsApi.data?.materials ?? [];
   const [materialId, setMaterialId] = useState(1); const selectedMaterial = materials.find((material) => material.materialId === materialId) ?? materials[0];
-  const [week, setWeek] = useState(filters.week); const [from, setFrom] = useState(initialPages[subject][0]); const [to, setTo] = useState(initialPages[subject][1]);
-  const [topic, setTopic] = useState(initialTopic[subject]); const [chosen, setChosen] = useState<string[]>([initialTopic[subject]]);
+  const safeSubject = subject in initialPages ? subject : '포르투갈어 문법';
+  const [week, setWeek] = useState(filters.week); const [from, setFrom] = useState(initialPages[safeSubject][0]); const [to, setTo] = useState(initialPages[safeSubject][1]);
+  const [topic, setTopic] = useState(initialTopic[safeSubject]); const [chosen, setChosen] = useState<string[]>([initialTopic[safeSubject]]);
   const [fileName, setFileName] = useState('Português_A1_2026.pdf'); const [exercises, setExercises] = useState<Exercise[]>([]);
   const [scopeId, setScopeId] = useState<number | null>(editScopeId ?? null); const [busy, setBusy] = useState(false); const [uploadBusy, setUploadBusy] = useState(false);
   const [edit, setEdit] = useState<Exercise | null>(null); const [showPublish, setShowPublish] = useState(false); const [drag, setDrag] = useState(false); const [showAll, setShowAll] = useState(false); const [showGeneratedPreview, setShowGeneratedPreview] = useState(false);
@@ -81,6 +83,7 @@ export function ScopeBuilder({ onNavigate, onToast, editScopeId }: Props) {
   }
   function updateExercise(key: keyof Exercise, value: string) { if (!edit) return; setEdit({ ...edit, [key]: key === 'page' ? Number(value) : value }); }
   return <div className="prof-page scope-builder">
+    {(materialsApi.loading || typesApi.loading || (editScopeId && scopeApi.loading)) && <ApiLoadingState label={t('학습 범위를 불러오는 중…')}/>}
     {(materialsApi.error || typesApi.error || scopeApi.error) && <ApiErrorState error={materialsApi.error ?? typesApi.error ?? scopeApi.error!} onRetry={() => { materialsApi.retry(); typesApi.retry(); scopeApi.retry(); }}/>}
     <header className="prof-page-head"><div><span className="eyebrow">SCOPE STUDIO · P2</span><h1>{t('학습 범위 설정')}</h1><p>{language === 'en' ? `Set the scope and exercises for ${t(subject)}, Section ${filters.section}. Preview the student view.` : `${subject} · ${filters.section}분반 범위와 연습을 설정하고 학생 화면을 미리 봅니다.`}</p></div><span className="tag">{t(weekStatus)}</span></header>
     <div className="scope-layout"><section className="scope-form-col">

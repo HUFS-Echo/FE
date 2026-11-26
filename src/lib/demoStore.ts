@@ -23,8 +23,7 @@ const legacyCourseId = (value: unknown): number => typeof value === 'number' && 
 const feedbackType = (label: unknown): FeedbackReportType => label === '과잉 교정' ? 'OVER_CORRECTION' : label === '문법 용어 혼동' ? 'TERM_CONFUSION' : label === '잘못된 교정' ? 'WRONG_CORRECTION' : 'OTHER';
 const initialFeedback: FeedbackCase[] = [
   { reportId: 1, courseId: 1, sectionId: 1, type: 'OVER_CORRECTION', typeLabel: '과잉 교정', reportedAt: '2026-11-21T10:42:00', week: 3, sourcePage: 29, student: { maskedName: '김*윤', maskedStudentNo: '2025****11' }, studentSentence: 'Eu estou cansada.', aiCorrection: 'Eu sou cansada.', aiExplanation: 'estar를 ser로 바꾸는 편이 자연스럽습니다.', comment: '맞게 쓴 것 같은데 틀렸다고 나왔어요.', status: 'OPEN' },
-  { reportId: 2, courseId: 1, sectionId: 1, type: 'OVER_CORRECTION', typeLabel: '과잉 교정', reportedAt: '2026-11-21T09:18:00', week: 3, sourcePage: 48, student: { maskedName: '박*은', maskedStudentNo: '2024****28' }, studentSentence: 'Queria um café, por favor.', aiCorrection: 'Eu queria um café, por favor.', aiExplanation: '완전한 문장에는 주어가 필요합니다.', comment: '주어는 생략해도 된다고 배웠어요.', status: 'OPEN' },
-  { reportId: 3, courseId: 1, sectionId: 1, type: 'TERM_CONFUSION', typeLabel: '문법 용어 혼동', reportedAt: '2026-11-20T16:05:00', week: 3, sourcePage: 30, student: { maskedName: '이*아', maskedStudentNo: '2025****04' }, studentSentence: 'A conta, por favor.', aiCorrection: 'a는 부정관사입니다.', aiExplanation: 'a는 부정관사로 쓰입니다.', comment: 'a는 정관사 아닌가요?', status: 'OPEN' },
+    { reportId: 2, courseId: 1, sectionId: 1, type: 'TERM_CONFUSION', typeLabel: '문법 용어 혼동', reportedAt: '2026-11-20T16:05:00', week: 3, sourcePage: 30, student: { maskedName: '이*아', maskedStudentNo: '2025****04' }, studentSentence: 'A conta, por favor.', aiCorrection: 'a는 부정관사입니다.', aiExplanation: 'a는 부정관사로 쓰입니다.', comment: 'a는 정관사 아닌가요?', status: 'OPEN' },
 ];
 const question = (questionId: number, sentence: string, answer: string, sourcePage: number): Question => ({ questionId, format: 'MULTIPLE_CHOICE', sentence, answer, choices: [], sourcePage, answerType: 'CHOICE' });
 const initial: DemoState = {
@@ -67,7 +66,7 @@ export function getDemoState(): DemoState {
     };
     const legacyDisabled = Array.isArray(settings.disabledCourses) ? settings.disabledCourses.map((item: unknown) => legacyCourseId(item)) : [];
     const disabledCourseIds = [...new Set([...(Array.isArray(settings.disabledCourseIds) ? settings.disabledCourseIds.filter((item): item is number => typeof item === 'number') : []), ...legacyDisabled])];
-    const next: DemoState = { ...initial, ...stored, scopes: (stored.scopes ?? initial.scopes).map(migrateScope), feedback: (stored.feedback ?? initial.feedback).map(migrateFeedback), studentSettings: { ...settings, disabledCourseIds }, professorSettings: { ...initial.professorSettings, ...stored.professorSettings } };
+    const next: DemoState = { ...initial, ...stored, scopes: (stored.scopes ?? initial.scopes).map(migrateScope), feedback: (stored.feedback ?? initial.feedback).filter((item: any) => !(item.studentSentence === 'Queria um café, por favor.' || item.original === 'Queria um café, por favor.')).map(migrateFeedback), studentSettings: { ...settings, disabledCourseIds }, professorSettings: { ...initial.professorSettings, ...stored.professorSettings } };
     return next;
   } catch { return structuredClone(initial); }
 }

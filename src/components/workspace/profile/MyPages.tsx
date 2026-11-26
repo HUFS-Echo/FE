@@ -65,6 +65,7 @@ export function StudentProfile({ session, onSessionUpdate, onToast, onLogout }: 
       if (consent?.agreed) {
         const result = await revokeLearningConsent();
         setConsentOverride({ agreed: result.agreed, agreedAt: '' });
+        onToast('학습 기록 활용 동의를 철회했어요. (데모)');
       } else {
         const result = await agreeLearningConsent();
         setConsentOverride(result);
