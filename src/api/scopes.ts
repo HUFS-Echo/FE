@@ -16,7 +16,8 @@ export function createScope(input: { courseId: number; sectionId: number; week: 
 /** A20 GET /prof/scopes?courseId=&sectionId= — Bearer(교수만) */
 export function getScopes(courseId = 1, sectionId = 1) { return mockRequest<ScopeList>('A20', () => {
   const scopes = getDemoState().scopes.filter((scope) => scope.sectionId === sectionId && (courseId === 0 || scope.courseId === courseId));
-  return { summary: { published: scopes.filter((scope) => scope.status === 'DONE' || scope.status === 'IN_PROGRESS').length, scheduledOrDraft: scopes.filter((scope) => scope.status === 'SCHEDULED' || scope.status === 'DRAFT').length, avgParticipation: scopes.length ? Math.round(scopes.reduce((sum, scope) => sum + scope.participants, 0) / scopes.length) : 0 }, studentCount: 48, scopes: scopes.map((scope) => ({ scopeId: scope.scopeId, week: scope.week, startDate: scope.startDate, endDate: scope.endDate, pdfPages: scope.pdfPages, title: scope.title, status: scope.status, participants: scope.participants, accuracy: scope.accuracy })) };
+  const listedScopes = scopes.filter((scope) => scope.status !== 'DRAFT');
+  return { summary: { published: scopes.filter((scope) => scope.status === 'DONE' || scope.status === 'IN_PROGRESS').length, scheduledOrDraft: scopes.filter((scope) => scope.status === 'SCHEDULED' || scope.status === 'DRAFT').length, avgParticipation: scopes.length ? Math.round(scopes.reduce((sum, scope) => sum + scope.participants, 0) / scopes.length) : 0 }, studentCount: sectionId === 1 ? 48 : 32, scopes: listedScopes.map((scope) => ({ scopeId: scope.scopeId, week: scope.week, startDate: scope.startDate, endDate: scope.endDate, pdfPages: scope.pdfPages, title: scope.title, status: scope.status, participants: scope.participants, accuracy: scope.accuracy })) };
 }); }
 /** A21 PUT /prof/scopes/{scopeId} — Bearer(교수만) */
 export function updateScope(scopeId: number, input: Partial<LearningScope>) { return mockRequest<LearningScope>('A21', () => {
@@ -43,5 +44,5 @@ export function generateExercises(input: { courseId: number; materialId: number;
   if (!input.exerciseType) fail(400, 'INVALID_EXERCISE_TYPE', '출제 유형을 선택해 주세요.');
   const subject = input.courseId === 2 ? '포르투갈어 읽기와 쓰기' as const : input.courseId === 3 ? '포르투갈어 회화' as const : '포르투갈어 문법' as const;
   const exercises = createScopeExercises(subject, input.startPage, input.endPage);
-  return { exerciseType: input.exerciseType, scopeTitle: input.courseId === 1 ? '부정관사와 명사의 성·수 일치' : input.courseId === 2 ? '학교 파티 일기 쓰기' : '집과 생활 공간 묘사', instruction: '문제를 읽고 답을 선택하거나 입력해 보세요.', questions: exercises.slice(0, input.count).map((item, index) => ({ format: 'MULTIPLE_CHOICE', sentence: item.prompt, choices: item.options ?? null, answer: item.answer, sourcePage: input.startPage + index, explanation: item.explanation })) };
+  return { exerciseType: input.exerciseType, scopeTitle: input.courseId === 1 ? '부정관사와 명사의 성·수 일치' : input.courseId === 2 ? '학교 파티 일기 쓰기' : '집과 생활 공간 묘사', instruction: '문제를 읽고 답을 선택하거나 입력해 보세요.', questions: exercises.slice(0, input.count).map((item) => ({ format: 'MULTIPLE_CHOICE', sentence: item.prompt, choices: item.options ?? null, answer: item.answer, sourcePage: item.page, explanation: item.explanation })) };
 }, 'AI 연습 문제를 만들었어요.'); }

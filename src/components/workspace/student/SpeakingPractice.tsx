@@ -17,8 +17,8 @@ function mapQuestion(question: Question, index: number): SpeakingQuestion {
   const promptType = question.audioUrl || index === 0 || index === 2 ? 'audio' : index === 3 ? 'sentence' : 'boo';
   return { ...question, label: question.typeLabel ?? `문항 ${index + 1}`, instruction: question.instruction ?? '질문에 알맞게 답하세요.', prompt: question.prompt ?? question.sentence, promptType, responseType: question.answerType === 'AUDIO' ? 'recording' : question.answerType === 'CHOICE' || question.choices?.length ? 'choice' : fallbackResponse, placeholder: question.answerType === 'AUDIO' || index === 2 || index === 3 ? '' : '여기에 답을 적어 보세요' };
 }
-function toSummary(weekLabel: string, b6: SubmitResponse, b7: ApiPracticeSummary): SummaryData {
-  return { subject: 'speaking', weekLabel, title: b7.title || 'Muito bem!', message: b7.message || '회화 연습을 마쳤어요.', stats: b7.stats.map((stat) => ({ label: stat.label, value: String(stat.value), suffix: stat.suffix })), corrections: b6.results.filter((result) => !result.correct).map((result) => ({ original: result.myAnswer || result.answer, corrected: result.answer })), correctionsTitle: '학습 마무리', emptyCorrectionsMessage: '다섯 문항의 예시 답안과 해설을 확인했어요.', responseData: { results: b6.results, completion: b7 } };
+function toSummary(weekLabel: string, b6: SubmitResponse, b7: ApiPracticeSummary, elapsedSeconds: number, answeredCount: number): SummaryData {
+  return { subject: 'speaking', weekLabel, title: b7.title || 'Muito bem!', message: '회화 5문항을 풀고 예시 답안과 해설을 확인했어요.', stats: [{ label: '제출 문항', value: String(b6.summary.total), suffix: `/ ${b6.summary.total}` }, { label: '답변 완료', value: String(answeredCount), suffix: '문항' }, { label: '연습 시간', value: String(Math.max(1, Math.round(elapsedSeconds / 60))), suffix: '분' }], corrections: [], correctionsTitle: '학습 마무리', emptyCorrectionsMessage: '다섯 문항의 예시 답안과 해설을 확인했어요.', responseData: { results: b6.results, completion: b7 } };
 }
 
 export function SpeakingPractice({ onBack, onComplete, onToast, setId = DEFAULT_SET_ID }: Props) {
@@ -60,7 +60,7 @@ export function SpeakingPractice({ onBack, onComplete, onToast, setId = DEFAULT_
   }
   async function transcribeAudio(audio: PendingAudio) {
     setBusy(true); setActionError(null); setPendingAudio(audio);
-    try { const response = await transcribePracticeAnswer(setId, audio.questionId, audio.blob); setAnswers((previous) => questions.map((_, answerIndex) => answerIndex === audio.index ? response.text : previous[answerIndex] ?? '')); setTranscriptionIds((previous) => questions.map((_, answerIndex) => answerIndex === audio.index ? response.transcriptionId : previous[answerIndex])); setRecorded((previous) => questions.map((_, answerIndex) => answerIndex === audio.index ? true : previous[answerIndex] ?? false)); setPendingAudio(null); onToast('녹음 답변이 기록됐어요.'); }
+    try { const response = await transcribePracticeAnswer(setId, audio.questionId, audio.blob); setAnswers((previous) => questions.map((_, answerIndex) => answerIndex === audio.index ? response.text : previous[answerIndex] ?? '')); setTranscriptionIds((previous) => questions.map((_, answerIndex) => answerIndex === audio.index ? response.transcriptionId : previous[answerIndex])); setRecorded((previous) => questions.map((_, answerIndex) => answerIndex === audio.index ? true : previous[answerIndex] ?? false)); setPendingAudio(null); onToast('예시 음성 답안을 기록했어요. (데모)'); }
     catch (reason) { setActionError(reason instanceof Error ? reason : new Error('녹음을 처리하지 못했어요.')); }
     finally { setBusy(false); }
   }
@@ -83,7 +83,7 @@ export function SpeakingPractice({ onBack, onComplete, onToast, setId = DEFAULT_
     try {
       const b6 = await submitPracticeSet(setId, questions.map((item, questionIndex) => ({ questionId: item.questionId, ...(transcriptionIds[questionIndex] ? { transcriptionId: transcriptionIds[questionIndex] } : item.choices?.length ? { choice: answers[questionIndex] ?? '' } : { text: answers[questionIndex] ?? '' }) })), elapsedSeconds);
       const { summary: b7 } = await completePracticeSet(setId, elapsedSeconds, b6.summary.correctCount, b6.summary.total);
-      onComplete(toSummary(weekLabel, b6, b7));
+      onComplete(toSummary(weekLabel, b6, b7, elapsedSeconds, answers.filter((value) => value.trim()).length));
     } catch (reason) { setActionError(reason instanceof Error ? reason : new Error('연습 결과를 저장하지 못했어요.')); }
     finally { setBusy(false); }
   }

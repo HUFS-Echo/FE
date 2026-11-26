@@ -117,7 +117,7 @@ function ProfessorLanguagePicker({ language, label, onChange }: {
 export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout, onToast, onReset, onReplay }: Props) {
   const [filters, setFilters] = useState<ProfFilters>(initialFilters);
   const [professorLanguage, setProfessorLanguage] = useState<ProfessorLanguage>(initialProfessorLanguage);
-  const isStudent = session.role === 'student';
+  const isStudent = session.role === 'STUDENT';
   const professorCoursesApi = useApi<ProfCourses>(() => isStudent ? Promise.resolve({ courses: [], current: { courseId: 1, sectionId: 1, week: 3 } }) : getProfessorCourses(), [session.email, isStudent]);
   const displayLanguage: ProfessorLanguage = isStudent ? 'ko' : professorLanguage;
   const t = (text: string) => translateProfessorText(displayLanguage, text);

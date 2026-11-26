@@ -12,8 +12,8 @@ function mapQuestion(question: Question, index: number): WritingQuestion {
   const promptType = question.prompt === 'boo' ? 'boo' : 'reading';
   return { ...question, label: question.typeLabel ?? `문항 ${index + 1}`, instruction: question.instruction ?? '글을 읽고 답을 작성하세요.', prompt: question.sentence, promptType, promptLabel: promptType === 'boo' ? 'Boo' : '읽을 글', responseType: question.answerType === 'CHOICE' || Boolean(question.choices?.length) ? 'choice' : 'text', placeholder: question.answerType === 'CHOICE' || question.choices?.length ? '' : '여기에 답을 적어 보세요' };
 }
-function toSummary(weekLabel: string, b6: SubmitResponse, b7: ApiPracticeSummary): SummaryData {
-  return { subject: 'writing', weekLabel, title: b7.title || 'Muito bem!', message: b7.message || '작문·독해 연습을 마쳤어요.', stats: b7.stats.map((stat) => ({ label: stat.label, value: String(stat.value), suffix: stat.suffix })), corrections: b6.results.filter((result) => !result.correct).map((result) => ({ original: result.myAnswer || result.answer, corrected: result.answer })), correctionsTitle: '학습 마무리', emptyCorrectionsMessage: '다섯 문항의 예시 답안과 해설을 확인했어요.', responseData: { results: b6.results, completion: b7 } };
+function toSummary(weekLabel: string, b6: SubmitResponse, b7: ApiPracticeSummary, elapsedSeconds: number): SummaryData {
+  return { subject: 'writing', weekLabel, title: b7.title || 'Muito bem!', message: '작문·독해 5문항을 풀고 예시 답안과 해설을 확인했어요.', stats: [{ label: '제출 문항', value: String(b6.summary.total), suffix: `/ ${b6.summary.total}` }, { label: '작성 답변', value: '4', suffix: '문항' }, { label: '연습 시간', value: String(Math.max(1, Math.round(elapsedSeconds / 60))), suffix: '분' }], corrections: [], correctionsTitle: '학습 마무리', emptyCorrectionsMessage: '다섯 문항의 예시 답안과 해설을 확인했어요.', responseData: { results: b6.results, completion: b7 } };
 }
 
 export function WritingPractice({ onBack, onComplete, onToast, setId = DEFAULT_SET_ID }: Props) {
@@ -46,7 +46,7 @@ export function WritingPractice({ onBack, onComplete, onToast, setId = DEFAULT_S
     try {
       const b6 = await submitPracticeSet(setId, questions.map((question, questionIndex) => ({ questionId: question.questionId, ...(question.choices?.length ? { choice: answers[questionIndex] ?? '' } : { text: answers[questionIndex] ?? '' }) })), elapsedSeconds);
       const { summary: b7 } = await completePracticeSet(setId, elapsedSeconds, b6.summary.correctCount, b6.summary.total);
-      onComplete(toSummary(weekLabel, b6, b7));
+      onComplete(toSummary(weekLabel, b6, b7, elapsedSeconds));
     } catch (reason) { setActionError(reason instanceof Error ? reason : new Error('연습 결과를 저장하지 못했어요.')); }
     finally { setBusy(false); }
   }

@@ -6,7 +6,7 @@ export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 export const MOCK_DELAY_ENABLED = false;
 export const MOCK_FORCE_ERROR = false;
-let mockDelayEnabled = MOCK_DELAY_ENABLED;
+let mockDelayMs = MOCK_DELAY_ENABLED ? 300 : 0;
 let mockForceError = MOCK_FORCE_ERROR;
 
 export class ApiError extends Error {
@@ -16,8 +16,8 @@ export class ApiError extends Error {
   }
 }
 
-export function setMockOptions(options: { delay?: boolean; forceError?: boolean }) {
-  if (options.delay !== undefined) mockDelayEnabled = options.delay;
+export function setMockOptions(options: { delay?: number | boolean; forceError?: boolean }) {
+  if (options.delay !== undefined) mockDelayMs = typeof options.delay === 'number' ? Math.max(0, options.delay) : options.delay ? 300 : 0;
   if (options.forceError !== undefined) mockForceError = options.forceError;
 }
 
@@ -43,7 +43,7 @@ function unwrap<T>(envelope: ApiEnvelope<T>): T {
 
 /** All current endpoint functions call this mock transport; it issues no fetch/XHR. */
 export async function mockRequest<T>(operation: string, factory: () => T | Promise<T>, message = '요청이 완료됐어요.'): Promise<T> {
-  if (mockDelayEnabled) await new Promise((resolve) => window.setTimeout(resolve, 300));
+  if (mockDelayMs > 0) await new Promise((resolve) => window.setTimeout(resolve, mockDelayMs));
   if (mockForceError) return unwrap<T>({ success: false, code: 500, error_code: 'MOCK_FORCED_ERROR', message: '목 API 강제 오류입니다.', data: null as T });
   try {
     const data = await factory();

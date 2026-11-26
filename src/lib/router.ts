@@ -1,10 +1,10 @@
 import type { Role } from './session';
 
-export function roleHome(role: Role) { return role === 'student' ? '/student' : '/prof'; }
+export function roleHome(role: Role) { return role === 'STUDENT' ? '/student' : '/prof'; }
 
 export function roleForPath(path: string): Role | null {
-  if (path === '/student' || path.startsWith('/student/')) return 'student';
-  if (path === '/prof' || path.startsWith('/prof/')) return 'professor';
+  if (path === '/student' || path.startsWith('/student/')) return 'STUDENT';
+  if (path === '/prof' || path.startsWith('/prof/')) return 'PROFESSOR';
   return null;
 }
 
