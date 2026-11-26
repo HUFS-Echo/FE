@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { completePracticeSet, getPracticeSet, submitPracticeSet } from '../../../api/practiceSets';
 import type { PracticeSummary as ApiPracticeSummary, Question, SubmitResponse } from '../../../api/types';
 import { ApiEmptyState, ApiErrorState, ApiLoadingState, useApi } from '../../../api/useApi';
@@ -15,8 +15,21 @@ function questionType(question: Question, index: number): GrammarQuestion['type'
   return byFormat[question.format] ?? GRAMMAR_TYPES[index] ?? 'fill';
 }
 function mapQuestion(question: Question, index: number): GrammarQuestion { return { ...question, label: question.typeLabel ?? `문항 ${index + 1}`, instruction: question.instruction ?? '알맞은 답을 입력하세요.', prompt: question.prompt ?? question.sentence, type: questionType(question, index) }; }
-function toSummary(subject: SubjectId, title: string, message: string, weekLabel: string, b6: SubmitResponse, b7: ApiPracticeSummary): SummaryData {
-  const corrections = b6.results.filter((result) => !result.correct).map((result) => ({ original: result.myAnswer || result.answer, corrected: result.answer }));
+function fillGrammarSentence(prompt: string, answer: string, completeAnswer: string): string {
+  if (/eu\s*\+\s*ser/i.test(prompt)) return `Eu ${answer.trim().replace(/[.!?]+$/, '')}.`;
+  if (/_{2,}/.test(prompt)) return prompt.replace(/_{2,}/g, answer.trim() || '—');
+  if (/\[[^\]]+\]/.test(prompt)) return prompt.replace(/\[[^\]]+\]/, answer.trim() || '—');
+  if (answer.trim().split(/\s+/).length > 1 || /[.!?]$/.test(answer.trim())) return answer.trim();
+  if (completeAnswer.trim().split(/\s+/).length > 1) return completeAnswer.replace(/([\p{L}]+)([.!?]?)$/u, `${answer.trim()}$2`);
+  return answer.trim() || completeAnswer;
+}
+function toSummary(subject: SubjectId, title: string, message: string, weekLabel: string, questions: GrammarQuestion[], b6: SubmitResponse, b7: ApiPracticeSummary): SummaryData {
+  const corrections = b6.results.filter((result) => !result.correct).map((result) => {
+    const question = questions.find((item) => item.questionId === result.questionId);
+    const prompt = question?.prompt ?? question?.sentence ?? '';
+    const completeAnswer = question?.answer ?? result.answer;
+    return { original: fillGrammarSentence(prompt, result.myAnswer, completeAnswer), corrected: fillGrammarSentence(prompt, result.answer, completeAnswer) };
+  });
   return { subject, title: b7.title || title, message: b7.message || message, weekLabel, stats: b7.stats.map((stat) => ({ label: stat.label, value: String(stat.value), suffix: stat.suffix })), corrections, responseData: { results: b6.results, completion: b7 } };
 }
 
@@ -29,8 +42,9 @@ export function ReadingPractice({ onBack, onComplete, onToast, setId = DEFAULT_S
   const [actionError, setActionError] = useState<Error | null>(null);
   const startedAt = useRef(Date.now());
   const questions = (set?.questions ?? []).map(mapQuestion);
+  useEffect(() => { const refresh = () => retry(); window.addEventListener('hufs-demo-change', refresh); return () => window.removeEventListener('hufs-demo-change', refresh); }, [retry]);
   if (loading) return <ApiLoadingState label="문법 연습을 불러오는 중…" />;
-  if (error) return <ApiErrorState error={error} onRetry={retry} />;
+  if (error) return <ApiErrorState error={error} onRetry={() => window.dispatchEvent(new Event('hufs-demo-change'))} />;
   if (!questions.length) return <ApiEmptyState message="아직 연습 문항이 없어요." />;
   const weekLabel = `${set?.week ?? 3}주차`;
   const total = questions.length;
@@ -52,7 +66,7 @@ export function ReadingPractice({ onBack, onComplete, onToast, setId = DEFAULT_S
       const b6 = await submitPracticeSet(setId, questions.map((question, questionIndex) => ({ questionId: question.questionId, ...(question.choices?.length ? { choice: answers[questionIndex] ?? '' } : { text: answers[questionIndex] ?? '' }) })), elapsedSeconds);
       const correctCount = b6.summary.correctCount;
       const { summary: b7 } = await completePracticeSet(setId, elapsedSeconds, correctCount, b6.summary.total);
-      onComplete(toSummary('grammar', 'Muito bem!', `문법 ${questions.length}문제를 모두 풀었어요. 오늘의 결과를 확인해 보세요.`, weekLabel, b6, b7));
+      onComplete(toSummary('grammar', 'Muito bem!', `문법 ${questions.length}문제를 모두 풀었어요. 오늘의 결과를 확인해 보세요.`, weekLabel, questions, b6, b7));
     } catch (reason) { setActionError(reason instanceof Error ? reason : new Error('연습 결과를 저장하지 못했어요.')); }
     finally { setBusy(false); }
   }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { completePracticeSet, getPracticeSet, submitPracticeSet } from '../../../api/practiceSets';
 import type { PracticeSummary as ApiPracticeSummary, Question, SubmitResponse } from '../../../api/types';
 import { ApiEmptyState, ApiErrorState, ApiLoadingState, useApi } from '../../../api/useApi';
@@ -25,8 +25,9 @@ export function WritingPractice({ onBack, onComplete, onToast, setId = DEFAULT_S
   const [actionError, setActionError] = useState<Error | null>(null);
   const startedAt = useRef(Date.now());
   const questions = (set?.questions ?? []).map(mapQuestion);
+  useEffect(() => { const refresh = () => retry(); window.addEventListener('hufs-demo-change', refresh); return () => window.removeEventListener('hufs-demo-change', refresh); }, [retry]);
   if (loading) return <ApiLoadingState label="작문·독해 연습을 불러오는 중…" />;
-  if (error) return <ApiErrorState error={error} onRetry={retry} />;
+  if (error) return <ApiErrorState error={error} onRetry={() => window.dispatchEvent(new Event('hufs-demo-change'))} />;
   if (!questions.length) return <ApiEmptyState message="아직 연습 문항이 없어요." />;
   const weekLabel = `${set?.week ?? 3}주차`;
   const total = questions.length;

@@ -15,6 +15,7 @@ export const ProfessorLanguageContext = createContext<ProfessorLanguageContextVa
 });
 
 const english: Record<string, string> = {
+  '교수 용어집: 정관사=o/a · 부정관사=um/uma': 'Professor glossary: definite article=o/a · indefinite article=um/uma',
   '포르투갈어': 'Portuguese',
   '포르투갈어 문법': 'Portuguese Grammar',
   '포르투갈어 읽기와 쓰기': 'Portuguese Reading & Writing',

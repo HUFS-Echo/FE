@@ -36,7 +36,8 @@ export default function App() {
   useEffect(() => () => { if (toastTimer.current) window.clearTimeout(toastTimer.current); }, []);
 
   const notify = useCallback((message: string) => {
-    setToast(message);
+    const userMessage = /목\s*API|mock|endpoint|MOCK_/i.test(message) ? '불러오지 못했어요. 잠시 후 다시 시도해 주세요.' : message;
+    setToast(userMessage);
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(''), 3400);
   }, []);

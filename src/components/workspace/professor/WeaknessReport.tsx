@@ -3,6 +3,7 @@ import { useProfFilters } from './ProfFilterContext';
 import { useProfessorLanguage } from './ProfessorLanguageContext';
 import { getInsights, getWeeklyReport } from '../../../api/reports';
 import { useApi, ApiErrorState, ApiLoadingState, ApiEmptyState } from '../../../api/useApi';
+import { displayDateRange } from './scopeDate';
 type ReportRow = { name: string; count: number; rate: number; bad: string; good: string; examples: string[] };
 const courseIdForFilter = { grammar: 1, writing: 2, speaking: 3 } as const;
 const subjects = { grammar: '포르투갈어 문법', writing: '포르투갈어 읽기와 쓰기', speaking: '포르투갈어 회화' } as const;
@@ -18,7 +19,7 @@ export function WeaknessReport() {
   const report = reportApi.data;
   const reportRows: ReportRow[] = filters.section === '02' ? [] : (report?.errors ?? []).map((item) => ({ name: item.tag, count: item.studentCount, rate: item.rate, bad: item.example.original, good: item.example.corrected, examples: item.moreExamples }));
   const visibleRows = showAll ? reportRows : reportRows.slice(0, 2);
-  const dates = report ? `${report.startDate}–${report.endDate}` : weekDateFallback[filters.week] ?? '';
+  const dates = report ? displayDateRange(report.startDate, report.endDate) : weekDateFallback[filters.week] ?? '';
   const retryAll = () => { insightsApi.retry(); reportApi.retry(); };
   return <div className="prof-page">
     {(insightsApi.error || reportApi.error) && <ApiErrorState error={insightsApi.error ?? reportApi.error!} onRetry={retryAll}/>}

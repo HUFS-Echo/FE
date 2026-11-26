@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { SubjectId } from '../../../config/learning';
 import type { Course, CourseType } from '../../../api/types';
 import { getStudentCourses } from '../../../api/studentCourses';
-import { useApi, ApiEmptyState, ApiErrorState, ApiLoadingState } from '../../../api/useApi';
+import { useApi, ApiEmptyState, ApiLoadingState } from '../../../api/useApi';
 
 type Props = { subject: SubjectId; variant: 'header' | 'sidebar'; onChange: (subject: SubjectId) => void };
 const subjectForType: Record<CourseType, SubjectId> = { GRAMMAR: 'grammar', WRITING: 'writing', SPEAKING: 'speaking' };
@@ -21,6 +21,7 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
   const courses = coursesApi.data?.courses ?? [];
+  const menuCourses: Course[] = coursesApi.error ? Object.values(fallback) : courses;
   const current = courses.find((course) => subjectForType[course.type] === subject) ?? fallback[subject];
   const currentSubject = subjectForType[current.type];
 
@@ -54,7 +55,7 @@ export function StudentCoursePicker({ subject, variant, onChange }: Props) {
     </button>
     {open && <div ref={menuRef} id={menuId} className="student-course-picker__menu" role="menu" aria-label="과목 선택">
       <div className="student-course-picker__menu-head"><span>학습 과목</span><small>PORTUGUÊS · A1</small></div>
-      {coursesApi.loading ? <ApiLoadingState label="과목을 불러오는 중…" /> : coursesApi.error ? <ApiErrorState error={coursesApi.error} onRetry={coursesApi.retry} /> : courses.length === 0 ? <ApiEmptyState message="연결된 과목이 없어요." /> : <div className="student-course-picker__options">{courses.map((course) => {
+      {coursesApi.loading && !coursesApi.error ? <ApiLoadingState label="과목을 불러오는 중…" /> : menuCourses.length === 0 ? <ApiEmptyState message="연결된 과목이 없어요." /> : <div className="student-course-picker__options">{menuCourses.map((course) => {
         const itemSubject = subjectForType[course.type];
         const selected = itemSubject === subject;
         const disabled = !course.enrolled;

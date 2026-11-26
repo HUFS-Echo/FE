@@ -15,7 +15,7 @@ function formatTime(seconds: number) { return `${String(Math.floor(seconds / 60)
 function mapQuestion(question: Question, index: number): SpeakingQuestion {
   const fallbackResponse: SpeakingQuestion['responseType'] = index === 2 || index === 3 ? 'recording' : question.choices?.length ? 'choice' : 'text';
   const promptType: SpeakingQuestion['promptType'] = question.promptType === 'audio' || question.promptType === 'boo' || question.promptType === 'sentence' ? question.promptType : question.audioUrl || index === 0 || index === 2 ? 'audio' : index === 3 ? 'sentence' : 'boo';
-  return { ...question, label: question.typeLabel ?? `문항 ${index + 1}`, instruction: question.instruction ?? '질문에 알맞게 답하세요.', prompt: question.prompt ?? question.sentence, promptType, responseType: question.answerType === 'AUDIO' ? 'recording' : question.answerType === 'CHOICE' || question.choices?.length ? 'choice' : fallbackResponse, placeholder: question.answerType === 'AUDIO' || index === 2 || index === 3 ? '' : '여기에 답을 적어 보세요' };
+  return { ...question, label: question.typeLabel ?? `문항 ${index + 1}`, instruction: question.instruction ?? '질문에 알맞게 답하세요.', prompt: question.prompt ?? question.sentence, promptType, responseType: question.answerType === 'AUDIO' ? 'recording' : question.answerType === 'CHOICE' || question.choices?.length ? 'choice' : fallbackResponse, placeholder: question.answerType === 'AUDIO' || index === 2 || index === 3 ? '' : index === 0 ? '한국어로 짧게 적어 보세요' : '여기에 답을 적어 보세요' };
 }
 function toSummary(weekLabel: string, b6: SubmitResponse, b7: ApiPracticeSummary, elapsedSeconds: number, answeredCount: number): SummaryData {
   return { subject: 'speaking', weekLabel, title: b7.title || 'Muito bem!', message: '회화 5문항을 풀고 예시 답안과 해설을 확인했어요.', stats: [{ label: '제출 문항', value: String(b6.summary.total), suffix: `/ ${b6.summary.total}` }, { label: '답변 완료', value: String(answeredCount), suffix: '문항' }, { label: '연습 시간', value: String(Math.max(1, Math.round(elapsedSeconds / 60))), suffix: '분' }], corrections: [], correctionsTitle: '학습 마무리', emptyCorrectionsMessage: '다섯 문항의 예시 답안과 해설을 확인했어요.', responseData: { results: b6.results, completion: b7 } };
@@ -41,10 +41,11 @@ export function SpeakingPractice({ onBack, onComplete, onToast, setId = DEFAULT_
   const recordingStart = useRef(0);
   const audioChunks = useRef<Blob[]>([]);
   const questions = (set?.questions ?? []).map(mapQuestion);
+  useEffect(() => { const refresh = () => retry(); window.addEventListener('hufs-demo-change', refresh); return () => window.removeEventListener('hufs-demo-change', refresh); }, [retry]);
   useEffect(() => { if (!recording) return; const timer = window.setInterval(() => setSeconds((value) => value + 1), 1000); return () => window.clearInterval(timer); }, [recording]);
   useEffect(() => () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); if (playbackFallback.current !== null) window.clearTimeout(playbackFallback.current); mediaRecorder.current?.stop(); mediaStream.current?.getTracks().forEach((track) => track.stop()); }, []);
   if (loading) return <ApiLoadingState label="회화 연습을 불러오는 중…" />;
-  if (error) return <ApiErrorState error={error} onRetry={retry} />;
+  if (error) return <ApiErrorState error={error} onRetry={() => window.dispatchEvent(new Event('hufs-demo-change'))} />;
   if (!questions.length) return <ApiEmptyState message="아직 연습 문항이 없어요." />;
   const weekLabel = `${set?.week ?? 3}주차`;
   const total = questions.length;

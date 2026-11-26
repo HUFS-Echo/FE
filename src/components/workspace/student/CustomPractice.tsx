@@ -18,6 +18,7 @@ export function CustomPractice({ practiceId, onBack }: Props) {
   const [finished, setFinished] = useState(() => restoredProgress?.finished ?? false);
   const [actionError, setActionError] = useState<Error | null>(null);
   useEffect(() => { saveCustomPracticeProgress(practiceId, { index, selected, checkedAnswers, finished }); }, [practiceId, index, selected, checkedAnswers, finished]);
+  useEffect(() => { const refresh = () => customApi.retry(); window.addEventListener('hufs-demo-change', refresh); return () => window.removeEventListener('hufs-demo-change', refresh); }, [customApi.retry]);
 
   const current = questions[index];
   const isChecked = current ? Object.prototype.hasOwnProperty.call(checkedAnswers, current.id) : false;
@@ -45,7 +46,7 @@ export function CustomPractice({ practiceId, onBack }: Props) {
   }
 
   if (customApi.loading) return <ApiLoadingState label="맞춤 연습 문제를 불러오는 중…" />;
-  if (customApi.error) return <ApiErrorState error={customApi.error} onRetry={customApi.retry} />;
+  if (customApi.error) return <ApiErrorState error={customApi.error} onRetry={() => window.dispatchEvent(new Event('hufs-demo-change'))} />;
   if (!customApi.data) return <ApiEmptyState message="맞춤 연습 세트를 찾을 수 없어요." />;
   return (
     <div className="custom-practice">
