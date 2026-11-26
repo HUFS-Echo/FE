@@ -1,30 +1,187 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import type { Session } from '../../../api/adapters';
-import { getDemoState, updateDemoState } from '../../../api/adapters';
-import { COURSE_LABELS, isCourseDisabled, type SubjectId } from '../../../api/adapters';
+import type { Session } from '../../../lib/session';
+import { getMe, updateMe, getUserSettings, updateUserSettings, agreeLearningConsent, revokeLearningConsent, exportLearningData } from '../../../api/auth';
+import { getStudentCourses, leaveCourse } from '../../../api/studentCourses';
+import { useApi, ApiEmptyState, ApiErrorState, ApiLoadingState } from '../../../api/useApi';
+import type { Course } from '../../../api/types';
+import { deleteMaterial, getMaterials, uploadMaterial } from '../../../api/materials';
+import { getProfessorCourses } from '../../../api/profCourses';
 import { useProfessorLanguage } from '../professor/ProfessorLanguageContext';
-type Props={session:Session;onNavigate?:(path:string)=>void;onSessionUpdate:(session:Session)=>void;onToast:(message:string)=>void;onLogout:()=>void;onReset:()=>void;onReplay:()=>void};
-function Toggle({label,checked,onChange}:{label:string;checked:boolean;onChange:()=>void}){return <label className="setting-toggle"><span>{label}</span><button type="button" role="switch" aria-checked={checked} className={checked?'is-on':''} onClick={onChange}><i/></button></label>}
-function ProfileHeader({session,role,t=(text:string)=>text}:{session:Session;role:string;t?:(text:string)=>string}){return <header className="profile-hero"><div className="profile-avatar"><img src="/owls/football.png" alt="축구 유니폼을 입은 에코 부엉이"/></div><div><span className="eyebrow">MY HUFS ECHO · {role}</span><h1>{session.name}{t('님의 마이페이지')}</h1><p>{session.email} · {session.department}</p></div><span className="profile-shield">{t('학교 메일 인증 완료')}</span></header>}
-function Section({title,desc,children}:{title:string;desc?:string;children:ReactNode}){return <section className="profile-card"><header><div><h2>{title}</h2>{desc&&<p>{desc}</p>}</div></header>{children}</section>}
-type TeachingFile={name:string;pages:number;used:number;uploaded:string};
-const DEMO_FILES:TeachingFile[]=[{name:'Português_A1_2026.pdf',pages:120,used:3,uploaded:'11.17'},{name:'Caderno_gramática.pdf',pages:84,used:1,uploaded:'11.17'},{name:'Diálogos_A1.pdf',pages:56,used:0,uploaded:'11.17'}];
-const DEFAULT_CODES:Record<string,string>={'PT-GRAM1':'PT-GRAM1','PT-WRITE1':'PT-WRITE1','PT-TALK1':'PT-TALK1'};
-export function StudentProfile({session,onSessionUpdate,onToast,onLogout}:Props){const [edit,setEdit]=useState(false);const [name,setName]=useState(session.name);const avatar='/owls/football.png';const [deptYear,setDeptYear]=useState(`${session.department} · ${session.year||'2학년'}`);const [settings,setSettings]=useState(()=>getDemoState().studentSettings);useEffect(()=>{const sync=()=>setSettings(getDemoState().studentSettings);window.addEventListener('hufs-demo-change',sync);return()=>window.removeEventListener('hufs-demo-change',sync)},[]);const [modal,setModal]=useState<'leave'|null>(null);const [leaveCourse,setLeaveCourse]=useState('');const change=(key:string,value:unknown)=>{const next={...settings,[key]:value};setSettings(next);updateDemoState(s=>({...s,studentSettings:next}))};return <div className="profile-page"><ProfileHeader session={{...session,name,avatar,department:deptYear.split(' · ')[0],year:deptYear.split(' · ').slice(1).join(' · ')}} role="STUDENT PROFILE"/><div className="profile-columns"><div className="profile-column"><Section title="프로필" desc="학습에 표시되는 기본 정보예요."><div className="profile-data-grid"><label>이름<input disabled={!edit} value={name} onChange={e=>setName(e.target.value)}/></label><label>학번<input disabled value={session.studentId}/></label><label>학교 메일<input disabled value={session.email}/></label><label>학과 · 학년<input disabled={!edit} value={deptYear} onChange={e=>setDeptYear(e.target.value)}/></label></div><div className="prof-actions"><button className="btn-ghost" onClick={()=>{if(edit){onSessionUpdate({...session,name,avatar,department:deptYear.split(' · ')[0],year:deptYear.split(' · ').slice(1).join(' · ')});onToast('프로필 정보를 저장했어요. (데모)');}setEdit(!edit)}}>{edit?'변경 저장':'프로필 수정'}</button></div></Section>
 
-<Section title="수강 과목" desc="연결된 과목과 이번 주 학습 범위예요."><div className="course-profile-list">{[['문법','문법·문제 풀이 · PT-GRAM1','김교수 · 01분반','부정관사와 명사의 성·수 일치','reading'],['읽기와 쓰기','작문·교정 · PT-WRITE1','김교수 · 01분반','학교 파티 일기','writing'],['회화','말하기 · PT-TALK1','김교수 · 01분반','아사이 가게 주문·가격 묻기','speaking']].filter(x=>!isCourseDisabled(x[4] as SubjectId,(getDemoState().studentSettings.disabledCourses as string[]|undefined)||[])).map(x=><article key={x[0]}><div><b>포르투갈어 {x[0]}</b><span>{x[1]} · {x[2]}</span><small>이번 주 · {x[3]}</small></div><button onClick={()=>{setLeaveCourse(COURSE_LABELS[x[4] as SubjectId]);setModal('leave')}}>과목 나가기</button></article>)}</div></Section>
-</div>
-<div className="profile-column">
-<Section title="알림" desc="필요한 학습 알림만 받아요."><Toggle label="새 학습 범위 공개" checked={Boolean((settings.notifications as any)?.release??true)} onChange={()=>{const n={...(settings.notifications as object),release:!((settings.notifications as any)?.release)};change('notifications',n)}}/><Toggle label="마감 하루 전" checked={Boolean((settings.notifications as any)?.deadline??true)} onChange={()=>{const n={...(settings.notifications as object),deadline:!((settings.notifications as any)?.deadline)};change('notifications',n)}}/></Section>
-<Section title="개인정보 · 데이터" desc="학습 데이터 사용 방식을 관리합니다."><div className="consent-banner"><b>학습 기록 활용에 동의했어요</b><span>동의일 · 2026.11.17</span><button onClick={()=>onToast('학습 기록 활용 동의를 철회했어요. (데모)')}>동의 철회</button></div><p className="profile-info">음성은 텍스트로 바꾼 뒤 저장하지 않아요. 학습 기록은 수업 개선과 개인화에만 사용됩니다.</p><button className="btn-ghost" onClick={()=>onToast('학습 기록 파일을 준비했어요. (데모)')}>내 학습 기록 내려받기</button></Section>
-<Section title="계정"><div className="account-actions"><button className="btn-danger" onClick={onLogout}>로그아웃</button></div></Section></div></div>
-{modal&&<div className="modal-backdrop" onClick={()=>setModal(null)}><div className="simple-modal" role="dialog" aria-modal="true" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setModal(null)}>×</button><h2>과목에서 나갈까요?</h2><p>{`${leaveCourse} 과목 연결을 해제할까요?`}</p><div className="prof-actions"><button className="btn-ghost" onClick={()=>setModal(null)}>취소</button><button className="btn-solid" onClick={()=>{updateDemoState(state=>({...state,studentSettings:{...state.studentSettings,disabledCourses:[...((state.studentSettings.disabledCourses as string[]|undefined)||[]),leaveCourse]}}));onToast(`${leaveCourse} 과목에서 나왔어요. (데모)`);setModal(null)}}>과목 나가기</button></div></div></div>}</div>}
-export function ProfessorProfile({session,onSessionUpdate,onToast,onLogout}:Props){const {t,language}=useProfessorLanguage();const [edit,setEdit]=useState(false);const [profName,setProfName]=useState(session.name);const [profDepartment,setProfDepartment]=useState(session.department);const [room,setRoom]=useState(session.room||'본관 512호 · 화 14:00–16:00');const [settings,setSettings]=useState(()=>getDemoState().professorSettings);const [courseCodes,setCourseCodes]=useState<Record<string,string>>({...DEFAULT_CODES,...((settings.courseCodes as Record<string,string>)||{})});const [files,setFiles]=useState<TeachingFile[]>(Array.isArray(settings.files)?settings.files as TeachingFile[]:DEMO_FILES);useEffect(()=>{const sync=()=>{const next=getDemoState().professorSettings;setSettings(next);setCourseCodes({...DEFAULT_CODES,...((next.courseCodes as Record<string,string>)||{})});setFiles(Array.isArray(next.files)?next.files as TeachingFile[]:DEMO_FILES)};window.addEventListener('hufs-demo-change',sync);return()=>window.removeEventListener('hufs-demo-change',sync)},[]);const change=(key:string,value:unknown)=>{const next={...settings,[key]:value};setSettings(next);updateDemoState(s=>({...s,professorSettings:next}))};return <div className="profile-page"><ProfileHeader session={{...session,name:profName,department:profDepartment,room}} role="PROFESSOR PROFILE" t={t}/><div className="profile-columns"><div className="profile-column"><Section title={t('프로필')} desc={t('학생에게 표시되는 담당 교수 정보예요.')}><div className="profile-data-grid"><label>이름<input disabled={!edit} value={profName} onChange={e=>setProfName(e.target.value)}/></label><label>학교 메일<input disabled value={session.email}/></label><label>{t('소속 학과')}<input disabled={!edit} value={profDepartment} onChange={e=>setProfDepartment(e.target.value)}/></label><label>{t('연구실 · 면담 시간')}<input disabled={!edit} value={room} onChange={e=>setRoom(e.target.value)}/></label></div><button className="btn-ghost" onClick={()=>{if(edit){onSessionUpdate({...session,name:profName,department:profDepartment,room});onToast(t('교수 프로필을 저장했어요. (데모)'));}setEdit(!edit)}}>{edit?'변경 저장':'프로필 수정'}</button></Section>
-<Section title={t('담당 과목 관리')} desc={t('01분반 · 수강생 48명')}><div className="course-profile-list">{[['포르투갈어 문법','문법·문제 풀이','PT-GRAM1'],['포르투갈어 읽기와 쓰기','작문·교정','PT-WRITE1'],['포르투갈어 회화','말하기','PT-TALK1']].map(x=><article key={x[2]}><div><b>{t(x[0])}</b><span>{t(x[1])} · {t('01분반')} · 48 {t('명')}</span><small>{t('수업 코드 · ')}{courseCodes[x[2]]||x[2]}</small></div></article>)}</div></Section>
+type Props = { session: Session; onNavigate?: (path: string) => void; onSessionUpdate: (session: Session) => void; onToast: (message: string) => void; onLogout: () => void; onReset: () => void; onReplay: () => void };
+type StudentSettings = Awaited<ReturnType<typeof getUserSettings>>;
+function ProfileHeader({ session, role, t = (text: string) => text }: { session: Session; role: string; t?: (text: string) => string }) {
+  return <header className="profile-hero"><div className="profile-avatar"><img src="/owls/football.png" alt="축구 유니폼을 입은 에코 부엉이" /></div><div><span className="eyebrow">MY HUFS ECHO · {role}</span><h1>{session.name}{t('님의 마이페이지')}</h1><p>{session.email} · {session.department}</p></div><span className="profile-shield">{t('학교 메일 인증 완료')}</span></header>;
+}
+function Section({ title, desc, children }: { title: string; desc?: string; children: ReactNode }) {
+  return <section className="profile-card"><header><div><h2>{title}</h2>{desc && <p>{desc}</p>}</div></header>{children}</section>;
+}
+function Toggle({ label, checked, disabled, onChange }: { label: string; checked: boolean; disabled?: boolean; onChange: () => void }) {
+  return <label className="setting-toggle"><span>{label}</span><button type="button" role="switch" aria-checked={checked} disabled={disabled} className={checked ? 'is-on' : ''} onClick={onChange}><i /></button></label>;
+}
+export function StudentProfile({ session, onSessionUpdate, onToast, onLogout }: Props) {
+  const profileApi = useApi(() => getMe(), [session.email]);
+  const settingsApi = useApi(() => getUserSettings(), [session.email]);
+  const coursesApi = useApi(() => getStudentCourses(), [session.email]);
+  const [edit, setEdit] = useState(false);
+  const [name, setName] = useState(session.name);
+  const [deptYear, setDeptYear] = useState(`${session.department} · ${session.year || '2학년'}`);
+  const [settingsOverride, setSettingsOverride] = useState<Partial<StudentSettings['notifications']> | null>(null);
+  const [consentOverride, setConsentOverride] = useState<StudentSettings['consent'] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [modal, setModal] = useState<Course | null>(null);
+  const settings = settingsApi.data;
+  const notifications = { ...settings?.notifications, ...settingsOverride };
+  const consent = consentOverride ?? settings?.consent;
+  const courses = (coursesApi.data?.courses ?? []).filter((course) => course.enrolled);
+  const visibleProfile = profileApi.data;
+  useEffect(() => {
+    if (!visibleProfile) return;
+    setName(visibleProfile.name);
+    setDeptYear(`${visibleProfile.department} · ${visibleProfile.year ?? session.year ?? '2학년'}`);
+  }, [visibleProfile, session.year]);
 
-</div>
-<div className="profile-column">
+  async function saveProfile() {
+    setSaving(true);
+    try {
+      const [department, year] = deptYear.split(' · ');
+      await updateMe({ name, department, year });
+      onSessionUpdate({ ...session, name, department, year, avatar: '/owls/football.png' });
+      onToast('프로필 정보를 저장했어요.');
+      setEdit(false);
+    } catch (error) { onToast(error instanceof Error ? error.message : '프로필을 저장하지 못했어요.'); }
+    finally { setSaving(false); }
+  }
+  async function changeNotification(key: 'newScope' | 'dueTomorrow') {
+    const patch = { [key]: !Boolean(notifications[key]) };
+    try {
+      const result = await updateUserSettings({ notifications: patch });
+      setSettingsOverride(result.notifications);
+    } catch (error) { onToast(error instanceof Error ? error.message : '설정을 저장하지 못했어요.'); }
+  }
+  async function changeConsent() {
+    try {
+      if (consent?.agreed) {
+        const result = await revokeLearningConsent();
+        setConsentOverride({ agreed: result.agreed, agreedAt: '' });
+      } else {
+        const result = await agreeLearningConsent();
+        setConsentOverride(result);
+      }
+    } catch (error) { onToast(error instanceof Error ? error.message : '동의 설정을 변경하지 못했어요.'); }
+  }
+  async function downloadLearningData() {
+    setExporting(true);
+    try {
+      const result = await exportLearningData('json');
+      const blob = new Blob([result.content], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = result.fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+      onToast('내 학습 기록 파일을 준비했어요.');
+    } catch (error) { onToast(error instanceof Error ? error.message : '학습 기록을 준비하지 못했어요.'); }
+    finally { setExporting(false); }
+  }
+  async function confirmLeave() {
+    if (!modal) return;
+    try {
+      await leaveCourse(modal.courseId);
+      coursesApi.retry();
+      onToast(`${modal.title} 과목에서 나왔어요.`);
+      setModal(null);
+    } catch (error) { onToast(error instanceof Error ? error.message : '과목 연결을 해제하지 못했어요.'); }
+  }
 
+  const displayName = visibleProfile?.name ?? name;
+  const profileSession: Session = { ...session, name: displayName, department: visibleProfile?.department ?? deptYear.split(' · ')[0], year: visibleProfile?.year ?? deptYear.split(' · ').slice(1).join(' · '), avatar: '/owls/football.png' };
+  return <div className="profile-page"><ProfileHeader session={profileSession} role="STUDENT PROFILE" />
+    <div className="profile-columns"><div className="profile-column">
+      <Section title="프로필" desc="학습에 표시되는 기본 정보예요.">
+        {profileApi.loading && <ApiLoadingState label="프로필을 불러오는 중…" />}
+        {profileApi.error && <ApiErrorState error={profileApi.error} onRetry={profileApi.retry} />}
+        <div className="profile-data-grid"><label>이름<input disabled={!edit} value={name} onChange={(event) => setName(event.target.value)} /></label><label>학번<input disabled value={visibleProfile?.studentId ?? session.studentId} /></label><label>학교 메일<input disabled value={visibleProfile?.email ?? session.email} /></label><label>학과 · 학년<input disabled={!edit} value={deptYear} onChange={(event) => setDeptYear(event.target.value)} /></label></div>
+        <div className="prof-actions"><button className="btn-ghost" disabled={saving} onClick={() => edit ? void saveProfile() : setEdit(true)}>{saving ? '저장 중…' : edit ? '변경 저장' : '프로필 수정'}</button></div>
+      </Section>
+      <Section title="수강 과목" desc="연결된 과목과 이번 주 학습 범위예요.">
+        {coursesApi.loading ? <ApiLoadingState label="수강 과목을 불러오는 중…" /> : coursesApi.error ? <ApiErrorState error={coursesApi.error} onRetry={coursesApi.retry} /> : courses.length === 0 ? <ApiEmptyState message="연결된 수강 과목이 없어요." /> : <div className="course-profile-list">{courses.map((course) => <article key={course.courseId}><div><b>{course.title}</b><span>{course.typeLabel} · {course.code} · {course.professorName ?? '김교수'} · {course.section ?? '01분반'}</span><small>이번 주 · {course.currentScopeTitle ?? '학습 범위 없음'}</small></div><button onClick={() => setModal(course)}>과목 나가기</button></article>)}</div>}
+      </Section>
+    </div><div className="profile-column">
+      <Section title="알림" desc="필요한 학습 알림만 받아요.">
+        {settingsApi.loading ? <ApiLoadingState label="알림 설정을 불러오는 중…" /> : settingsApi.error ? <ApiErrorState error={settingsApi.error} onRetry={settingsApi.retry} /> : <><Toggle label="새 학습 범위 공개" checked={Boolean(notifications.newScope)} onChange={() => void changeNotification('newScope')} /><Toggle label="마감 하루 전" checked={Boolean(notifications.dueTomorrow)} onChange={() => void changeNotification('dueTomorrow')} /></>}
+      </Section>
+      <Section title="개인정보 · 데이터" desc="학습 데이터 사용 방식을 관리합니다.">
+        {settingsApi.loading ? <ApiLoadingState label="동의 정보를 불러오는 중…" /> : settingsApi.error ? <ApiErrorState error={settingsApi.error} onRetry={settingsApi.retry} /> : <><div className="consent-banner"><b>{consent?.agreed ? '학습 기록 활용에 동의했어요' : '학습 기록 활용 동의를 철회했어요'}</b><span>{consent?.agreedAt ? `동의일 · ${consent.agreedAt.replaceAll('-', '.')}` : '동의하지 않음'}</span><button onClick={() => void changeConsent()}>{consent?.agreed ? '동의 철회' : '동의하기'}</button></div><p className="profile-info">음성은 텍스트로 바꾼 뒤 저장하지 않아요. 학습 기록은 수업 개선과 개인화에만 사용됩니다.</p></>}
+        <button className="btn-ghost" disabled={exporting} onClick={() => void downloadLearningData()}>{exporting ? '준비 중…' : '내 학습 기록 내려받기'}</button>
+      </Section>
+      <Section title="계정"><div className="account-actions"><button className="btn-danger" onClick={onLogout}>로그아웃</button></div></Section>
+    </div></div>
+    {modal && <div className="modal-backdrop" onClick={() => setModal(null)}><div className="simple-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setModal(null)}>×</button><h2>과목에서 나갈까요?</h2><p>{`${modal.title} 과목 연결을 해제할까요?`}</p><div className="prof-actions"><button className="btn-ghost" onClick={() => setModal(null)}>취소</button><button className="btn-solid" onClick={() => void confirmLeave()}>과목 나가기</button></div></div></div>}
+  </div>;
+}
 
-<Section title={t('강의자료 보관함')} desc={t('PDF 파일 메타데이터는 이 기기에만 저장됩니다.')}><div className="file-list">{files.map(file=><article key={file.name}><span className="pdf-icon">PDF</span><div><b>{file.name}</b><small>{language==='en'?`${file.pages} pages · Used by ${file.used} scopes · Uploaded ${file.uploaded}`:`${file.pages}쪽 · 사용 중인 범위 ${file.used}개 · ${file.uploaded} 업로드`}</small></div><button onClick={()=>{const warning=file.used?`이 자료를 사용하는 범위 ${file.used}개가 있어요. 그래도 삭제할까요?`:`${file.name}을 삭제할까요?`;if(window.confirm(warning)){const next=files.filter(x=>x.name!==file.name);setFiles(next);change('files',next);onToast(t('강의자료 메타데이터를 삭제했어요. (데모)'))}}}>{t('삭제')}</button></article>)}</div><label className="btn-ghost upload-label">{t('＋ 새 PDF 올리기')}<input type="file" accept="application/pdf" onChange={e=>{const file=e.target.files?.[0];if(!file)return;if(file.type!=='application/pdf'){onToast(t('PDF 파일만 올릴 수 있어요.'));return;}const next=[...files.filter(x=>x.name!==file.name),{name:file.name,pages:120,used:0,uploaded:'11.21'}];setFiles(next);change('files',next);onToast(language==='en'?`${file.name} file name metadata saved. (Demo)`:t('의 파일명 메타데이터를 저장했어요. (데모)').replace('의 파일명', `${file.name}의 파일명`));e.target.value='';}}/></label></Section>
-<Section title="계정"><button className="btn-danger" onClick={onLogout}>로그아웃</button></Section></div></div></div>}
+export function ProfessorProfile({ session, onSessionUpdate, onToast, onLogout }: Props) {
+  const { t, language } = useProfessorLanguage();
+  const profileApi = useApi(() => getMe(), [session.email]);
+  const coursesApi = useApi(() => getProfessorCourses(), [session.email]);
+  const materialsApi = useApi(() => getMaterials(), []);
+  const [edit, setEdit] = useState(false);
+  const [profName, setProfName] = useState(session.name);
+  const [profDepartment, setProfDepartment] = useState(session.department);
+  const [room, setRoom] = useState(session.room || '본관 512호 · 화 14:00–16:00');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  useEffect(() => {
+    if (!profileApi.data) return;
+    setProfName(profileApi.data.name);
+    setProfDepartment(profileApi.data.department);
+    setRoom(profileApi.data.room ?? session.room ?? '본관 512호 · 화 14:00–16:00');
+  }, [profileApi.data, session.room]);
+  async function saveProfile() {
+    setSaving(true);
+    try {
+      await updateMe({ name: profName, department: profDepartment, room });
+      onSessionUpdate({ ...session, name: profName, department: profDepartment, room });
+      onToast(t('교수 프로필을 저장했어요.'));
+      setEdit(false);
+    } catch (error) { onToast(error instanceof Error ? error.message : '프로필을 저장하지 못했어요.'); }
+    finally { setSaving(false); }
+  }
+  async function removeMaterial(materialId: number, fileName: string, used: number) {
+    const warning = used ? `이 자료를 사용하는 범위 ${used}개가 있어요. 그래도 삭제할까요?` : `${fileName}을 삭제할까요?`;
+    if (!window.confirm(warning)) return;
+    try { await deleteMaterial(materialId); materialsApi.retry(); onToast(t('강의자료를 삭제했어요.')); }
+    catch (error) { onToast(error instanceof Error ? error.message : '강의자료를 삭제하지 못했어요.'); }
+  }
+  async function addMaterial(file?: File) {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) { onToast(t('PDF 파일만 올릴 수 있어요.')); return; }
+    setUploading(true);
+    try { await uploadMaterial(file); materialsApi.retry(); onToast(t('강의자료를 올렸어요.')); }
+    catch (error) { onToast(error instanceof Error ? error.message : '강의자료를 올리지 못했어요.'); }
+    finally { setUploading(false); }
+  }
+  const displayProfile = profileApi.data;
+  const professorSession: Session = { ...session, name: displayProfile?.name ?? profName, department: displayProfile?.department ?? profDepartment, room: displayProfile?.room ?? room };
+  const courses = coursesApi.data?.courses ?? [];
+  const materials = materialsApi.data?.materials ?? [];
+  return <div className="profile-page"><ProfileHeader session={professorSession} role="PROFESSOR PROFILE" t={t} /><div className="profile-columns"><div className="profile-column">
+    <Section title={t('프로필')} desc={t('학생에게 표시되는 담당 교수 정보예요.')}>
+      {profileApi.loading && <ApiLoadingState label={t('프로필을 불러오는 중…')} />}{profileApi.error && <ApiErrorState error={profileApi.error} onRetry={profileApi.retry} />}
+      <div className="profile-data-grid"><label>이름<input disabled={!edit} value={profName} onChange={(event) => setProfName(event.target.value)} /></label><label>학교 메일<input disabled value={displayProfile?.email ?? session.email} /></label><label>{t('소속 학과')}<input disabled={!edit} value={profDepartment} onChange={(event) => setProfDepartment(event.target.value)} /></label><label>{t('연구실 · 면담 시간')}<input disabled={!edit} value={room} onChange={(event) => setRoom(event.target.value)} /></label></div>
+      <button className="btn-ghost" disabled={saving} onClick={() => edit ? void saveProfile() : setEdit(true)}>{saving ? t('저장 중…') : edit ? '변경 저장' : t('프로필 수정')}</button>
+    </Section>
+    <Section title={t('담당 과목 관리')} desc={coursesApi.data ? t(`${coursesApi.data.current.sectionId === 1 ? '01' : '02'}분반 · 수강생 ${courses.find((item) => item.courseId === coursesApi.data?.current.courseId)?.sections.find((section) => section.sectionId === coursesApi.data?.current.sectionId)?.studentCount ?? 0}명`) : t('담당 과목 정보예요.')}>
+      {coursesApi.loading ? <ApiLoadingState label={t('담당 과목을 불러오는 중…')} /> : coursesApi.error ? <ApiErrorState error={coursesApi.error} onRetry={coursesApi.retry} /> : courses.length === 0 ? <ApiEmptyState message={t('담당 과목이 없어요.')} /> : <div className="course-profile-list">{courses.map((course) => <article key={course.courseId}><div><b>{t(course.title)}</b><span>{t(course.typeLabel)} · {course.sections.map((section) => `${t(section.name)} · ${section.studentCount}명`).join(' / ')}</span><small>{course.sections[0]?.classCode ? `${t('수업 코드 · ')}${course.sections[0].classCode}` : t('수업 코드 정보 없음')}</small></div></article>)}</div>}
+    </Section>
+  </div><div className="profile-column">
+    <Section title={t('강의자료 보관함')} desc={t('파일 정보는 목 API에서 관리됩니다.')}>
+      {materialsApi.loading ? <ApiLoadingState label={t('강의자료를 불러오는 중…')} /> : materialsApi.error ? <ApiErrorState error={materialsApi.error} onRetry={materialsApi.retry} /> : <div className="file-list">{materials.length ? materials.map((file) => <article key={file.materialId}><span className="pdf-icon">PDF</span><div><b>{file.fileName}</b><small>{language === 'en' ? `${file.pageCount} pages · Used by ${file.usedScopeCount ?? 0} scopes` : `${file.pageCount}쪽 · 사용 중인 범위 ${file.usedScopeCount ?? 0}개 · ${file.uploadedAt?.slice(5, 10).replace('-', '.') ?? '데모'}`}</small></div><button onClick={() => void removeMaterial(file.materialId, file.fileName, file.usedScopeCount ?? 0)}>{t('삭제')}</button></article>) : <ApiEmptyState message={t('저장된 강의자료가 없어요.')} />}</div>}
+      <label className="btn-ghost upload-label">{uploading ? t('올리는 중…') : t('＋ 새 PDF 올리기')}<input type="file" accept="application/pdf" disabled={uploading} onChange={(event) => { void addMaterial(event.target.files?.[0]); event.target.value = ''; }} /></label>
+    </Section>
+    <Section title="계정"><button className="btn-danger" onClick={onLogout}>로그아웃</button></Section>
+  </div></div></div>;
+}

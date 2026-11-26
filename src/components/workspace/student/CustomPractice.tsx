@@ -1,202 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CORRECTION_HISTORY, getSubject, type HistoryItem } from '../../../api/adapters';
-import { answerCustomPractice } from '../../../api/customPractice';
+import { answerCustomPractice, getCustomPractice, getCustomPracticeProgress, saveCustomPracticeProgress } from '../../../api/customPractice';
+import type { CustomPracticeQuestion } from '../../../api/types';
+import { ApiEmptyState, ApiErrorState, ApiLoadingState, useApi } from '../../../api/useApi';
 
-type Props = {
-  practiceId: number;
-  onBack: () => void;
-};
-
-type QuestionTemplate = {
-  id: string;
-  prompt: string;
-  choices: string[];
-  answer: string;
-  explanation: string;
-};
-
-type PracticeQuestion = QuestionTemplate & {
-  tag: string;
-  subject: HistoryItem['subject'];
-  repeat: number;
-};
-
-const QUESTION_TEMPLATES: Record<string, QuestionTemplate[]> = {
-  관사: [
-    {
-      id: 'article-book',
-      prompt: 'Eu comprei ___ livro para a aula.',
-      choices: ['uma', 'um', 'uns'],
-      answer: 'um',
-      explanation: 'livro는 남성 단수 명사이므로 남성 단수 부정관사 um을 사용해요.',
-    },
-    {
-      id: 'article-apple',
-      prompt: 'Ela comprou ___ maçã na feira.',
-      choices: ['um', 'uma', 'umas'],
-      answer: 'uma',
-      explanation: 'maçã는 여성 단수 명사이므로 여성 단수 부정관사 uma를 사용해요.',
-    },
-    {
-      id: 'article-professor',
-      prompt: 'Eles precisam de ___ professor novo.',
-      choices: ['um', 'uma', 'uns'],
-      answer: 'um',
-      explanation: 'professor는 남성 단수 명사이므로 부정관사 um과 함께 써요.',
-    },
-    {
-      id: 'article-films',
-      prompt: 'Nós vimos ___ filmes no fim de semana.',
-      choices: ['uma', 'uns', 'um'],
-      answer: 'uns',
-      explanation: 'filmes는 남성 복수 명사이므로 남성 복수 부정관사 uns를 사용해요.',
-    },
-  ],
-  '형용사 성 일치': [
-    {
-      id: 'adjective-beach',
-      prompt: 'A praia é ___ (bonito).',
-      choices: ['bonito', 'bonita', 'bonitos'],
-      answer: 'bonita',
-      explanation: 'praia는 여성 단수 명사라서 형용사도 여성 단수형 bonita로 맞춰요.',
-    },
-    {
-      id: 'adjective-rooms',
-      prompt: 'Os quartos são ___ (pequeno).',
-      choices: ['pequenas', 'pequeno', 'pequenos'],
-      answer: 'pequenos',
-      explanation: 'quartos는 남성 복수 명사라서 형용사를 남성 복수형 pequenos로 써요.',
-    },
-    {
-      id: 'adjective-classes',
-      prompt: 'As aulas são ___ (interessante).',
-      choices: ['interessantes', 'interessante', 'interessantas'],
-      answer: 'interessantes',
-      explanation: 'aulas는 여성 복수 명사예요. interessante는 성별 변화 없이 복수형 interessants가 아니라 interessantes가 됩니다.',
-    },
-  ],
-  전치사: [
-    {
-      id: 'preposition-library',
-      prompt: 'A estudante vai ___ biblioteca depois da aula.',
-      choices: ['ao', 'à', 'na'],
-      answer: 'à',
-      explanation: 'ir a와 여성 명사 a biblioteca가 만나 a + a = à로 축약돼요.',
-    },
-    {
-      id: 'preposition-chair',
-      prompt: 'O livro está ___ cadeira.',
-      choices: ['no', 'na', 'à'],
-      answer: 'na',
-      explanation: '위치를 나타내는 em과 여성 정관사 a가 결합해 em + a = na가 돼요.',
-    },
-    {
-      id: 'preposition-work',
-      prompt: 'Eles voltam ___ trabalho às seis.',
-      choices: ['à', 'ao', 'na'],
-      answer: 'ao',
-      explanation: 'voltar a와 남성 정관사 o가 결합해 a + o = ao가 돼요.',
-    },
-  ],
-  '수 일치': [
-    {
-      id: 'number-bread',
-      prompt: 'Dois ___ estão na mesa. (pão)',
-      choices: ['pão', 'pães', 'pãos'],
-      answer: 'pães',
-      explanation: '수량 표현 dois가 있으므로 명사는 복수형이 필요해요. pão의 복수형은 pães입니다.',
-    },
-    {
-      id: 'number-papers',
-      prompt: 'Comprei três ___ para a aula. (papel)',
-      choices: ['papel', 'papeles', 'papéis'],
-      answer: 'papéis',
-      explanation: '수량 표현 três 뒤에는 복수형이 와요. papel의 복수형은 papéis입니다.',
-    },
-    {
-      id: 'number-students',
-      prompt: 'Há muitos ___ na sala. (aluno)',
-      choices: ['alunos', 'aluno', 'alunas'],
-      answer: 'alunos',
-      explanation: 'muitos는 복수를 나타내므로 명사도 복수형 alunos로 써요.',
-    },
-  ],
-};
-
-function shuffle<T,>(values: T[]): T[] {
-  const shuffled = [...values];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const otherIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[otherIndex]] = [shuffled[otherIndex], shuffled[index]];
-  }
-  return shuffled;
+type Props = { practiceId: number; onBack: () => void };
+type PracticeQuestion = { id: string; prompt: string; choices: string[]; answer: string; explanation: string; tag: string; courseTitle: string; repeat: number };
+function mapQuestions(source: CustomPracticeQuestion[]): PracticeQuestion[] {
+  return source.map((item) => ({ id: String(item.questionId), prompt: item.sentence, choices: item.choices, answer: item.choices[0] ?? '', explanation: item.explanation, tag: item.tag, courseTitle: item.courseTitle, repeat: item.repeatCount }));
 }
-
-function buildQuestions(): PracticeQuestion[] {
-  const sourcesByTag = new Map<string, HistoryItem[]>();
-  for (const item of CORRECTION_HISTORY) {
-    if (!QUESTION_TEMPLATES[item.tag]) continue;
-    const items = sourcesByTag.get(item.tag) ?? [];
-    items.push(item);
-    sourcesByTag.set(item.tag, items);
-  }
-
-  const errorTypes = [...sourcesByTag.entries()]
-    .map(([tag, items]) => ({
-      tag,
-      items: [...items].sort((a, b) => b.repeat - a.repeat),
-      weight: items.reduce((total, item) => total + item.repeat + 1, 0),
-    }))
-    .sort((a, b) => b.weight - a.weight);
-
-  const templateOffsets = new Map(
-    errorTypes.map(({ tag }) => [tag, Math.floor(Math.random() * QUESTION_TEMPLATES[tag].length)]),
-  );
-  const useCounts = new Map(errorTypes.map(({ tag }) => [tag, 0]));
-  const sourceCounts = new Map(errorTypes.map(({ tag }) => [tag, 0]));
-  const questions: PracticeQuestion[] = [];
-
-  while (questions.length < 5) {
-    const countBeforeRound = questions.length;
-
-    for (const errorType of errorTypes) {
-      const templates = QUESTION_TEMPLATES[errorType.tag];
-      const useCount = useCounts.get(errorType.tag) ?? 0;
-      if (useCount >= templates.length) continue;
-
-      const sourceCount = sourceCounts.get(errorType.tag) ?? 0;
-      const templateOffset = templateOffsets.get(errorType.tag) ?? 0;
-      const template = templates[(templateOffset + useCount) % templates.length];
-      const source = errorType.items[sourceCount % errorType.items.length];
-
-      questions.push({
-        ...template,
-        id: `custom-${questions.length + 1}-${template.id}`,
-        choices: shuffle(template.choices),
-        tag: errorType.tag,
-        subject: source.subject,
-        repeat: source.repeat,
-      });
-      useCounts.set(errorType.tag, useCount + 1);
-      sourceCounts.set(errorType.tag, sourceCount + 1);
-      if (questions.length === 5) break;
-    }
-
-    if (questions.length === countBeforeRound) break;
-  }
-
-  return questions;
-}
-
-function progressKey(practiceId: number) { return `hufs-echo.custom-ui-progress.${practiceId}.v1`; }
-function readProgress(practiceId: number) { try { return JSON.parse(localStorage.getItem(progressKey(practiceId)) ?? 'null') as { index?: number; selected?: string | null; checkedAnswers?: Record<string, string>; finished?: boolean; questions?: PracticeQuestion[] } | null; } catch { return null; } }
 export function CustomPractice({ practiceId, onBack }: Props) {
-  const questions = useMemo(() => readProgress(practiceId)?.questions ?? buildQuestions(), [practiceId]);
-  const [index, setIndex] = useState(() => readProgress(practiceId)?.index ?? 0);
-  const [selected, setSelected] = useState<string | null>(() => readProgress(practiceId)?.selected ?? null);
-  const [checkedAnswers, setCheckedAnswers] = useState<Record<string, string>>(() => readProgress(practiceId)?.checkedAnswers ?? {});
-  const [finished, setFinished] = useState(() => readProgress(practiceId)?.finished ?? false);
-  useEffect(() => { localStorage.setItem(progressKey(practiceId), JSON.stringify({ index, selected, checkedAnswers, finished, questions })); }, [practiceId, index, selected, checkedAnswers, finished, questions]);
+  const customApi = useApi(() => getCustomPractice(practiceId), [practiceId]);
+  const restoredProgress = getCustomPracticeProgress(practiceId);
+  const questions = useMemo(() => customApi.data?.questions ? mapQuestions(customApi.data.questions) : [], [customApi.data]);
+  const [index, setIndex] = useState(() => restoredProgress?.index ?? 0);
+  const [selected, setSelected] = useState<string | null>(() => restoredProgress?.selected ?? null);
+  const [checkedAnswers, setCheckedAnswers] = useState<Record<string, string>>(() => restoredProgress?.checkedAnswers ?? {});
+  const [finished, setFinished] = useState(() => restoredProgress?.finished ?? false);
+  const [actionError, setActionError] = useState<Error | null>(null);
+  useEffect(() => { saveCustomPracticeProgress(practiceId, { index, selected, checkedAnswers, finished }); }, [practiceId, index, selected, checkedAnswers, finished]);
 
   const current = questions[index];
   const isChecked = current ? Object.prototype.hasOwnProperty.call(checkedAnswers, current.id) : false;
@@ -206,10 +27,11 @@ export function CustomPractice({ practiceId, onBack }: Props) {
     ? (finished ? 100 : ((index + (isChecked ? 1 : 0)) / questions.length) * 100)
     : 0;
 
-  function checkAnswer() {
+  async function checkAnswer() {
     if (!current || selected === null || isChecked) return;
-    void answerCustomPractice(practiceId, index + 1, selected).catch(() => undefined);
-    setCheckedAnswers((previous) => ({ ...previous, [current.id]: selected }));
+    setActionError(null);
+    try { await answerCustomPractice(practiceId, Number(current.id), selected); setCheckedAnswers((previous) => ({ ...previous, [current.id]: selected })); }
+    catch (reason) { setActionError(reason instanceof Error ? reason : new Error('답안을 확인하지 못했어요.')); }
   }
 
   function moveForward() {
@@ -222,6 +44,9 @@ export function CustomPractice({ practiceId, onBack }: Props) {
     setSelected(null);
   }
 
+  if (customApi.loading) return <ApiLoadingState label="맞춤 연습 문제를 불러오는 중…" />;
+  if (customApi.error) return <ApiErrorState error={customApi.error} onRetry={customApi.retry} />;
+  if (!customApi.data) return <ApiEmptyState message="맞춤 연습 세트를 찾을 수 없어요." />;
   return (
     <div className="custom-practice">
       <div className="custom-practice__top">
@@ -265,7 +90,7 @@ export function CustomPractice({ practiceId, onBack }: Props) {
                     {answerIsCorrect ? '✓' : '×'}
                   </span>
                   <div className="custom-practice__result-content">
-                    <b>{questionIndex + 1}번 · {question.tag} · {getSubject(question.subject).name}</b>
+                    <b>{questionIndex + 1}번 · {question.tag} · {question.courseTitle}</b>
                     <p className="custom-practice__result-prompt">{question.prompt}</p>
                     <p className="custom-practice__result-answer">
                       <span>내 답</span>
@@ -304,7 +129,7 @@ export function CustomPractice({ practiceId, onBack }: Props) {
           <section className="custom-practice__question">
             <div className="custom-practice__question-meta">
               <span className="tag">{current.tag}</span>
-              <span>{getSubject(current.subject).name}</span>
+              <span>{current.courseTitle}</span>
               {current.repeat > 0 && <b>반복 오류 {current.repeat}회</b>}
             </div>
             <p className="custom-practice__instruction">빈칸에 들어갈 알맞은 표현을 골라주세요.</p>
@@ -346,9 +171,10 @@ export function CustomPractice({ practiceId, onBack }: Props) {
               </div>
             )}
 
+            {actionError && <ApiErrorState error={actionError} onRetry={() => void checkAnswer()} />}
             <div className="custom-practice__question-actions">
               {!isChecked ? (
-                <button type="button" className="btn-solid" onClick={checkAnswer} disabled={selected === null}>
+                <button type="button" className="btn-solid" onClick={() => void checkAnswer()} disabled={selected === null}>
                   정답 확인
                 </button>
               ) : (

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { DEMO_PROFESSOR, DEMO_STUDENT, getSavedProfile, type Role, type Session, toApiRole } from '../../api/adapters';
-import { login } from '../../api/auth';
+import { toApiRole } from '../../api/adapters';
+import type { Role, Session } from '../../lib/session';
+import { loginWithProfile } from '../../api/auth';
 
 type Props = {
   onLogin: (session: Session) => void;
@@ -13,7 +14,6 @@ export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
   const [mailId, setMailId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const email = `${mailId.trim()}@hufs.ac.kr`;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,11 +27,9 @@ export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
       return;
     }
 
-    void login({ role: toApiRole(role), emailId: normalizedId, password }).then(() => {
-      const saved = getSavedProfile(role, email);
-      const demo = role === 'student' ? DEMO_STUDENT : DEMO_PROFESSOR;
-      onLogin(saved ?? demo);
-    }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '로그인에 실패했어요.'));
+    void loginWithProfile({ role: toApiRole(role), emailId: normalizedId, password })
+      .then(onLogin)
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '로그인에 실패했어요.'));
   }
 
   return (

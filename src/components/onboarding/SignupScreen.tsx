@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { DEMO_PROFESSOR, DEMO_STUDENT, type Role, type Session, toApiRole } from '../../api/adapters';
-import { signup } from '../../api/auth';
+import { toApiRole } from '../../api/adapters';
+import type { Role, Session } from '../../lib/session';
+import { signupWithProfile } from '../../api/auth';
 
 type Props = {
   onSignup: (session: Session) => void;
@@ -18,7 +19,6 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
-  const email = `${mailId.trim()}@hufs.ac.kr`;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,18 +40,9 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
       return;
     }
 
-    const demo = role === 'student' ? DEMO_STUDENT : DEMO_PROFESSOR;
-    const session: Session = {
-      ...demo,
-      name: name.trim(),
-      email,
-      department: department.trim(),
-      ...(role === 'student'
-        ? { studentId: studentId.trim() }
-        : { studentId: '', professorId: professorId.trim() }),
-      setupComplete: true,
-    };
-    void signup({ role: toApiRole(role), name: name.trim(), emailId: normalizedId, studentId: role === 'student' ? studentId.trim() : null, professorId: role === 'professor' ? professorId.trim() : null, department: department.trim(), password, passwordConfirm }).then(() => onSignup(session)).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '회원가입에 실패했어요.'));
+    void signupWithProfile({ role: toApiRole(role), name: name.trim(), emailId: normalizedId, studentId: role === 'student' ? studentId.trim() : null, professorId: role === 'professor' ? professorId.trim() : null, department: department.trim(), password, passwordConfirm })
+      .then(onSignup)
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '회원가입에 실패했어요.'));
   }
 
   return (
