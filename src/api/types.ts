@@ -15,10 +15,10 @@ export type UserProfile = { userId: number; role: Role; name: string; email: str
 export type UserPatch = Partial<Pick<UserProfile, 'name' | 'department' | 'year' | 'room' | 'language'>>;
 export type Course = { courseId: number; title: string; type: CourseType; typeLabel: string; code: string; professorName?: string; section?: string; currentScopeTitle?: string; enrolled: boolean };
 export type StudentCourses = { language: string; level: string; courses: Course[] };
-export type ProfCourse = { courseId: number; title: string; type: CourseType; typeLabel: string; sections: Array<{ sectionId: number; name: string; studentCount: number; classCode?: string }>; weeks: Array<{ week: number; status: ScopeStatus; startDate?: string; endDate?: string }> };
+export type ProfCourse = { courseId: number; title: string; type: CourseType; typeLabel: string; sections: Array<{ sectionId: number; name: string; studentCount: number; /** 프론트 제안: 교수 프로필에 현재 표시 중인 수업 코드를 연결합니다. */ classCode?: string }>; weeks: Array<{ week: number; status: ScopeStatus; startDate?: string; endDate?: string }> };
 export type ProfCourses = { courses: ProfCourse[]; current: { courseId: number; sectionId: number; week: number } };
-export type Question = { questionId: number; format: QuestionFormat; sentence: string; answer: string; choices?: string[] | null; sourcePage?: number; instruction?: string; explanation?: string; typeLabel?: string; prompt?: string | null; answerType?: AnswerType; audioUrl?: string | null };
-export type Correction = { correctionId: number; week: number; tag: string; original: string; corrected: string; explanation: string; createdAt: string; courseId?: number; courseTitle?: string; repeatCount?: number };
+export type Question = { questionId: number; format: QuestionFormat; sentence: string; answer: string; choices?: string[] | null; sourcePage?: number; /** 프론트 제안: 학습 화면에 맞춘 문항별 지시문입니다. */ instruction?: string; /** 프론트 제안: A21/A22/A24 생성 응답에 추가가 필요한 해설입니다. */ explanation?: string; /** 프론트 제안: 기존 학생 화면에서 사용하던 형식 라벨입니다. */ typeLabel?: string; /** 프론트 제안: B3의 말풍선/읽기 제시 방식을 구분하는 값입니다. */ prompt?: string | null; answerType?: AnswerType; audioUrl?: string | null };
+export type Correction = { correctionId: number; week: number; tag: string; original: string; corrected: string; explanation: string; createdAt: string; /** 프론트 제안: 맞춤 문제 유형을 위해 B8에 포함할 과목 식별자입니다. */ courseId?: number; /** 프론트 제안: 맞춤 연습에 표시할 과목명입니다. */ courseTitle?: string; /** 프론트 제안: 맞춤 문제 난이도에 사용할 오류 반복 횟수입니다. */ repeatCount?: number };
 export type MockResponse<T> = { message: string; data: T };
 export type ErrorPayload = { code: number; error_code: string; message: string };
 
