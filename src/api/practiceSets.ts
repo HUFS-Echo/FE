@@ -37,7 +37,7 @@ export function answerPracticeQuestion(setId: number, questionId: number, answer
   return { correct, answer, correctAnswer: question.answer, correction: correct ? null : { correctionId: questionId, week: WEEK.no, tag: '관사', original: question.sentence, corrected: question.sentence.replace('___', question.answer), explanation: question.explanation ?? '', createdAt: new Date().toISOString() }, isLast: false, explanation: question.explanation };
 }); }
 /** B5 POST /practice-sets/{setId}/questions/{questionId}/transcriptions — Bearer(학생만), multipart mock */
-export function transcribePracticeAnswer(_setId: number, _questionId: number, _audio?: Blob) { return mockRequest('B5', () => ({ transcriptionId: 12, text: 'O meu jardim é grande.', durationSec: 3.1 })); }
+export function transcribePracticeAnswer(setId: number, questionId: number, _audio?: Blob) { return mockRequest('B5', () => ({ transcriptionId: 12, text: questionsFor(setId).find((question) => question.questionId === questionId)?.answer ?? '', durationSec: 3.1 })); }
 /** B6 POST /practice-sets/{setId}/submit — Bearer(학생만) */
 export function submitPracticeSet(setId: number, answers: Array<{ questionId: number; text?: string; choice?: string; transcriptionId?: number }>, elapsedSeconds = 180) { return mockRequest<SubmitResponse>('B6', () => {
   const questions = questionsFor(setId);
