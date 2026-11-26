@@ -144,3 +144,23 @@ AI 오류 신고 화면은 `/prof/feedback`에서 처리합니다. 사이드바 
 - 연습 완료 화면은 `오늘 고친 문장` 제목과 틀린 문장→교정 문장 행을 유지하고, 파란 오류 유형 태그와 완료 데이터 필드만 제거한다.
 - 사용자가 승인한 A–D를 완료했다: `/prof/students` 링크·선언과 `StudentProgress.tsx` 제거, `/prof/scopes` 선언 제거(범위 라이브러리는 보존), 미참조 레거시 4개 제거, 결과 화면의 파란 교정 태그 제거.
 - 코드와 문서는 GitHub 원격 `main`에 동기화하되 라이브 배포하지 않는다.
+
+
+## API 목 계층 작업 계획 (2026-11-26)
+
+### 구현 방식과 제약
+
+이번 변경은 API 연동 준비이며 실제 서버 요청, 외부 AI 호출, 디자인 변경, 라이브 배포를 포함하지 않습니다. `src/api/client.ts`의 `USE_MOCK`은 기본값 `true`이며 목 전송만 사용합니다. 성공·실패 공통 envelope는 내부에서 풀어 성공 시 `data`를 반환하고, 실패 시 `ApiError(code, errorCode, message)`를 던집니다. 인증 헤더는 토큰이 있을 때 `Authorization: Bearer ...`로 구성하되, 만료(401)에는 기존 세션을 제거하고 로그인 경로로 보냅니다. 지연(기본 0/옵션 300ms)과 강제 목 오류는 개발 설정에서 조정합니다. `API_BASE_URL`은 `VITE_API_BASE_URL`에서 읽고 `.env.example`에만 예시를 둡니다.
+
+`src/api/types.ts`는 API_SPEC의 요청·응답 필드, 역할·과목·상태·문제형식 enum을 정의합니다. `src/api/{auth,users,studentCourses,practiceSets,corrections,customPractice,profCourses,materials,scopes,dashboard,feedbackReports,reports,speakingSessions,writingTasks}.ts`는 명세 A1–A24/B1–B17/C1–C9의 함수 경계를 갖고, 각 함수 JSDoc에 번호·HTTP method/path·권한을 적습니다. 목 저장·기존 데모 설정 참조는 API 내부에 둡니다. 값 이름 차이는 `adapters.ts`에서만 변환하며, `useApi` 및 간결한 로딩/재시도/빈 상태 컴포넌트로 화면과 API 경계를 잇습니다. C1–C9와 B11은 타입·목 함수만 제공하고 화면에는 연결하지 않습니다.
+
+### 주요 모듈과 데이터 흐름
+
+- `src/api/client.ts`: envelope, 오류, Bearer 자리, 모드/지연/강제 오류 옵션을 제공하며 실제 서버 요청을 기본 경로로 실행하지 않습니다.
+- `src/api/types.ts`: 명세 명칭의 공용 계약을 유지합니다. 화면 레거시 데이터는 `adapters.ts`에서 과목 숫자 ID, 분반 ID, emailId 등 API 값으로 매핑합니다.
+- 도메인 파일: auth/users는 세션과 데모 프로필을, 학생 API는 학습 카탈로그 및 진행상태를, 교수 API는 범위·자료·필터·신고 데모 상태를 목 데이터로 반환합니다.
+- 화면은 API 함수 또는 API 어댑터를 통해서만 데모 저장 상태/학습 카탈로그를 읽고 씁니다. 기존 localStorage 키는 유지하며 기존 소문자 역할·상태와 `reading` 경로를 읽을 때 명세 이름/`grammar`로 정규화합니다.
+- `src/api/useApi.ts`는 비동기 요청의 loading/data/error/retry를 제공하고, 공용 상태 컴포넌트는 현재 스타일을 따르며 상태 UI만 추가합니다.
+- 경로는 grammar 명칭을 사용하고 `/student/course/reading`, `/student/practice/reading`, `/student/summary/reading`은 기존 사용자 북마크 호환 리다이렉트를 제공합니다. 맞춤 연습은 `/student/practice/custom/:practiceId`에서 ID별 목 세트와 진행 상황을 localStorage로 복원합니다. 교수 필터는 `courseId`, `sectionId`, `week` 쿼리와 A14 현재 선택/저장값/기본값 우선순위로 동기화합니다.
+
+기존 제품 화면의 콘텐츠·카피·레이아웃은 계획서의 현재 설명 그대로 유지합니다. 명세가 현재 UI의 순서·요약·맞춤 연습 선택형 문항 등과 다른 경우 UI를 명세에 끼워 맞추지 않고 `SPEC_GAPS.md`에 명세, 화면 요구, 프론트 임시 처리, 질문을 함께 기록합니다.
