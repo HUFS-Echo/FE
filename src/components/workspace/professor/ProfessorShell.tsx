@@ -10,10 +10,10 @@ import { ScopeBuilder } from './ScopeBuilder';
 import { WeaknessReport } from './WeaknessReport';
 import { FeedbackInbox } from './FeedbackInbox';
 import { ProfessorProfile } from '../profile/MyPages';
-type Props = { path: string; session: Session; onNavigate: (path: string) => void; onSessionUpdate: (session: Session) => void; onToast: (message: string) => void; onLogout: () => void; onReset: () => void; onReplay: () => void };
+type Props = { path: string; session: Session; onNavigate: (path: string) => void; onSessionUpdate: (session: Session) => void; onToast: (message: string) => void; onLogout: () => void; onReset: () => void; onReplay: () => void; externalError?: Error | null; onRetryExternal?: () => void };
 const nav = [['/prof', '반 학습 현황', '◫'], ['/prof/scope/new', '학습 범위 설정', '＋'], ['/prof/report', '취약점 리포트', '⌁'], ['/prof/feedback', 'AI 오류 신고', 'aiError'], ['/prof/me', '마이페이지', 'profile']] as const;
 const courseIdForFilter = { grammar: 1, writing: 2, speaking: 3 } as const;
-export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onToast, onLogout, onReset, onReplay }: Props) {
+export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onToast, onLogout, onReset, onReplay, externalError, onRetryExternal }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const { filters } = useProfFilters();
   const { t, language } = useProfessorLanguage();
@@ -29,6 +29,8 @@ export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onT
   const openCount = useMemo(() => filters.section === '01' ? (feedbackApi.data?.reports.filter((item) => item.week === filters.week && item.status === 'OPEN').length ?? 0) : 0, [feedbackApi.data, filters.section, filters.week]);
   const isScopeBuilderPath = path === '/prof/scope/new' || path.startsWith('/prof/scope/new/edit/');
   const route = isScopeBuilderPath ? '/prof/scope/new' : path;
+  const shellError = externalError ?? coursesApi.error ?? feedbackApi.error;
+  const retryShellData = () => { onRetryExternal?.(); coursesApi.retry(); feedbackApi.retry(); };
   const current = route === '/prof' ? '/prof' : route;
   const course = coursesApi.data?.courses.find((item) => item.courseId === courseId)?.title ?? { grammar: '포르투갈어 문법', writing: '포르투갈어 읽기와 쓰기', speaking: '포르투갈어 회화' }[filters.course];
   const sectionLabel = t(filters.section === '01' ? '01분반' : '02분반');
@@ -43,11 +45,11 @@ export function ProfessorShell({ path, session, onNavigate, onSessionUpdate, onT
       </nav>
     </aside>
     <main className="prof-main" key={path}>
-      {coursesApi.error && <ApiErrorState error={coursesApi.error} onRetry={coursesApi.retry}/>}
-      {feedbackApi.error && <ApiErrorState error={feedbackApi.error} onRetry={feedbackApi.retry}/>}
+      {!isScopeBuilderPath && coursesApi.error && <ApiErrorState error={coursesApi.error} onRetry={coursesApi.retry}/>}
+      {!isScopeBuilderPath && feedbackApi.error && <ApiErrorState error={feedbackApi.error} onRetry={feedbackApi.retry}/>}
       <div className="prof-filter-context">{t('현재 보기 기준')} <b>{t(course)}</b> · <b>{sectionLabel}</b> · <b>{weekLabel}</b></div>
       {route === '/prof' && <Overview onNavigate={onNavigate} onToast={onToast}/>}
-      {isScopeBuilderPath && <ScopeBuilder onNavigate={onNavigate} onToast={onToast} editScopeId={path.match(/^\/prof\/scope\/new\/edit\/(\d+)$/) ? Number(path.match(/^\/prof\/scope\/new\/edit\/(\d+)$/)?.[1]) : undefined}/>}
+      {isScopeBuilderPath && <ScopeBuilder onNavigate={onNavigate} onToast={onToast} externalError={shellError} onRetryExternal={retryShellData} editScopeId={path.match(/^\/prof\/scope\/new\/edit\/(\d+)$/) ? Number(path.match(/^\/prof\/scope\/new\/edit\/(\d+)$/)?.[1]) : undefined}/>}
       {route === '/prof/report' && <WeaknessReport/>}
       {route === '/prof/feedback' && <FeedbackInbox onToast={onToast}/>}
       {route === '/prof/me' && <ProfessorProfile session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay}/>}

@@ -23,7 +23,8 @@ function questionsFor(setId: number): Question[] {
       instruction: item.instruction,
       typeLabel: item.label,
       answerType: audio ? 'AUDIO' as const : choice ? 'CHOICE' as const : 'TEXT' as const,
-      prompt: 'promptType' in item ? item.promptType : null,
+      prompt: item.prompt,
+      promptType: 'promptType' in item ? item.promptType : null,
     };
   });
 }

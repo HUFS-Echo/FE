@@ -10,12 +10,16 @@ export function useApi<T>(request: () => Promise<T>, dependencies: readonly unkn
   useEffect(() => {
     let active = true;
     setLoading(true); setError(null);
-    request().then((result) => { if (active) setData(result); }).catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason : new Error('요청을 불러오지 못했어요.')); }).finally(() => { if (active) setLoading(false); });
+    request().then((result) => { if (active) setData(result); }).catch((reason: unknown) => {
+      const detail = reason instanceof Error ? reason : new Error('요청을 불러오지 못했어요.');
+      console.error('[API request failed]', detail);
+      if (active) setError(detail);
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...dependencies, attempt]);
   return { data, loading, error, retry };
 }
-export function ApiLoadingState({ label = '불러오는 중…' }: { label?: string }) { return <div className="api-state" role="status" aria-live="polite">{label}</div>; }
-export function ApiErrorState({ error, onRetry }: { error: Error; onRetry: () => void }) { return <div className="api-state api-state--error" role="alert"><span>{error.message}</span><button type="button" onClick={onRetry}>다시 시도</button></div>; }
-export function ApiEmptyState({ message }: { message: string }) { return <div className="api-state" role="status">{message}</div>; }
+export function ApiLoadingState({ label = '불러오는 중…' }: { label?: string }) { return <div className="api-state api-state--loading" role="status" aria-live="polite">{label}</div>; }
+export function ApiErrorState({ error: _error, onRetry }: { error: Error; onRetry: () => void }) { return <div className="api-state api-state--error" role="alert"><span>불러오지 못했어요. 잠시 후 다시 시도해 주세요.</span><button type="button" className="btn-ghost" onClick={onRetry}>다시 시도</button></div>; }
+export function ApiEmptyState({ message }: { message: string }) { return <div className="api-state api-state--empty" role="status">{message}</div>; }

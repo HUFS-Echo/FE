@@ -1188,3 +1188,32 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Compact API status messages use the workspace's existing card palette. */
+.api-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid var(--line, #e5ded1);
+  border-radius: 12px;
+  background: var(--surface, #ffffff);
+  color: var(--ink-soft, #4a5a6d);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.api-state--loading,
+.api-state--empty {
+  justify-content: flex-start;
+  color: var(--mute, #8a939e);
+}
+.api-state--error {
+  justify-content: space-between;
+}
+.api-state--error .btn-ghost {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 12px;
+}

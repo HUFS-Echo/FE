@@ -9,7 +9,7 @@ type Props = { onBack: () => void; onComplete: (data: SummaryData) => void; onTo
 type WritingQuestion = Question & { label: string; instruction: string; prompt: string; promptType: 'boo' | 'reading'; promptLabel: string; responseType: 'text' | 'choice'; placeholder: string };
 const DEFAULT_SET_ID = 2;
 function mapQuestion(question: Question, index: number): WritingQuestion {
-  const promptType = question.prompt === 'boo' ? 'boo' : 'reading';
+  const promptType = question.promptType === 'boo' ? 'boo' : 'reading';
   return { ...question, label: question.typeLabel ?? `문항 ${index + 1}`, instruction: question.instruction ?? '글을 읽고 답을 작성하세요.', prompt: question.sentence, promptType, promptLabel: promptType === 'boo' ? 'Boo' : '읽을 글', responseType: question.answerType === 'CHOICE' || Boolean(question.choices?.length) ? 'choice' : 'text', placeholder: question.answerType === 'CHOICE' || question.choices?.length ? '' : '여기에 답을 적어 보세요' };
 }
 function toSummary(weekLabel: string, b6: SubmitResponse, b7: ApiPracticeSummary, elapsedSeconds: number): SummaryData {

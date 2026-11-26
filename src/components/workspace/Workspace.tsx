@@ -225,12 +225,12 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
               </div>
             </div>
           </header>
-          {!isStudent && professorCoursesApi.loading && <ApiLoadingState label={t('교수 과목 필터를 불러오는 중…')} />}
-          {!isStudent && professorCoursesApi.error && <ApiErrorState error={professorCoursesApi.error} onRetry={professorCoursesApi.retry} />}
+          {!isStudent && !path.startsWith('/prof/scope/new') && professorCoursesApi.loading && <ApiLoadingState label={t('교수 과목 필터를 불러오는 중…')} />}
+          {!isStudent && !path.startsWith('/prof/scope/new') && professorCoursesApi.error && <ApiErrorState error={professorCoursesApi.error} onRetry={professorCoursesApi.retry} />}
           {isStudent ? (
             <StudentShell session={session} path={path} onNavigate={onNavigate} onToast={onToast} onSessionUpdate={onSessionUpdate} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />
           ) : (
-            <ProfessorShell path={path} session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />
+            <ProfessorShell path={path} session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} externalError={professorCoursesApi.error} onRetryExternal={professorCoursesApi.retry} />
           )}
         </div>
       </ProfFilterProvider>

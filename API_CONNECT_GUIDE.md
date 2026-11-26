@@ -61,6 +61,8 @@ setMockOptions({ delay: false, forceError: false });
 | 학생 마이페이지 프로필 수정·동의·설정·내보내기 | `getMe`, `updateMe`, `agreeLearningConsent`, `revokeLearningConsent`, `getUserSettings`, `updateUserSettings`, `exportLearningData` | A5 `GET /users/me`; A6 `PATCH /users/me`; A7 `POST /users/me/consent`; A8 `DELETE /users/me/consent`; A9 `GET /users/me/settings`; A10 `PATCH /users/me/settings`; A11 `GET /users/me/export?format=json|csv` |
 | 교수 마이페이지 프로필·자료 | `getMe`, `updateMe`, `getProfessorCourses`, `getMaterials`, `uploadMaterial`, `deleteMaterial` | A5 `GET /users/me`; A6 `PATCH /users/me`; A14 `GET /prof/courses`; A16 `POST /prof/materials`; A17 `GET /prof/materials`; A18 `DELETE /prof/materials/{materialId}` |
 
+문법 연습도 문항별 채점 없이 마지막 B6 제출로 한 번에 채점함. B5(문항별 답 제출)는 현재 화면에서 사용하지 않음.
+
 현재 화면에서 사용하지 않는 mock endpoint 함수: B11 `POST /corrections/{correctionId}/reports`; C1–C4 `speaking-sessions`; C5–C9 `writing-tasks`. A3 refresh token 함수도 정의돼 있으나 로그인 갱신 UI/자동 호출은 연결하지 않았습니다.
 
 ## 목 전용 동작 및 프론트 제안 필드
