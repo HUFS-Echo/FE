@@ -1,4 +1,4 @@
-import { WEEK, getSubject, type SubjectId } from '../../../config/learning';
+import { WEEK, getSubject, type SubjectId } from '../../../api/adapters';
 
 export type SummaryData = {
   subject: SubjectId;

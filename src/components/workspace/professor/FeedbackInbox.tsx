@@ -1,5 +1,5 @@
 import { useMemo,useState } from 'react';
-import { getDemoState,updateDemoState,type FeedbackCase } from '../../../lib/demoStore';
+import { getDemoState,updateDemoState,type FeedbackCase } from '../../../api/adapters';
 import { useProfFilters } from './ProfFilterContext';
 import { useProfessorLanguage } from './ProfessorLanguageContext';
 type Props={onToast:(message:string)=>void};

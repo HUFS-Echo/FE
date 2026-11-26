@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { READING_QUESTIONS, WEEK, type ReadingQuestion } from '../../../config/learning';
+import { READING_QUESTIONS, WEEK, type ReadingQuestion } from '../../../api/adapters';
 import type { SummaryData } from './PracticeSummary';
 
 type Props = {

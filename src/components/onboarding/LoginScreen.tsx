@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { DEMO_PROFESSOR, DEMO_STUDENT, getSavedProfile, type Role, type Session } from '../../lib/session';
+import { DEMO_PROFESSOR, DEMO_STUDENT, getSavedProfile, type Role, type Session, toApiRole } from '../../api/adapters';
+import { login } from '../../api/auth';
 
 type Props = {
   onLogin: (session: Session) => void;
@@ -26,19 +27,11 @@ export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
       return;
     }
 
-    const saved = getSavedProfile(role, email);
-    if (saved) {
-      onLogin(saved);
-      return;
-    }
-
-    const demo = role === 'student' ? DEMO_STUDENT : DEMO_PROFESSOR;
-    if (email.toLowerCase() === demo.email.toLowerCase()) {
-      onLogin(demo);
-      return;
-    }
-
-    setError('이 메일로 가입된 계정을 찾을 수 없어요. 먼저 회원가입해 주세요.');
+    void login({ role: toApiRole(role), emailId: normalizedId, password }).then(() => {
+      const saved = getSavedProfile(role, email);
+      const demo = role === 'student' ? DEMO_STUDENT : DEMO_PROFESSOR;
+      onLogin(saved ?? demo);
+    }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '로그인에 실패했어요.'));
   }
 
   return (

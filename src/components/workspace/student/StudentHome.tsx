@@ -1,7 +1,9 @@
-import { WEEK, getSubject, type SubjectId } from '../../../config/learning';
-import type { Session } from '../../../lib/session';
+import { WEEK, getSubject, type SubjectId } from '../../../api/adapters';
+import type { Session } from '../../../api/adapters';
 import { MiniGlobe } from './MiniGlobe';
 import { WeekList } from './WeekList';
+import { useApi, ApiErrorState } from '../../../api/useApi';
+import { getCourseHome, getCourseIdFromLegacySubject } from '../../../api/studentCourses';
 
 type Props = {
   session: Session;
@@ -11,9 +13,15 @@ type Props = {
 
 export function StudentHome({ session, subject, onOpen }: Props) {
   const current = getSubject(subject);
+  const courseId = getCourseIdFromLegacySubject(subject);
+  const home = useApi(() => getCourseHome(courseId), [courseId]);
+  const studyTitle = home.data?.scope?.title ?? current.rangeTitle;
+  const studyPages = home.data?.scope?.pdfPages ?? current.pdf;
+  const studyDeadline = home.data?.scope?.dueDate ?? current.deadline;
 
   return (
     <div className="home">
+      {home.error && <ApiErrorState error={home.error} onRetry={home.retry} />}
       <header className="home__top">
         <div>
           <p className="home__eyebrow">{WEEK.label} · PORTUGUÊS A1</p>
@@ -41,16 +49,16 @@ export function StudentHome({ session, subject, onOpen }: Props) {
               {current.name} <i aria-hidden="true">·</i> {current.type}
             </span>
           </div>
-          <h2 id="weekly-study-title">{current.rangeTitle}</h2>
+          <h2 id="weekly-study-title">{studyTitle}</h2>
           <div className="hero-card__footer">
             <div className="hero-card__details" role="group" aria-label="이번 주 학습 정보">
               <div className="hero-card__detail">
                 <span>PDF 학습 범위</span>
-                <b>{current.pdf}</b>
+                  <b>{studyPages}</b>
               </div>
               <div className="hero-card__detail">
                 <span>학습 마감</span>
-                <b>{current.deadline}</b>
+                  <b>{studyDeadline}</b>
               </div>
             </div>
             <button type="button" className="hero-card__cta" onClick={() => onOpen(current.id)}>
@@ -67,7 +75,7 @@ export function StudentHome({ session, subject, onOpen }: Props) {
       </section>
 
       <div className="home__grid">
-        <WeekList onOpen={onOpen} />
+        <WeekList subject={subject} onOpen={onOpen} />
       </div>
     </div>
   );

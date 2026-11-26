@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
-import { CORRECTION_HISTORY, getSubject, type HistoryItem } from '../../../config/learning';
+import { useEffect, useMemo, useState } from 'react';
+import { CORRECTION_HISTORY, getSubject, type HistoryItem } from '../../../api/adapters';
+import { answerCustomPractice } from '../../../api/customPractice';
 
 type Props = {
+  practiceId: number;
   onBack: () => void;
 };
 
@@ -186,12 +188,15 @@ function buildQuestions(): PracticeQuestion[] {
   return questions;
 }
 
-export function CustomPractice({ onBack }: Props) {
-  const questions = useMemo(buildQuestions, []);
-  const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [checkedAnswers, setCheckedAnswers] = useState<Record<string, string>>({});
-  const [finished, setFinished] = useState(false);
+function progressKey(practiceId: number) { return `hufs-echo.custom-ui-progress.${practiceId}.v1`; }
+function readProgress(practiceId: number) { try { return JSON.parse(localStorage.getItem(progressKey(practiceId)) ?? 'null') as { index?: number; selected?: string | null; checkedAnswers?: Record<string, string>; finished?: boolean; questions?: PracticeQuestion[] } | null; } catch { return null; } }
+export function CustomPractice({ practiceId, onBack }: Props) {
+  const questions = useMemo(() => readProgress(practiceId)?.questions ?? buildQuestions(), [practiceId]);
+  const [index, setIndex] = useState(() => readProgress(practiceId)?.index ?? 0);
+  const [selected, setSelected] = useState<string | null>(() => readProgress(practiceId)?.selected ?? null);
+  const [checkedAnswers, setCheckedAnswers] = useState<Record<string, string>>(() => readProgress(practiceId)?.checkedAnswers ?? {});
+  const [finished, setFinished] = useState(() => readProgress(practiceId)?.finished ?? false);
+  useEffect(() => { localStorage.setItem(progressKey(practiceId), JSON.stringify({ index, selected, checkedAnswers, finished, questions })); }, [practiceId, index, selected, checkedAnswers, finished, questions]);
 
   const current = questions[index];
   const isChecked = current ? Object.prototype.hasOwnProperty.call(checkedAnswers, current.id) : false;
@@ -203,6 +208,7 @@ export function CustomPractice({ onBack }: Props) {
 
   function checkAnswer() {
     if (!current || selected === null || isChecked) return;
+    void answerCustomPractice(practiceId, index + 1, selected).catch(() => undefined);
     setCheckedAnswers((previous) => ({ ...previous, [current.id]: selected }));
   }
 

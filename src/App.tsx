@@ -3,9 +3,9 @@ import { Hero } from './components/Hero';
 import { LoginScreen } from './components/onboarding/LoginScreen';
 import { SignupScreen } from './components/onboarding/SignupScreen';
 import { Workspace } from './components/workspace/Workspace';
-import { clearSession, readSession, saveSession, type Session } from './lib/session';
+import { clearSession, readSession, saveSession, resetDemoState, type Session } from './api/adapters';
+import { logout } from './api/auth';
 import { navigateTo, roleForPath, roleHome } from './lib/router';
-import { resetDemoState } from './lib/demoStore';
 
 type Screen = 'intro' | 'login' | 'signup' | 'workspace';
 function startingScreen(): Screen {
@@ -44,6 +44,7 @@ export default function App() {
   }, [notify]);
   const handleSessionUpdate = useCallback((next: Session) => { saveSession(next); setSession(next); }, []);
   const handleLogout = useCallback(() => {
+    void logout().catch(() => undefined);
     clearSession(); setSession(null); navigateTo('/'); setScreen('intro'); notify('로그아웃했어요.');
   }, [notify]);
   const handleReset = useCallback(() => { resetDemoState(); notify('데모 데이터를 기본값으로 초기화했어요.'); }, []);

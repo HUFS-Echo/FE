@@ -1,4 +1,4 @@
-import type { SubjectId } from '../../../config/learning';
+import type { SubjectId } from '../../../api/adapters';
 import { StudentCoursePicker } from './StudentCoursePicker';
 
 export type StudentNavKey = 'home' | 'practice' | 'history' | 'me';

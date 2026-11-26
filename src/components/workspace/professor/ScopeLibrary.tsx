@@ -1,4 +1,4 @@
-import { getDemoState } from '../../../lib/demoStore';
+import { getDemoState } from '../../../api/adapters';
 import { useProfFilters } from './ProfFilterContext';
 import { useProfessorLanguage } from './ProfessorLanguageContext';
 

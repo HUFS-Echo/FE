@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { Session } from '../../../lib/session';
-import { getDemoState } from '../../../lib/demoStore';
+import type { Session } from '../../../api/adapters';
+import { getDemoState } from '../../../api/adapters';
 import { useProfFilters } from './ProfFilterContext';
 import { useProfessorLanguage } from './ProfessorLanguageContext';
 import { Overview } from './Overview';

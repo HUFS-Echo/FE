@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import type { Session } from '../../../lib/session';
-import { getDemoState, updateDemoState } from '../../../lib/demoStore';
-import { COURSE_LABELS, isCourseDisabled, type SubjectId } from '../../../config/learning';
+import type { Session } from '../../../api/adapters';
+import { getDemoState, updateDemoState } from '../../../api/adapters';
+import { COURSE_LABELS, isCourseDisabled, type SubjectId } from '../../../api/adapters';
 import { useProfessorLanguage } from '../professor/ProfessorLanguageContext';
 type Props={session:Session;onNavigate?:(path:string)=>void;onSessionUpdate:(session:Session)=>void;onToast:(message:string)=>void;onLogout:()=>void;onReset:()=>void;onReplay:()=>void};
 function Toggle({label,checked,onChange}:{label:string;checked:boolean;onChange:()=>void}){return <label className="setting-toggle"><span>{label}</span><button type="button" role="switch" aria-checked={checked} className={checked?'is-on':''} onClick={onChange}><i/></button></label>}

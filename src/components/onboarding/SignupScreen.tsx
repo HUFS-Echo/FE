@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { DEMO_PROFESSOR, DEMO_STUDENT, type Role, type Session } from '../../lib/session';
+import { DEMO_PROFESSOR, DEMO_STUDENT, type Role, type Session, toApiRole } from '../../api/adapters';
+import { signup } from '../../api/auth';
 
 type Props = {
   onSignup: (session: Session) => void;
@@ -50,8 +51,7 @@ export function SignupScreen({ onSignup, onBack, onLogin }: Props) {
         : { studentId: '', professorId: professorId.trim() }),
       setupComplete: true,
     };
-    // 데모 계정 정보만 저장하고 비밀번호는 저장·전송하지 않습니다.
-    onSignup(session);
+    void signup({ role: toApiRole(role), name: name.trim(), emailId: normalizedId, studentId: role === 'student' ? studentId.trim() : null, professorId: role === 'professor' ? professorId.trim() : null, department: department.trim(), password, passwordConfirm }).then(() => onSignup(session)).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '회원가입에 실패했어요.'));
   }
 
   return (

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
-import { WEEK } from '../../../config/learning';
-import { WRITING_READING_QUESTIONS } from '../../../config/writingReadingPractice';
+import { WEEK } from '../../../api/adapters';
+import { WRITING_READING_QUESTIONS } from '../../../api/adapters';
 import type { SummaryData } from './PracticeSummary';
 import './WritingPractice.css';
 

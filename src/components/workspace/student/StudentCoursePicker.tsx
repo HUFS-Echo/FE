@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
-import { SUBJECTS, WEEK, getSubject, isCourseDisabled, type SubjectId } from '../../../config/learning';
-import { getDemoState } from '../../../lib/demoStore';
+import { SUBJECTS, WEEK, getSubject, isCourseDisabled, type SubjectId } from '../../../api/adapters';
+import { getDemoState } from '../../../api/adapters';
 
 type Props = {
   subject: SubjectId;

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
-  CORRECTION_HISTORY,
   HISTORY_WEEK_FILTERS,
-} from '../../../config/learning';
+} from '../../../api/adapters';
+import { useApi, ApiErrorState, ApiLoadingState } from '../../../api/useApi';
+import { getCorrections } from '../../../api/corrections';
 
 type Props = {
   onCustomPractice: () => void;
@@ -10,10 +11,9 @@ type Props = {
 
 export function CorrectionHistory({ onCustomPractice }: Props) {
   const [filter, setFilter] = useState<(typeof HISTORY_WEEK_FILTERS)[number]>('전체');
-  const items =
-    filter === '전체'
-      ? CORRECTION_HISTORY
-      : CORRECTION_HISTORY.filter((item) => item.week === filter);
+  const week = filter === '전체' ? undefined : Number(filter.replace(/\D/g, ''));
+  const corrections = useApi(() => getCorrections({ week }), [week]);
+  const items = corrections.data?.items.map((item, index) => ({ id: String(item.correctionId), date: index < 2 ? '오늘' : '어제', week: `${item.week}주차`, original: item.original, corrected: item.corrected, explanation: item.explanation })) ?? [];
 
   return (
     <div className="history">
@@ -45,7 +45,7 @@ export function CorrectionHistory({ onCustomPractice }: Props) {
 
       <div className="history__grid">
         <div className="history__list">
-          {items.length > 0 ? (
+          {corrections.loading ? <ApiLoadingState label="교정 기록을 불러오는 중…" /> : corrections.error ? <ApiErrorState error={corrections.error} onRetry={corrections.retry} /> : items.length > 0 ? (
             items.map((item) => (
               <article className="history-item" key={item.id}>
                 <div className="history-item__meta">

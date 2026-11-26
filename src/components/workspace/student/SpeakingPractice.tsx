@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { SPEAKING_PRACTICE_QUESTIONS } from '../../../config/speakingPractice';
-import { WEEK } from '../../../config/learning';
+import { SPEAKING_PRACTICE_QUESTIONS } from '../../../api/adapters';
+import { WEEK } from '../../../api/adapters';
 import type { SummaryData } from './PracticeSummary';
 import './WritingPractice.css';
 import './SpeakingPractice.css';

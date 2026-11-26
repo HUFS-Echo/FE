@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { getDemoState, updateDemoState, type LearningScope } from '../../../lib/demoStore';
-import { createScopeExercises } from '../../../config/scopePreview';
+import { getDemoState, updateDemoState, type LearningScope } from '../../../api/adapters';
+import { createScopeExercises } from '../../../api/adapters';
 import { useProfFilters } from './ProfFilterContext';
 import { useProfessorLanguage } from './ProfessorLanguageContext';
 import { ScopeListCard } from './ScopeLibrary';

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Wordmark } from '../Wordmark';
-import { WEEK } from '../../config/learning';
-import type { Session } from '../../lib/session';
+import { WEEK } from '../../api/adapters';
+import type { Session } from '../../api/adapters';
 import { roleHome } from '../../lib/router';
 import { StudentShell } from './student/StudentShell';
 import { ProfessorShell } from './professor/ProfessorShell';
@@ -23,9 +23,23 @@ type Props = {
   onReplay: () => void;
 };
 
+function fromQuery(): Partial<ProfFilters> {
+  const params = new URLSearchParams(window.location.search);
+  const courseId = Number(params.get('courseId'));
+  const sectionId = Number(params.get('sectionId'));
+  const week = Number(params.get('week'));
+  return {
+    ...(courseId >= 1 && courseId <= 3 ? { course: courseId === 1 ? 'reading' : courseId === 2 ? 'writing' : 'speaking' } : {}),
+    ...(sectionId === 1 || sectionId === 2 ? { section: String(sectionId).padStart(2, '0') as ProfFilters['section'] } : {}),
+    ...(week > 0 ? { week } : {}),
+  };
+}
 function initialFilters(): ProfFilters {
   try {
-    return { ...defaultProfFilters, ...JSON.parse(localStorage.getItem('hufs-echo.prof-filters.v1') || '{}') };
+    const saved = JSON.parse(localStorage.getItem('hufs-echo.prof-filters.v1') || '{}') as Partial<ProfFilters>;
+    const query = fromQuery();
+    const current = { ...defaultProfFilters }; // A14 mock current = course 1, section 1, week 3.
+    return { ...current, ...saved, ...query };
   } catch {
     return defaultProfFilters;
   }
@@ -107,7 +121,16 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
 
   useEffect(() => {
     localStorage.setItem('hufs-echo.prof-filters.v1', JSON.stringify(filters));
+    const params = new URLSearchParams(window.location.search);
+    const courseId = filters.course === 'reading' ? 1 : filters.course === 'writing' ? 2 : 3;
+    params.set('courseId', String(courseId)); params.set('sectionId', filters.section === '01' ? '1' : '2'); params.set('week', String(filters.week));
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   }, [filters]);
+
+  useEffect(() => {
+    const query = fromQuery();
+    if (Object.keys(query).length) setFilters((current) => ({ ...current, ...query }));
+  }, [path]);
 
   useEffect(() => {
     try {

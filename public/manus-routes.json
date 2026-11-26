@@ -9,7 +9,7 @@
       "title": "학생 홈"
     },
     {
-      "path": "/student/course/reading",
+      "path": "/student/course/grammar",
       "title": "포르투갈어 문법 홈"
     },
     {
@@ -21,8 +21,48 @@
       "title": "포르투갈어 회화 홈"
     },
     {
+      "path": "/student/course/reading",
+      "title": "구주소 호환: 문법 홈"
+    },
+    {
       "path": "/student/me",
       "title": "학생 마이페이지"
+    },
+    {
+      "path": "/student/practice/grammar",
+      "title": "문법·독해 연습"
+    },
+    {
+      "path": "/student/practice/writing",
+      "title": "작문·독해 연습"
+    },
+    {
+      "path": "/student/practice/speaking",
+      "title": "회화 연습"
+    },
+    {
+      "path": "/student/practice/reading",
+      "title": "구주소 호환: 문법 연습"
+    },
+    {
+      "path": "/student/practice/custom",
+      "title": "맞춤 연습 생성 경로"
+    },
+    {
+      "path": "/student/practice/custom/:practiceId",
+      "title": "교정 기록 기반 맞춤 연습"
+    },
+    {
+      "path": "/student/summary",
+      "title": "연습 결과"
+    },
+    {
+      "path": "/student/history",
+      "title": "교정 기록"
+    },
+    {
+      "path": "/student/summary/:subject",
+      "title": "과목별 연습 결과"
     },
     {
       "path": "/prof",
@@ -47,34 +87,6 @@
     {
       "path": "/prof/me",
       "title": "교수 마이페이지"
-    },
-    {
-      "path": "/student/practice/reading",
-      "title": "문법·독해 연습"
-    },
-    {
-      "path": "/student/practice/writing",
-      "title": "작문·독해 연습"
-    },
-    {
-      "path": "/student/practice/speaking",
-      "title": "회화 연습"
-    },
-    {
-      "path": "/student/practice/custom",
-      "title": "교정 기록 기반 맞춤 연습"
-    },
-    {
-      "path": "/student/summary",
-      "title": "연습 결과"
-    },
-    {
-      "path": "/student/history",
-      "title": "교정 기록"
-    },
-    {
-      "path": "/student/summary/:subject",
-      "title": "과목별 연습 결과"
     }
   ]
 }
