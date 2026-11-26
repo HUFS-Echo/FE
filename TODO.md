@@ -1,6 +1,6 @@
 # HUFS Echo — 현재 구현 상태와 확인 대기 항목
 
-> 갱신일: 2026-11-25
+> 갱신일: 2026-11-26
 > 페이지 구조와 경로의 상세 설명은 [plan.md](plan.md)를 기준으로 합니다. 여기에는 현재 구현 상태와 사용자 확인이 필요한 잔존 항목만 정리합니다.
 
 ## 현재 구현 상태
@@ -103,11 +103,12 @@
 
 ## API 명세 기반 목 계층 (2026-11-26)
 
-- [ ] **공통 API 클라이언트:** 기본 `USE_MOCK = true`로 두고 서버로 네트워크 요청을 보내지 않는다. API_SPEC의 `{ success, code, message, data, error_code }` 공통 응답을 처리하며 성공 시 `data`만 반환하고 실패 시 `ApiError(code, errorCode, message)`를 던진다. Bearer 토큰 헤더 자리, 401 세션 정리 후 로그인 화면 이동, 기본 0ms/선택 300ms 목 지연, 개발 강제 오류, `import.meta.env.VITE_API_BASE_URL`, `.env.example`을 제공하고 `.env`를 커밋하지 않는다.
-- [ ] **명세 타입 및 모든 엔드포인트 목 함수:** `src/api/types.ts`에 명세 요청·응답 필드 및 `STUDENT/PROFESSOR`, `GRAMMAR/WRITING/SPEAKING`, `DONE/IN_PROGRESS/SCHEDULED/DRAFT/LOCKED` 등 enum을 반영한다. `auth`, `users`, `studentCourses`, `practiceSets`, `corrections`, `customPractice`, `profCourses`, `materials`, `scopes`, `dashboard`, `feedbackReports`, `reports`, `speakingSessions`, `writingTasks` 도메인 모듈이 A1–A24, B1–B17, C1–C9 각각에 대응하는 함수를 제공하며, 함수 JSDoc에 번호, method+endpoint, 권한을 적는다. 화면에서 쓰지 않는 explanation·맞춤 객관식 choices 등은 `/** 프론트 제안: 명세에 없음 */` 주석을 단다. 목 오류에는 명세 error_code와 한국어 message를 사용한다. B11과 C1–C9는 함수만 만들고 화면에 연결하지 않는다.
-- [ ] **이름 정규화와 기존 데이터 보존:** 의미가 같은 역할·주차 상태·과목·문항·범위·신고·교정 필드 및 상태를 API_SPEC 이름으로 통일한다. 문제 화면 필드는 `format`, A21/A22 요청에 한해 `type`으로 어댑트한다. 값 자체가 다른 과목 ID·분반 ID·학교 메일 아이디는 `src/api/adapters.ts`에서만 변환한다. 기존 localStorage의 소문자 role, `ended/active/scheduled`, `reading` 등은 읽을 때 새 이름으로 변환하며 저장 키와 현재 데모 계정을 깨뜨리지 않는다.
-- [ ] **화면의 API 계층 사용 및 상태 표시:** 대상 학생 화면(StudentHome, StudentSidebar 과목 선택, Reading/Writing/SpeakingPractice, PracticeSummary, CorrectionHistory, CustomPractice, 학생 MyPages), 교수 화면(ProfessorShell 필터, Overview, ScopeBuilder, ScopeLibrary, WeaknessReport, FeedbackInbox, 교수 MyPages), 로그인·회원가입 데이터 연결은 API 계층을 사용한다. 화면 컴포넌트는 `src/config` 및 `src/lib/demoStore`를 직접 import하지 않는다. 외부 라이브러리 없이 `useApi`와 작고 단순한 로딩, 재시도 가능한 오류, 빈 상태를 제공하며 평상시 UI의 모양·문구·동작은 유지한다.
-- [ ] **경로와 교수 필터:** 과목 URL을 `grammar/writing/speaking`으로 사용하고 `reading` 구주소를 호환 변환하며 기존 localStorage의 선택 과목도 변환한다. 맞춤 연습은 `/student/practice/custom/:practiceId`로 접근하고 새로고침 후 세트·진행을 복원하며, ID 없는 `/student/practice/custom`은 생성 후 ID 경로로 이동한다. 교수 `courseId/sectionId/week` 선택은 쿼리에 저장되며 쿼리 없을 때 A14 current → 저장값 → 기본값 순으로 정한다.
-- [ ] **현재 화면 흐름과 API 연결:** 학생 학습하기는 B1 practice.targetId를 setId로 사용해 세 과목 모두 B3 세트로 연다. 문법 문항 제출·재풀이는 B4, 최종 예시 답은 B6, 읽기와 쓰기/회화 최종 제출은 B6, 회화 녹음은 B5 후 B6, 완료 요약은 B7, 교정 기록은 B8, 맞춤 연습은 B9/B10, 마이페이지는 A5–A13/A2를 연결한다. 교수 필터는 A14, 반 현황 B12, 범위 설정 A15–A24 중 화면 사용 함수, 취약점 B16/B17, 오류 신고 B13–B15, 교수 마이페이지 A5/A6/A14/A16–A18/A2를 연결한다. 로그인/회원가입은 A1/A4 및 프로필 조회 A5에 연결한다. 명세와 UI 흐름 차이를 없애기 위해 UI를 바꾸지 않는다.
-- [ ] **명세 차이 문서:** 저장소 루트 `SPEC_GAPS.md`에 최소 27개 지시 항목을 기록한다. 각 차이에는 API 번호, 명세 내용, 현 화면 필요, 프론트 임시 처리, 결정 질문을 적고 구현 중 발견 차이를 보탠다.
-- [ ] **라우트·표시 문서 및 전달 근거:** `public/manus-routes.json`과 `plan.md`를 실제 경로/제품 구조에 맞게 갱신한다. 기존 화면과 `harin`/`prof` 데모 로그인을 유지하고, 외부 서버·AI 호출과 라이브 배포는 하지 않는다. 구현은 1–9 단계로 구분해 커밋하고 각 커밋 후 `npm run typecheck`와 `npm run build`가 통과해야 한다. 최종 보고에는 커밋별 요약, 구/신 주소, 화면→함수→명세번호·method+endpoint 표, 확인한 학생·교수 흐름, 명칭 변경, SPEC_GAPS 추가 항목을 포함한다.
+- [x] **공통 API 클라이언트:** 기본 mock 설정을 유지하고 서버 요청은 보내지 않는다. 공통 envelope, `ApiError`, Bearer 헤더 준비, 401 세션·토큰 정리 후 `/` 이동, 기본 0ms/선택 300ms mock 지연, 개발 강제 오류, `VITE_API_BASE_URL`, `.env.example`을 제공하며 `.env`는 ignore한다. 실제 endpoint 모듈은 아직 `mockRequest` 전용이다.
+- [x] **명세 타입 및 엔드포인트 mock 함수:** `src/api/types.ts`에 공통 enum·요청/응답 타입을 두고, 도메인 모듈은 A1–A24/B1–B17/C1–C9 함수 주석에 번호·method+endpoint·권한을 기록한다. B11/C1–C9는 UI에 연결하지 않는다. 화면 유지용 `Question`·`Correction` 프론트 제안 필드와 A21/A22 `type` 변환은 주석 및 `SPEC_GAPS.md`로 구분한다.
+- [x] **이름 정규화와 기존 데이터 보존:** 역할·주차 상태·문항·신고·교정 상태를 API enum/name으로 정규화하고, 기존 localStorage의 레거시 role/status/필드는 읽을 때 변환한다. 내부 과목 ID는 `grammar/writing/speaking`; 구값 `reading`과 구주소는 읽을 때 문법으로 호환한다. `adapters.ts`에는 변환 함수만 남긴다.
+- [x] **화면의 API 계층 사용 및 상태 표시:** 학생 홈·과목 선택·연습·완료·교정 기록·맞춤 연습·학생 마이페이지와 교수 필터·현황·범위 설정·범위 목록·리포트·신고·교수 마이페이지 및 로그인·가입은 API 도메인 모듈을 사용한다. 학습 데이터의 UI→demoStore 직접 접근은 제거했다. 연결 화면에 공용 로딩·재시도 오류·빈 상태를 적용했다.
+- [x] **경로와 교수 필터:** 과목 URL은 `grammar/writing/speaking`이고 reading 구주소 및 저장값은 문법으로 바꾼다. 맞춤 연습은 `/student/practice/custom/:practiceId`에서 생성·복원한다. 교수 query는 `/prof`에서만 사용하며 선택 순서는 A14 current → 저장값 → 기본값이다. 학생 URL에는 교수 query를 쓰지 않도록 구현했다.
+- [x] **화면 흐름/API 연결:** 학생은 B1/B2/B3–B10 및 A5–A13, 교수는 A14–A24/B12–B17을 화면 사용 범위에서 연결했다. 로그인·가입 후 A5로 프로필을 채운다. `harin`/`prof`와 데모 화면 값은 유지한다.
+- [x] **명세 차이 문서:** 기존 27개 항목을 유지했다. 이번 작업에서 확인한 새 명세 차이는 추가로 발견하지 않았다.
+- [x] **라우트·연결 문서 및 안전 경계:** `public/manus-routes.json`은 현재 코드 라우트와 일치함을 확인했고, 루트 `API_CONNECT_GUIDE.md`에 env/mock 차단, fetch 접점, Bearer/401, 화면→함수→endpoint, 목 전용 사항/제안 필드를 기록했다. 라이브 배포와 실제 서버 호출은 하지 않았다.
+- [ ] **최종 UI 검증·전달:** 전체 타입검사·build는 통과(2026-11-26). Preview에서 학생 홈과 로그인 선택 진입을 확인했으나, 요청된 학생·교수 전체 클릭 흐름 및 강제 오류/300ms 지연의 화면별 시각 확인은 아직 남아 있다. 브랜치 `api-structure-2` 커밋·푸시와 `main` 대상 PR 생성 후 링크를 기록한다.
