@@ -1,17 +1,47 @@
-import { getDemoState, updateDemoState } from '../lib/demoStore';
+import { getDemoState, updateDemoState, type LearningScope as StoredScope } from '../lib/demoStore';
 import { createScopeExercises } from '../config/scopePreview';
 import { mockRequest, fail } from './client';
-import type { ExerciseType, LearningScope, ScopeList } from './types';
-const toStatus = (status: string) => status === 'active' ? 'IN_PROGRESS' as const : status === 'ended' ? 'DONE' as const : status === 'scheduled' ? 'SCHEDULED' as const : 'DRAFT' as const;
+import type { ExerciseType, LearningScope, Question, ScopeList, ScopeStatus } from './types';
+const asApiScope = (scope: StoredScope): LearningScope => ({ scopeId: scope.scopeId, courseId: scope.courseId, sectionId: scope.sectionId, week: scope.week, materialId: scope.materialId, startPage: scope.startPage, endPage: scope.endPage, title: scope.title, exerciseType: scope.exerciseType, questions: scope.questions, status: scope.status, updatedAt: scope.updatedAt });
+const requireScope = (scopeId: number) => { const scope = getDemoState().scopes.find((item) => item.scopeId === scopeId); if (!scope) fail(404, 'SCOPE_NOT_FOUND', '학습 범위를 찾을 수 없어요.'); return scope; };
 /** A19 POST /prof/scopes — Bearer(교수만) */
-export function createScope(input: { courseId: number; sectionId: number; week: number; materialId: number; startPage: number; endPage: number; exerciseType: ExerciseType; questions: LearningScope['questions'] }) { return mockRequest('A19', () => { if (input.endPage - input.startPage > 9) fail(400, 'INVALID_PAGE_RANGE', '최대 10쪽까지 설정할 수 있어요.'); const scopeId = Date.now(); return { scopeId, status: 'DRAFT' as const }; }, '임시 저장됨'); }
+export function createScope(input: { courseId: number; sectionId: number; week: number; materialId: number; startPage: number; endPage: number; exerciseType: ExerciseType; questions: Question[]; title?: string }) { return mockRequest<{ scopeId: number; status: ScopeStatus }>('A19', () => {
+  if (input.endPage - input.startPage > 9 || input.startPage < 1) fail(400, 'INVALID_PAGE_RANGE', '최대 10쪽까지 설정할 수 있어요.');
+  const scopeId = Date.now();
+  const range = `${input.startPage}–${input.endPage}`;
+  const scope: StoredScope = { scopeId, courseId: input.courseId, sectionId: input.sectionId, week: input.week, materialId: input.materialId, startPage: input.startPage, endPage: input.endPage, startDate: '2026-11-17', endDate: '2026-11-23', pdfPages: range, title: input.title ?? '', exerciseType: input.exerciseType, questions: input.questions, status: 'DRAFT', participants: 0, accuracy: 0, updatedAt: new Date().toISOString() };
+  updateDemoState((state) => ({ ...state, scopes: [...state.scopes, scope] }));
+  return { scopeId, status: 'DRAFT' as const };
+}, '학습 범위를 만들었어요.'); }
 /** A20 GET /prof/scopes?courseId=&sectionId= — Bearer(교수만) */
-export function getScopes(courseId = 1, sectionId = 1) { return mockRequest<ScopeList>('A20', () => { const scopes = getDemoState().scopes.filter((scope) => Number(scope.section ?? '1') === sectionId && (courseId === 0 || scope.subject.includes(['문법', '읽기와 쓰기', '회화'][courseId - 1] ?? ''))); return { summary: { published: scopes.length, scheduledOrDraft: 0, avgParticipation: 89 }, studentCount: 48, scopes: scopes.map((scope) => ({ scopeId: Number(scope.id.replace(/\D/g, '')) || 1, week: scope.week, startDate: '2026-11-17', endDate: '2026-11-23', pdfPages: scope.pages, title: scope.topic, status: toStatus(scope.status), participants: scope.participation, accuracy: scope.accuracy })) }; }); }
+export function getScopes(courseId = 1, sectionId = 1) { return mockRequest<ScopeList>('A20', () => {
+  const scopes = getDemoState().scopes.filter((scope) => scope.sectionId === sectionId && (courseId === 0 || scope.courseId === courseId));
+  return { summary: { published: scopes.filter((scope) => scope.status === 'DONE' || scope.status === 'IN_PROGRESS').length, scheduledOrDraft: scopes.filter((scope) => scope.status === 'SCHEDULED' || scope.status === 'DRAFT').length, avgParticipation: scopes.length ? Math.round(scopes.reduce((sum, scope) => sum + scope.participants, 0) / scopes.length) : 0 }, studentCount: 48, scopes: scopes.map((scope) => ({ scopeId: scope.scopeId, week: scope.week, startDate: scope.startDate, endDate: scope.endDate, pdfPages: scope.pdfPages, title: scope.title, status: scope.status, participants: scope.participants, accuracy: scope.accuracy })) };
+}); }
 /** A21 PUT /prof/scopes/{scopeId} — Bearer(교수만) */
-export function updateScope(scopeId: number, input: Partial<LearningScope>) { return mockRequest('A21', () => ({ scopeId, updatedAt: new Date().toISOString(), ...input }), '임시 저장됨'); }
+export function updateScope(scopeId: number, input: Partial<LearningScope>) { return mockRequest<LearningScope>('A21', () => {
+  requireScope(scopeId);
+  let updated!: StoredScope;
+  updateDemoState((state) => ({ ...state, scopes: state.scopes.map((scope) => {
+    if (scope.scopeId !== scopeId) return scope;
+    updated = { ...scope, ...input, scopeId, pdfPages: input.startPage !== undefined || input.endPage !== undefined ? `${input.startPage ?? scope.startPage}–${input.endPage ?? scope.endPage}` : scope.pdfPages, updatedAt: new Date().toISOString() };
+    return updated;
+  }) }));
+  return asApiScope(updated);
+}, '학습 범위를 수정했어요.'); }
 /** A22 GET /prof/scopes/{scopeId} — Bearer(교수만) */
-export function getScope(scopeId: number) { return mockRequest<LearningScope>('A22', () => { const scope = getDemoState().scopes.find((item) => Number(item.id.replace(/\D/g, '')) === scopeId) ?? getDemoState().scopes[2]; return { scopeId, courseId: 1, sectionId: 1, week: scope.week, materialId: 1, startPage: 29, endPage: 30, title: scope.topic, exerciseType: 'GRAMMAR', questions: [], status: toStatus(scope.status), updatedAt: '2026-11-17T09:00:00' }; }); }
+export function getScope(scopeId: number) { return mockRequest<LearningScope>('A22', () => asApiScope(requireScope(scopeId))); }
 /** A23 POST /prof/scopes/{scopeId}/publish — Bearer(교수만) */
-export function publishScope(scopeId: number) { return mockRequest('A23', () => { const state = getDemoState(); const target = state.scopes.find((scope) => Number(scope.id.replace(/\D/g, '')) === scopeId); if (!target) fail(404, 'SCOPE_NOT_FOUND', '학습 범위를 찾을 수 없어요.'); if (!target.topic || target.exercises.length < 1) fail(400, 'SCOPE_INCOMPLETE', '주제와 연습 문제를 한 개 이상 넣어 주세요.'); updateDemoState((prev) => ({ ...prev, scopes: prev.scopes.map((item) => item.id === target.id ? { ...item, status: 'active' } : item) })); return { scopeId, status: 'IN_PROGRESS' as const, opensAt: '2026-11-26' }; }, '학습 범위를 게시했어요.'); }
+export function publishScope(scopeId: number) { return mockRequest<{ scopeId: number; status: ScopeStatus; opensAt: string }>('A23', () => {
+  const target = requireScope(scopeId);
+  if (!target.title || target.questions.length < 1) fail(400, 'SCOPE_INCOMPLETE', '주제와 연습 문제를 한 개 이상 넣어 주세요.');
+  updateDemoState((state) => ({ ...state, scopes: state.scopes.map((scope) => scope.scopeId === scopeId ? { ...scope, status: 'IN_PROGRESS', updatedAt: new Date().toISOString() } : scope) }));
+  return { scopeId, status: 'IN_PROGRESS', opensAt: new Date().toISOString().slice(0, 10) };
+}, '학습 범위를 게시했어요.'); }
 /** A24 POST /prof/scopes/ai/exercises — Bearer(교수만) */
-export function generateExercises(input: { courseId: number; materialId: number; startPage: number; endPage: number; exerciseType: ExerciseType; count: number }) { return mockRequest('A24', () => { if (!input.exerciseType) fail(400, 'INVALID_EXERCISE_TYPE', '출제 유형을 선택해 주세요.'); const subject = input.courseId === 1 ? '포르투갈어 문법' : input.courseId === 2 ? '포르투갈어 읽기와 쓰기' : '포르투갈어 회화'; const exercises = createScopeExercises(subject, input.startPage, input.endPage); return { exerciseType: input.exerciseType, scopeTitle: input.courseId === 1 ? '부정관사와 명사의 성·수 일치' : input.courseId === 2 ? '학교 파티 일기 쓰기' : '집과 생활 공간 묘사', instruction: '문제를 읽고 답을 선택하거나 입력해 보세요.', questions: exercises.slice(0, input.count).map((item, index) => ({ format: 'MULTIPLE_CHOICE', sentence: item.prompt, choices: item.options ?? null, answer: item.answer, sourcePage: input.startPage + index, explanation: item.explanation })) }; }, 'AI 연습 문제를 만들었어요.'); }
+export function generateExercises(input: { courseId: number; materialId: number; startPage: number; endPage: number; exerciseType: ExerciseType; count: number }) { return mockRequest('A24', () => {
+  if (!input.exerciseType) fail(400, 'INVALID_EXERCISE_TYPE', '출제 유형을 선택해 주세요.');
+  const subject = input.courseId === 2 ? '포르투갈어 읽기와 쓰기' as const : input.courseId === 3 ? '포르투갈어 회화' as const : '포르투갈어 문법' as const;
+  const exercises = createScopeExercises(subject, input.startPage, input.endPage);
+  return { exerciseType: input.exerciseType, scopeTitle: input.courseId === 1 ? '부정관사와 명사의 성·수 일치' : input.courseId === 2 ? '학교 파티 일기 쓰기' : '집과 생활 공간 묘사', instruction: '문제를 읽고 답을 선택하거나 입력해 보세요.', questions: exercises.slice(0, input.count).map((item, index) => ({ format: 'MULTIPLE_CHOICE', sentence: item.prompt, choices: item.options ?? null, answer: item.answer, sourcePage: input.startPage + index, explanation: item.explanation })) };
+}, 'AI 연습 문제를 만들었어요.'); }

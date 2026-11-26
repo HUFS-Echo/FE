@@ -5,7 +5,27 @@ import { SPEAKING_PRACTICE_QUESTIONS } from '../config/speakingPractice';
 import type { AnswerResponse, PracticeSet, PracticeSummary, Question, SubmitResponse } from './types';
 function questionsFor(setId: number): Question[] {
   const source = setId % 10 === 2 ? WRITING_READING_QUESTIONS : setId % 10 === 3 ? SPEAKING_PRACTICE_QUESTIONS : READING_QUESTIONS;
-  return source.map((item, index) => ({ questionId: setId * 10 + index + 1, format: 'MULTIPLE_CHOICE', sentence: item.prompt, choices: item.options ?? null, answer: item.answer, explanation: item.explanation, sourcePage: 29 + index, instruction: item.instruction, typeLabel: item.label }));
+  const grammarFormats = ['FORM_WRITE', 'FILL_BLANK', 'FIX_PART', 'REWRITE', 'MULTIPLE_CHOICE'] as const;
+  const writingFormats = ['FIND_INFO', 'FIND_PURPOSE', 'WRITE_REQUIRED', 'REPLY', 'MULTIPLE_CHOICE'] as const;
+  const speakingFormats = ['LISTEN', 'REPLY_LINE', 'SPEAK', 'READ_ALOUD', 'MULTIPLE_CHOICE'] as const;
+  return source.map((item, index) => {
+    const format = (setId % 10 === 2 ? writingFormats : setId % 10 === 3 ? speakingFormats : grammarFormats)[index];
+    const choice = ('responseType' in item ? item.responseType === 'choice' : item.type === 'choice');
+    const audio = 'responseType' in item && item.responseType === 'recording';
+    return {
+      questionId: setId * 10 + index + 1,
+      format,
+      sentence: item.prompt,
+      choices: item.options ?? null,
+      answer: item.answer,
+      explanation: item.explanation,
+      sourcePage: 29 + index,
+      instruction: item.instruction,
+      typeLabel: item.label,
+      answerType: audio ? 'AUDIO' as const : choice ? 'CHOICE' as const : 'TEXT' as const,
+      prompt: 'promptType' in item ? item.promptType : null,
+    };
+  });
 }
 /** B3 GET /practice-sets/{setId} — Bearer(학생만) */
 export function getPracticeSet(setId: number) { return mockRequest<PracticeSet>('B3', () => ({ setId, title: '이번 주 연습', week: WEEK.no, textbook: { materialId: 1, title: 'Português A1', page: 29, pageImageUrl: null }, currentIndex: 0, questions: questionsFor(setId) })); }
@@ -21,7 +41,7 @@ export function transcribePracticeAnswer(_setId: number, _questionId: number, _a
 /** B6 POST /practice-sets/{setId}/submit — Bearer(학생만) */
 export function submitPracticeSet(setId: number, answers: Array<{ questionId: number; text?: string; choice?: string; transcriptionId?: number }>, elapsedSeconds = 180) { return mockRequest<SubmitResponse>('B6', () => {
   const questions = questionsFor(setId);
-  const results = questions.map((question, index) => { const given = answers.find((item) => item.questionId === question.questionId); const myAnswer = given?.choice ?? given?.text ?? ''; return { questionId: question.questionId, number: index + 1, format: question.format, formatLabel: question.typeLabel ?? '문제 풀이', myAnswer, correct: myAnswer.toLowerCase() === question.answer.toLowerCase(), answer: question.answer, explanation: question.explanation ?? '정답과 표현을 확인해 보세요.' }; });
+  const results = questions.map((question, index) => { const given = answers.find((item) => item.questionId === question.questionId); const myAnswer = given?.choice ?? given?.text ?? (given?.transcriptionId ? 'O meu jardim é grande.' : ''); return { questionId: question.questionId, number: index + 1, format: question.format, formatLabel: question.typeLabel ?? '문제 풀이', myAnswer, correct: myAnswer.toLocaleLowerCase() === question.answer.toLocaleLowerCase(), answer: question.answer, explanation: question.explanation ?? '정답과 표현을 확인해 보세요.' }; });
   return { results, summary: { correctCount: results.filter((result) => result.correct).length, total: results.length, elapsedMinutes: Math.max(1, Math.round(elapsedSeconds / 60)) } };
 }); }
 /** B7 POST /practice-sets/{setId}/complete — Bearer(학생만) */

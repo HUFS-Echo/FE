@@ -1,12 +1,14 @@
+import type { ExerciseType, FeedbackReportType, Question, ScopeStatus } from '../api/types';
+
 export type FeedbackCase = {
-  id: string; type: string; date: string; week: string; page: string; student: string; subject: 'reading' | 'writing' | 'speaking';
-  original: string; correction: string; explanation: string; comment: string;
-  status: 'open' | 'resolved'; resolution?: string; correctAnswer?: string;
+  reportId: number; courseId: number; sectionId: number; type: FeedbackReportType; typeLabel: string; reportedAt: string; week: number; sourcePage: number;
+  student: { maskedName: string; maskedStudentNo: string }; studentSentence: string; aiCorrection: string; aiExplanation: string;
+  comment: string; status: 'OPEN' | 'RESOLVED'; resolution?: 'AI_CORRECT' | 'AI_ERROR' | 'CUSTOM';
 };
 export type LearningScope = {
-  id: string; subject: string; week: number; dates: string; pages: string; topic: string;
-  section?: '01' | '02'; status: 'ended' | 'active' | 'scheduled'; participation: number; accuracy: number;
-  exercises: Array<{ id: string; prompt: string; answer: string; explanation: string; page: number }>;
+  scopeId: number; courseId: number; sectionId: number; week: number; materialId: number; startPage: number; endPage: number;
+  startDate: string; endDate: string; pdfPages: string; title: string; exerciseType: ExerciseType; questions: Question[];
+  status: ScopeStatus; participants: number; accuracy: number; updatedAt: string;
 };
 export type DemoState = {
   scopes: LearningScope[];
@@ -16,55 +18,57 @@ export type DemoState = {
   professorSettings: Record<string, unknown>;
 };
 const KEY = 'hufs-echo-demo-v2';
+const courseName = (courseId: number) => ['포르투갈어 문법', '포르투갈어 읽기와 쓰기', '포르투갈어 회화'][courseId - 1] ?? '포르투갈어 문법';
+const legacyCourseId = (value: unknown): number => typeof value === 'number' && value >= 1 && value <= 3 ? value : typeof value === 'string' && value.includes('읽기와 쓰기') ? 2 : typeof value === 'string' && value.includes('회화') ? 3 : 1;
+const feedbackType = (label: unknown): FeedbackReportType => label === '과잉 교정' ? 'OVER_CORRECTION' : label === '문법 용어 혼동' ? 'TERM_CONFUSION' : label === '잘못된 교정' ? 'WRONG_CORRECTION' : 'OTHER';
 const initialFeedback: FeedbackCase[] = [
-  { id: 'f1', type: '과잉 교정', date: '11.21 10:42', week: '3주차', page: '29쪽', student: '김*윤 · 2025****11', subject: 'reading', original: 'Eu estou cansada.', correction: 'Eu sou cansada.', explanation: 'estar를 ser로 바꾸는 편이 자연스럽습니다.', comment: '맞게 쓴 것 같은데 틀렸다고 나왔어요.', status: 'open' },
-  { id: 'f2', type: '과잉 교정', date: '11.21 09:18', week: '3주차', page: '48쪽', student: '박*은 · 2024****28', subject: 'speaking', original: 'Queria um café, por favor.', correction: 'Eu queria um café, por favor.', explanation: '완전한 문장에는 주어가 필요합니다.', comment: '주어는 생략해도 된다고 배웠어요.', status: 'open' },
-  { id: 'f3', type: '문법 용어 혼동', date: '11.20 16:05', week: '3주차', page: '30쪽', student: '이*아 · 2025****04', subject: 'reading', original: 'A conta, por favor.', correction: 'a는 부정관사입니다.', explanation: 'a는 부정관사로 쓰입니다.', comment: 'a는 정관사 아닌가요?', status: 'open' },
+  { reportId: 1, courseId: 1, sectionId: 1, type: 'OVER_CORRECTION', typeLabel: '과잉 교정', reportedAt: '2026-11-21T10:42:00', week: 3, sourcePage: 29, student: { maskedName: '김*윤', maskedStudentNo: '2025****11' }, studentSentence: 'Eu estou cansada.', aiCorrection: 'Eu sou cansada.', aiExplanation: 'estar를 ser로 바꾸는 편이 자연스럽습니다.', comment: '맞게 쓴 것 같은데 틀렸다고 나왔어요.', status: 'OPEN' },
+  { reportId: 2, courseId: 1, sectionId: 1, type: 'OVER_CORRECTION', typeLabel: '과잉 교정', reportedAt: '2026-11-21T09:18:00', week: 3, sourcePage: 48, student: { maskedName: '박*은', maskedStudentNo: '2024****28' }, studentSentence: 'Queria um café, por favor.', aiCorrection: 'Eu queria um café, por favor.', aiExplanation: '완전한 문장에는 주어가 필요합니다.', comment: '주어는 생략해도 된다고 배웠어요.', status: 'OPEN' },
+  { reportId: 3, courseId: 1, sectionId: 1, type: 'TERM_CONFUSION', typeLabel: '문법 용어 혼동', reportedAt: '2026-11-20T16:05:00', week: 3, sourcePage: 30, student: { maskedName: '이*아', maskedStudentNo: '2025****04' }, studentSentence: 'A conta, por favor.', aiCorrection: 'a는 부정관사입니다.', aiExplanation: 'a는 부정관사로 쓰입니다.', comment: 'a는 정관사 아닌가요?', status: 'OPEN' },
 ];
+const question = (questionId: number, sentence: string, answer: string, sourcePage: number): Question => ({ questionId, format: 'MULTIPLE_CHOICE', sentence, answer, choices: [], sourcePage, answerType: 'CHOICE' });
 const initial: DemoState = {
   scopes: [
-    { id: 's1', section: '01', subject: '포르투갈어 문법', week: 1, dates: '11.03–11.09', pages: '8–12', topic: '인사와 자기소개', status: 'ended', participation: 92, accuracy: 88, exercises: [] },
-    { id: 's2', section: '01', subject: '포르투갈어 읽기와 쓰기', week: 2, dates: '11.10–11.16', pages: '18–22', topic: '길 묻고 답하기', status: 'ended', participation: 88, accuracy: 82, exercises: [] },
-    { id: 's3', section: '01', subject: '포르투갈어 문법', week: 3, dates: '11.17–11.23', pages: '29–30', topic: '부정관사와 명사의 성·수 일치', status: 'active', participation: 85, accuracy: 78, exercises: [] },
-    { id: 's4', section: '01', subject: '포르투갈어 회화', week: 4, dates: '11.24–11.30', pages: '38–42', topic: '시장에서 가격 묻기', status: 'scheduled', participation: 0, accuracy: 0, exercises: [] },
-    { id: 's5', section: '01', subject: '포르투갈어 읽기와 쓰기', week: 5, dates: '12.01–12.07', pages: '52–58', topic: '리스본 여행', status: 'scheduled', participation: 0, accuracy: 0, exercises: [] },
+    { scopeId: 1, courseId: 1, sectionId: 1, week: 1, materialId: 1, startPage: 8, endPage: 12, startDate: '2026-11-03', endDate: '2026-11-09', pdfPages: '8–12', title: '인사와 자기소개', exerciseType: 'GRAMMAR', questions: [], status: 'DONE', participants: 92, accuracy: 88, updatedAt: '2026-11-09T09:00:00Z' },
+    { scopeId: 2, courseId: 2, sectionId: 1, week: 2, materialId: 1, startPage: 18, endPage: 22, startDate: '2026-11-10', endDate: '2026-11-16', pdfPages: '18–22', title: '길 묻고 답하기', exerciseType: 'READING_WRITING', questions: [], status: 'DONE', participants: 88, accuracy: 82, updatedAt: '2026-11-16T09:00:00Z' },
+    { scopeId: 3, courseId: 1, sectionId: 1, week: 3, materialId: 1, startPage: 29, endPage: 30, startDate: '2026-11-17', endDate: '2026-11-23', pdfPages: '29–30', title: '부정관사와 명사의 성·수 일치', exerciseType: 'GRAMMAR', questions: [], status: 'IN_PROGRESS', participants: 85, accuracy: 78, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 4, courseId: 3, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'SPEAKING', questions: [], status: 'SCHEDULED', participants: 0, accuracy: 0, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 5, courseId: 2, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'READING_WRITING', questions: [], status: 'SCHEDULED', participants: 0, accuracy: 0, updatedAt: '2026-11-17T09:00:00Z' },
   ],
   feedback: initialFeedback, scopeDraft: null,
-  studentSettings: { goal: 10, detail: 'detailed', translation: true, voice: false, outsideWords: true, notifications: { release: true, deadline: true, report: false } },
+  studentSettings: { goal: 10, detail: 'detailed', translation: true, voice: false, outsideWords: true, notifications: { newScope: true, dueTomorrow: true, weeklyReportMail: false }, consent: { agreed: true, agreedAt: '2026-11-17' }, disabledCourseIds: [] },
   professorSettings: { strictness: '보통', language: '한국어', outsideWords: false, hideStudent: true, acceptStudents: true, glossary: [{ term: '정관사', desc: 'o/a' }, { term: '부정관사', desc: 'um/uma' }] },
 };
+function migrateScope(value: any, index: number): LearningScope {
+  const courseId = legacyCourseId(value.courseId ?? value.subject);
+  const startPage = Number(value.startPage ?? String(value.pages ?? '').split(/[–-]/)[0]) || 1;
+  const endPage = Number(value.endPage ?? String(value.pages ?? '').split(/[–-]/)[1]) || startPage;
+  const oldStatus = value.status;
+  const status: ScopeStatus = oldStatus === 'ended' ? 'DONE' : oldStatus === 'active' ? 'IN_PROGRESS' : oldStatus === 'scheduled' ? 'SCHEDULED' : ['DONE','IN_PROGRESS','SCHEDULED','DRAFT','LOCKED'].includes(oldStatus) ? oldStatus : 'DRAFT';
+  const questions: Question[] = Array.isArray(value.questions) ? value.questions : (Array.isArray(value.exercises) ? value.exercises : []).map((item: any, i: number) => question(i + 1, item.prompt ?? item.sentence ?? '', item.answer ?? '', item.page ?? item.sourcePage ?? startPage));
+  const scopeId = Number(value.scopeId ?? String(value.id ?? `s${index + 1}`).replace(/\D/g, '')) || index + 1;
+  return { scopeId, courseId, sectionId: Number(value.sectionId ?? value.section ?? 1) || 1, week: Number(value.week) || 1, materialId: Number(value.materialId) || 1, startPage, endPage, startDate: value.startDate ?? '2026-11-17', endDate: value.endDate ?? '2026-11-23', pdfPages: value.pdfPages ?? value.pages ?? `${startPage}–${endPage}`, title: value.title ?? value.topic ?? courseName(courseId), exerciseType: value.exerciseType ?? (courseId === 1 ? 'GRAMMAR' : courseId === 2 ? 'READING_WRITING' : 'SPEAKING'), questions, status, participants: Number(value.participants ?? value.participation ?? 0), accuracy: Number(value.accuracy ?? 0), updatedAt: value.updatedAt ?? '2026-11-17T09:00:00Z' };
+}
+function migrateFeedback(value: any, index: number): FeedbackCase {
+  const typeLabel = value.typeLabel ?? value.type ?? '기타';
+  return { reportId: Number(value.reportId ?? String(value.id ?? index + 1).replace(/\D/g, '')) || index + 1, courseId: legacyCourseId(value.courseId ?? value.subject), sectionId: Number(value.sectionId ?? value.section ?? 1) || 1, type: value.type in { OVER_CORRECTION: 1, TERM_CONFUSION: 1, WRONG_CORRECTION: 1, OTHER: 1 } ? value.type : feedbackType(typeLabel), typeLabel, reportedAt: value.reportedAt ?? '2026-11-21T10:42:00', week: Number(value.week ?? String(value.weekLabel ?? '').replace(/\D/g, '')) || 3, sourcePage: Number(value.sourcePage ?? String(value.page ?? '').replace(/\D/g, '')) || 29, student: value.student && typeof value.student === 'object' ? value.student : { maskedName: String(value.student ?? '').split(' · ')[0] || '학생', maskedStudentNo: String(value.student ?? '').split(' · ')[1] ?? '' }, studentSentence: value.studentSentence ?? value.original ?? '', aiCorrection: value.aiCorrection ?? value.correction ?? '', aiExplanation: value.aiExplanation ?? value.explanation ?? '', comment: value.comment ?? '', status: value.status === 'RESOLVED' || value.status === 'resolved' ? 'RESOLVED' : 'OPEN', resolution: value.resolution };
+}
 export function getDemoState(): DemoState {
   try {
-    const stored = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<DemoState> | null;
-    const state = stored ? { ...initial, ...stored, feedback: stored.feedback ?? initial.feedback, scopes: stored.scopes ?? initial.scopes } : structuredClone(initial);
-    const migrateSubject = (subject: unknown) => subject === '읽기와 쓰기' ? '포르투갈어 문법'
-      : subject === '작문' ? '포르투갈어 읽기와 쓰기'
-        : subject === '회화' ? '포르투갈어 회화' : subject;
-    const disabled = Array.isArray(state.studentSettings.disabledCourses)
-      ? state.studentSettings.disabledCourses.map((name) => name === '읽기와 쓰기' ? '포르투갈어 문법'
-        : name === '작문' ? '포르투갈어 읽기와 쓰기'
-          : name === '회화' ? '포르투갈어 회화' : name)
-      : [];
-    const storedCourseCodes = state.professorSettings.courseCodes;
-    const migratedCourseCodes = storedCourseCodes && typeof storedCourseCodes === 'object'
-      ? { ...(storedCourseCodes as Record<string, string>) }
-      : null;
-    if (migratedCourseCodes?.['PT-READ1']) {
-      if (!migratedCourseCodes['PT-GRAM1']) migratedCourseCodes['PT-GRAM1'] = migratedCourseCodes['PT-READ1'];
-      delete migratedCourseCodes['PT-READ1'];
-    }
-    const professorSettings = migratedCourseCodes
-      ? { ...state.professorSettings, courseCodes: migratedCourseCodes }
-      : state.professorSettings;
-    return {
-      ...state,
-      scopes: state.scopes.map((scope) => ({ ...scope, subject: String(migrateSubject(scope.subject)) })),
-      scopeDraft: state.scopeDraft
-        ? { ...state.scopeDraft, subject: migrateSubject(state.scopeDraft.subject) }
-        : null,
-      studentSettings: { ...state.studentSettings, disabledCourses: disabled },
-      professorSettings,
+    const stored = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<DemoState> & { scopes?: any[]; feedback?: any[] } | null;
+    if (!stored) return structuredClone(initial);
+    const storedSettings = (stored.studentSettings ?? {}) as Record<string, any>;
+    const oldNotifications = (storedSettings.notifications ?? {}) as Record<string, boolean>;
+    const settings: Record<string, any> = {
+      ...initial.studentSettings,
+      ...storedSettings,
+      notifications: { ...(initial.studentSettings.notifications as object), ...oldNotifications, newScope: oldNotifications.newScope ?? oldNotifications.release ?? true, dueTomorrow: oldNotifications.dueTomorrow ?? oldNotifications.deadline ?? true },
+      consent: { ...(initial.studentSettings.consent as object), ...(storedSettings.consent ?? {}) },
     };
+    const legacyDisabled = Array.isArray(settings.disabledCourses) ? settings.disabledCourses.map((item: unknown) => legacyCourseId(item)) : [];
+    const disabledCourseIds = [...new Set([...(Array.isArray(settings.disabledCourseIds) ? settings.disabledCourseIds.filter((item): item is number => typeof item === 'number') : []), ...legacyDisabled])];
+    const next: DemoState = { ...initial, ...stored, scopes: (stored.scopes ?? initial.scopes).map(migrateScope), feedback: (stored.feedback ?? initial.feedback).map(migrateFeedback), studentSettings: { ...settings, disabledCourseIds }, professorSettings: { ...initial.professorSettings, ...stored.professorSettings } };
+    return next;
   } catch { return structuredClone(initial); }
 }
 export function updateDemoState(update: (state: DemoState) => DemoState) {
