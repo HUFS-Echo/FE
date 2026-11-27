@@ -8,8 +8,9 @@ export function getProfessorCourses() { return mockRequest<ProfCourses>('A14', (
   const defaultStatuses = ['DONE', 'DONE', 'IN_PROGRESS', 'SCHEDULED', 'DRAFT'] as const;
   return { courses: [1, 2, 3].map((courseId) => {
     const storedScopes = scopes.filter((scope) => scope.courseId === courseId && scope.sectionId === 1);
-    const weeks = defaultStatuses.map((status, index) => {
+    const weeks = Array.from({ length: 15 }, (_, index) => {
       const week = index + 1;
+      const status = defaultStatuses[index] ?? null;
       const stored = storedScopes.find((scope) => scope.week === week);
       const dates = stored ?? DEMO_WEEK_DATES[week];
       return { week, status: stored?.status ?? status, startDate: dates.startDate, endDate: dates.endDate };

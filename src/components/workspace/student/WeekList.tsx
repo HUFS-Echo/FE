@@ -14,8 +14,15 @@ function displayPages(value: string) {
   return value.replace(/\s*(?:쪽|pages?)\s*$/i, '').trim();
 }
 
+function displayWeekDate(value: string) {
+  const isoDate = value.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return isoDate ? `${isoDate[1]}.${isoDate[2]}` : value;
+}
+
 function displayOpenDate(value: string) {
-  return `${value.replace(/\s*에\s*열려요\s*$/, '').trim()}에 열려요`;
+  const date = value.replace(/\s*에\s*열려요\s*$/, '').trim();
+  const isoDate = date.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return `${isoDate ? `${isoDate[1]}.${isoDate[2]}` : date}에 열려요`;
 }
 
 export function WeekList({ subject, onOpen }: Props) {
@@ -24,7 +31,7 @@ export function WeekList({ subject, onOpen }: Props) {
   const data = weeksApi.data;
   const items = data?.weeks.map((week) => ({
     no: week.week,
-    dates: `${week.startDate} – ${week.endDate}`,
+    dates: `${displayWeekDate(week.startDate)} – ${displayWeekDate(week.endDate)}`,
     range: week.title,
     pdf: `PDF ${displayPages(week.pdfPages)}쪽`,
     status: week.status,
@@ -41,7 +48,7 @@ export function WeekList({ subject, onOpen }: Props) {
       return <article className={`week-card ${locked ? 'is-locked' : ''}`} key={week.no}>
         <div className="week-card__top"><span className="week-card__no">{String(week.no).padStart(2, '0')}</span><span className={`week-card__status ${done ? 'is-done' : ''}`}>{done ? '완료' : '미공개'}</span></div>
         <h3>{week.range}</h3><p>{week.dates} · {week.pdf}</p>
-        {done ? <><div className="week-card__stats"><span>참여 {week.participation ?? 0}%</span><span>정확도 {week.accuracy ?? 0}%</span></div><button type="button" className="week-card__btn" onClick={() => onOpen(subject)}>복습하기</button></> : <div className="week-card__locked"><LockIcon /><span>{week.openAt ?? '아직 공개되지 않았어요.'}</span></div>}
+        {done ? <><div className="week-card__stats"><span>참여 {week.participation ?? 0}%</span><span>정확도 {week.accuracy ?? 0}%</span></div><button type="button" className="week-card__btn" onClick={() => onOpen(subject)}>복습하기</button></> : week.status === 'IN_PROGRESS' ? <button type="button" className="week-card__btn" onClick={() => onOpen(subject)}>학습하기</button> : <div className="week-card__locked"><LockIcon /><span>{week.openAt ?? '아직 공개되지 않았어요.'}</span></div>}
       </article>;
     })}</div>}
     {data && <p className="weeks__note">{subjectLabels[subject]} · {items.find((week) => week.status === 'IN_PROGRESS')?.range ?? '이번 주'} 범위는 이번 주 일요일까지 열려 있어요.</p>}

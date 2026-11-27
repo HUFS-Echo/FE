@@ -11,7 +11,8 @@ const labels: Record<ScopeStatus, Record<StatusLanguage, string>> = {
   LOCKED: { ko: '미공개', en: 'Locked' },
 };
 
-export function getScopeStatusLabel(status: ScopeStatus, language: StatusLanguage): string {
+export function getScopeStatusLabel(status: ScopeStatus | null, language: StatusLanguage): string {
+  if (status == null) return language === 'en' ? 'Not set' : '미설정';
   return labels[status][language];
 }
 
