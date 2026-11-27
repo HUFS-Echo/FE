@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { DEMO_PROFESSOR, DEMO_STUDENT, getSavedProfile, type Role, type Session, toApiRole } from '../../api/adapters';
-import { login } from '../../api/auth';
+import type { Session } from '../../lib/session';
+import type { Role } from '../../api/types';
+import { loginWithProfile } from '../../api/auth';
 
 type Props = {
   onLogin: (session: Session) => void;
@@ -9,11 +10,10 @@ type Props = {
 };
 
 export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
-  const [role, setRole] = useState<Role>('student');
+  const [role, setRole] = useState<Role>('STUDENT');
   const [mailId, setMailId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const email = `${mailId.trim()}@hufs.ac.kr`;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,11 +27,9 @@ export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
       return;
     }
 
-    void login({ role: toApiRole(role), emailId: normalizedId, password }).then(() => {
-      const saved = getSavedProfile(role, email);
-      const demo = role === 'student' ? DEMO_STUDENT : DEMO_PROFESSOR;
-      onLogin(saved ?? demo);
-    }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '로그인에 실패했어요.'));
+    void loginWithProfile({ role: role, emailId: normalizedId, password })
+      .then(onLogin)
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : '로그인에 실패했어요.'));
   }
 
   return (
@@ -47,10 +45,10 @@ export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
           <p className="login__sub">역할을 선택하고 학교 메일과 비밀번호를 입력해 주세요.</p>
 
           <div className="auth-roles" role="group" aria-label="로그인 역할">
-            <button type="button" className={role === 'student' ? 'is-active' : ''} aria-pressed={role === 'student'} onClick={() => { setRole('student'); setError(''); }}>
+            <button type="button" className={role === 'STUDENT' ? 'is-active' : ''} aria-pressed={role === 'STUDENT'} onClick={() => { setRole('STUDENT'); setError(''); }}>
               <b>학생</b><span>학습과 연습을 이어가요</span>
             </button>
-            <button type="button" className={role === 'professor' ? 'is-active' : ''} aria-pressed={role === 'professor'} onClick={() => { setRole('professor'); setError(''); }}>
+            <button type="button" className={role === 'PROFESSOR' ? 'is-active' : ''} aria-pressed={role === 'PROFESSOR'} onClick={() => { setRole('PROFESSOR'); setError(''); }}>
               <b>교수</b><span>수업과 학습을 관리해요</span>
             </button>
           </div>
@@ -68,7 +66,7 @@ export function LoginScreen({ onLogin, onBack, onSignup }: Props) {
               <input type="password" value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} placeholder="비밀번호" autoComplete="current-password" />
             </label>
             {error && <p className="login__error" role="alert">{error}</p>}
-            <button className="login__submit">{role === 'student' ? '학생으로 로그인' : '교수로 로그인'}<span aria-hidden="true">→</span></button>
+            <button className="login__submit">{role === 'STUDENT' ? '학생으로 로그인' : '교수로 로그인'}<span aria-hidden="true">→</span></button>
           </form>
 
           <p className="auth-switch">아직 회원이 아니신가요? <button type="button" onClick={onSignup}>회원가입</button></p>

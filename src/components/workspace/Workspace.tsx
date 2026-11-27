@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Wordmark } from '../Wordmark';
-import { WEEK } from '../../api/adapters';
-import type { Session } from '../../api/adapters';
+import { getProfessorCourses } from '../../api/profCourses';
+import { ApiErrorState, ApiLoadingState, useApi } from '../../api/useApi';
+import type { ProfCourses } from '../../api/types';
+import { getScopeStatusLabel } from '../../lib/statusLabels';
+import type { Session } from '../../lib/session';
 import { roleHome } from '../../lib/router';
 import { StudentShell } from './student/StudentShell';
 import { ProfessorShell } from './professor/ProfessorShell';
@@ -29,17 +32,17 @@ function fromQuery(): Partial<ProfFilters> {
   const sectionId = Number(params.get('sectionId'));
   const week = Number(params.get('week'));
   return {
-    ...(courseId >= 1 && courseId <= 3 ? { course: courseId === 1 ? 'reading' : courseId === 2 ? 'writing' : 'speaking' } : {}),
+    ...(courseId >= 1 && courseId <= 3 ? { course: courseId === 1 ? 'grammar' : courseId === 2 ? 'writing' : 'speaking' } : {}),
     ...(sectionId === 1 || sectionId === 2 ? { section: String(sectionId).padStart(2, '0') as ProfFilters['section'] } : {}),
     ...(week > 0 ? { week } : {}),
   };
 }
 function initialFilters(): ProfFilters {
   try {
-    const saved = JSON.parse(localStorage.getItem('hufs-echo.prof-filters.v1') || '{}') as Partial<ProfFilters>;
-    const query = fromQuery();
-    const current = { ...defaultProfFilters }; // A14 mock current = course 1, section 1, week 3.
-    return { ...current, ...saved, ...query };
+    const stored = JSON.parse(localStorage.getItem('hufs-echo.prof-filters.v1') || '{}') as Record<string, unknown>;
+    const saved = { ...stored, course: stored.course === 'reading' ? 'grammar' : stored.course } as Partial<ProfFilters>;
+    const query = window.location.pathname.startsWith('/prof') ? fromQuery() : {};
+    return { ...defaultProfFilters, ...saved, ...query };
   } catch {
     return defaultProfFilters;
   }
@@ -115,22 +118,42 @@ function ProfessorLanguagePicker({ language, label, onChange }: {
 export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout, onToast, onReset, onReplay }: Props) {
   const [filters, setFilters] = useState<ProfFilters>(initialFilters);
   const [professorLanguage, setProfessorLanguage] = useState<ProfessorLanguage>(initialProfessorLanguage);
-  const isStudent = session.role === 'student';
+  const isStudent = session.role === 'STUDENT';
+  const professorCoursesApi = useApi<ProfCourses>(() => isStudent ? Promise.resolve({ courses: [], current: { courseId: 1, sectionId: 1, week: 3 } }) : getProfessorCourses(), [session.email, isStudent]);
   const displayLanguage: ProfessorLanguage = isStudent ? 'ko' : professorLanguage;
   const t = (text: string) => translateProfessorText(displayLanguage, text);
 
   useEffect(() => {
-    localStorage.setItem('hufs-echo.prof-filters.v1', JSON.stringify(filters));
-    const params = new URLSearchParams(window.location.search);
-    const courseId = filters.course === 'reading' ? 1 : filters.course === 'writing' ? 2 : 3;
-    params.set('courseId', String(courseId)); params.set('sectionId', filters.section === '01' ? '1' : '2'); params.set('week', String(filters.week));
-    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-  }, [filters]);
+    if (isStudent || !path.startsWith('/prof') || !professorCoursesApi.data) return;
+    if (Object.keys(fromQuery()).length) return;
+    const current = professorCoursesApi.data.current;
+    setFilters({ course: current.courseId === 2 ? 'writing' : current.courseId === 3 ? 'speaking' : 'grammar', section: String(current.sectionId).padStart(2, '0') as ProfFilters['section'], week: current.week });
+  }, [isStudent, path, professorCoursesApi.data]);
 
   useEffect(() => {
+    if (isStudent || !path.startsWith('/prof')) return;
+    if (!professorCoursesApi.data && !professorCoursesApi.error) return;
+    localStorage.setItem('hufs-echo.prof-filters.v1', JSON.stringify(filters));
+    const params = new URLSearchParams(window.location.search);
+    const courseId = filters.course === 'grammar' ? 1 : filters.course === 'writing' ? 2 : 3;
+    params.set('courseId', String(courseId)); params.set('sectionId', filters.section === '01' ? '1' : '2'); params.set('week', String(filters.week));
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  }, [filters, isStudent, path, professorCoursesApi.data, professorCoursesApi.error]);
+
+  useEffect(() => {
+    if (isStudent || !path.startsWith('/prof')) return;
     const query = fromQuery();
     if (Object.keys(query).length) setFilters((current) => ({ ...current, ...query }));
-  }, [path]);
+  }, [path, isStudent]);
+
+  const courseId = filters.course === 'grammar' ? 1 : filters.course === 'writing' ? 2 : 3;
+  const selectedCourse = professorCoursesApi.data?.courses.find((course) => course.courseId === courseId);
+  const weekSuffix = (weekNumber: number) => {
+    const week = selectedCourse?.weeks.find((item) => item.week === weekNumber);
+    if (!week) return '';
+    if (week.status === 'IN_PROGRESS' && week.startDate && week.endDate) return `${week.startDate.slice(5).replace('-', '.')} – ${week.endDate.slice(5).replace('-', '.')}`;
+    return getScopeStatusLabel(week.status, displayLanguage);
+  };
 
   useEffect(() => {
     try {
@@ -143,10 +166,11 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
   useEffect(() => {
     const resetFilters = () => {
       if (!localStorage.getItem('hufs-echo.prof-filters.v1')) setFilters(defaultProfFilters);
+      professorCoursesApi.retry();
     };
     window.addEventListener('hufs-demo-change', resetFilters);
     return () => window.removeEventListener('hufs-demo-change', resetFilters);
-  }, []);
+  }, [professorCoursesApi.retry]);
 
   return (
     <ProfessorLanguageContext.Provider value={{ language: displayLanguage, setLanguage: setProfessorLanguage, t }}>
@@ -171,7 +195,7 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
                   <label className="header-select">
                     <span className="sr-only">{t('과목')}</span>
                     <select value={filters.course} onChange={event => setFilters(current => ({ ...current, course: event.target.value as ProfFilters['course'] }))}>
-                      <option value="reading">{t('포르투갈어 문법')}</option>
+                      <option value="grammar">{t('포르투갈어 문법')}</option>
                       <option value="writing">{t('포르투갈어 읽기와 쓰기')}</option>
                       <option value="speaking">{t('포르투갈어 회화')}</option>
                     </select>
@@ -186,11 +210,7 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
                   <label className="header-select header-select--week">
                     <span className="sr-only">{t('주차')}</span>
                     <select value={filters.week} onChange={event => setFilters(current => ({ ...current, week: Number(event.target.value) }))}>
-                      <option value={1}>{t('1주차 · 종료')}</option>
-                      <option value={2}>{t('2주차 · 종료')}</option>
-                      <option value={3}>{t(`3주차 · ${WEEK.dates}`)}</option>
-                      <option value={4}>{t('4주차 · 예약')}</option>
-                      <option value={5}>{t('5주차 · 임시 저장')}</option>
+                      {(selectedCourse?.weeks ?? []).map((week) => <option key={week.week} value={week.week}>{displayLanguage === 'en' ? `W${week.week} · ${weekSuffix(week.week).replace(' – ', '–')}` : `${week.week}주차 · ${weekSuffix(week.week)}`}</option>)}
                     </select>
                   </label>
                   <ProfessorLanguagePicker language={professorLanguage} label={t('화면 언어')} onChange={setProfessorLanguage} />
@@ -205,10 +225,12 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
               </div>
             </div>
           </header>
+          {!isStudent && !path.startsWith('/prof/scope/new') && professorCoursesApi.loading && <ApiLoadingState label={t('교수 과목 필터를 불러오는 중…')} />}
+          {!isStudent && !path.startsWith('/prof/scope/new') && professorCoursesApi.error && <ApiErrorState error={professorCoursesApi.error} onRetry={professorCoursesApi.retry} />}
           {isStudent ? (
             <StudentShell session={session} path={path} onNavigate={onNavigate} onToast={onToast} onSessionUpdate={onSessionUpdate} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />
           ) : (
-            <ProfessorShell path={path} session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />
+            <ProfessorShell path={path} session={session} onNavigate={onNavigate} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} externalError={professorCoursesApi.error} onRetryExternal={professorCoursesApi.retry} />
           )}
         </div>
       </ProfFilterProvider>

@@ -1,51 +1,164 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { getDemoState, updateDemoState, type LearningScope } from '../../../api/adapters';
-import { createScopeExercises } from '../../../api/adapters';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { getExerciseTypes, getProfessorCourses } from '../../../api/profCourses';
+import { getMaterials, uploadMaterial } from '../../../api/materials';
+import { createScope, generateExercises as requestExercises, getScope, getScopes, publishScope, updateScope } from '../../../api/scopes';
+import { ApiError } from '../../../api/client';
+import type { ExerciseType, ProfCourses, Question, ScopeList, ScopeStatus } from '../../../api/types';
+import { useApi, ApiEmptyState, ApiErrorState, ApiLoadingState } from '../../../api/useApi';
 import { useProfFilters } from './ProfFilterContext';
 import { useProfessorLanguage } from './ProfessorLanguageContext';
 import { ScopeListCard } from './ScopeLibrary';
-type Props={onNavigate:(path:string)=>void;onToast:(message:string)=>void};
-type Subject='포르투갈어 문법'|'포르투갈어 읽기와 쓰기'|'포르투갈어 회화';
-type Exercise={id:string;prompt:string;answer:string;explanation:string;page:number;options?:string[]};
-const subjectForCourse:Record<'reading'|'writing'|'speaking',Subject>={reading:'포르투갈어 문법',writing:'포르투갈어 읽기와 쓰기',speaking:'포르투갈어 회화'};
-const courseForSubject:Record<Subject,'reading'|'writing'|'speaking'>={'포르투갈어 문법':'reading','포르투갈어 읽기와 쓰기':'writing','포르투갈어 회화':'speaking'};
-const scopeDates:Record<number,string>={1:'11.03–11.09',2:'11.10–11.16',3:'11.17–11.23',4:'11.24–11.30',5:'12.01–12.07'};
-const initialTopic:Record<Subject,string>={'포르투갈어 문법':'집과 방의 동사·성수 일치','포르투갈어 읽기와 쓰기':'포르투갈 타일과 집 안 공간 읽기·쓰기','포르투갈어 회화':'집 안 공간을 묻고 답하기'};
-const normalizeTopic=(value:string,subject:Subject)=>['부정관사와 명사의 성·수 일치','학교 파티 일기','아사이 가게 주문·가격 묻기','카페에서 주문하고 가격 묻기'].includes(value)?initialTopic[subject]:value;
-const initialPages:Record<Subject,[number,number]>={'포르투갈어 문법':[29,30],'포르투갈어 읽기와 쓰기':[93,93],'포르투갈어 회화':[48,49]};
-const createExercises = createScopeExercises;
-export function ScopeBuilder({onNavigate,onToast}:Props){const {filters,setFilters}=useProfFilters();const {t,language}=useProfessorLanguage();const savedRaw=getDemoState().scopeDraft as Record<string,any>|null;const [subject,setSubject]=useState<Subject>(subjectForCourse[filters.course]);const saved=savedRaw?.subject===subject&&(savedRaw.section??'01')===filters.section?savedRaw:null;const [week,setWeek]=useState(Number(saved?.week)||filters.week);const start=initialPages[subject][0],end=initialPages[subject][1];const [from,setFrom]=useState(Number(saved?.from)||start);const [to,setTo]=useState(Number(saved?.to)||end);const [topic,setTopic]=useState(normalizeTopic(String(saved?.topic||initialTopic[subject]),subject));const [chosen,setChosen]=useState<string[]>(Array.isArray(saved?.chosen)?saved.chosen:[initialTopic[subject]]);const [busy,setBusy]=useState(false);const [fileName,setFileName]=useState(String(saved?.fileName||'Português_A1_2026.pdf'));const counts=saved?.counts&&typeof saved.counts==='object'?saved.counts as {fill:number;choice:number;rewrite:number}:{fill:4,choice:3,rewrite:3};const assignment=saved?.assignment||'포르투갈 타일과 집 안 공간에 관한 글을 읽고 핵심 정보를 찾아 쓰세요.';const checklist=Array.isArray(saved?.checklist)?saved.checklist:['핵심 정보를 찾기','글의 목적 파악','한 문장으로 답하기'];const role1=saved?.role1||'대화자';const role2=saved?.role2||'대화 상대';const situation=saved?.situation||'집과 방의 특징을 질문하고 대답합니다.';const mission=Array.isArray(saved?.mission)?saved.mission:['집 공간 묻기','정원 묘사하기','장소 응답 고르기'];const length=saved?.length||'80–120단어';const phrases=saved?.phrases||'varanda, sala de estar, jardim, quarto';const [exercises,setExercises]=useState<Exercise[]>(Array.isArray(saved?.exercises)?saved.exercises:[]);const [edit,setEdit]=useState<Exercise|null>(null);const [showPublish,setShowPublish]=useState(false);const [drag,setDrag]=useState(false);const [showAll,setShowAll]=useState(false);const [showGeneratedPreview,setShowGeneratedPreview]=useState(false);const previewExercises=showAll?exercises:exercises.slice(0,3);
-const previousSubject=useRef(subject);const rangeError=t(from>to?'시작 쪽은 끝 쪽보다 클 수 없어요.':to-from+1>10?'한 번에 최대 10쪽까지 설정할 수 있어요.':from<1||to>120?'PDF의 1–120쪽 범위에서 선택해 주세요.':'');const weekStatus=week<=2?'종료':week===3?'진행 중':'예정';
-useEffect(()=>{const id=window.setTimeout(()=>updateDemoState(s=>({...s,scopeDraft:{subject,section:filters.section,week,from,to,topic,chosen,fileName,exercises,counts,assignment,checklist,role1,role2,situation,mission,length,phrases}})),450);return()=>window.clearTimeout(id)},[subject,filters.section,week,from,to,topic,chosen,fileName,exercises,counts,assignment,checklist,role1,role2,situation,mission,length,phrases]);
-useEffect(()=>{if(previousSubject.current===subject)return;previousSubject.current=subject;setTopic(initialTopic[subject]);setChosen([initialTopic[subject]]);setFrom(initialPages[subject][0]);setTo(initialPages[subject][1]);setExercises([]);},[subject]);
-useEffect(()=>{const next=subjectForCourse[filters.course];if(next!==subject)setSubject(next);if(week!==filters.week)setWeek(filters.week)},[filters.course,filters.week]);
-function selectExerciseType(next:Subject){setSubject(next);setFilters(current=>({...current,course:courseForSubject[next]}));}
-function upload(file?:File){if(!file)return;if(file.type!=='application/pdf'){onToast(t('PDF 파일만 선택할 수 있어요.'));return;}setFileName(file.name);onToast(t('PDF를 브라우저 미리보기로 불러왔어요. (데모)'));}
-function generate(){
-  if(rangeError){onToast(rangeError);return;}
-  setBusy(true);
-  window.setTimeout(()=>{
-    const generated=createExercises(subject,from,to);
-    const prefs=getDemoState().professorSettings;
-    const glossary=(prefs.glossary as Array<{term:string;desc:string}>|undefined)||[];
-    const note=glossary.map(x=>`${x.term}=${x.desc}`).join(' · ');
-    const strictness=String(prefs.strictness||'보통');
-    const tone=strictness==='엄격하게'?'엄격 교정 기준을 적용합니다.':strictness==='너그럽게'?'의미 전달을 우선하고 부드럽게 설명합니다.':'';
-    const outside=prefs.outsideWords?'단원 밖 어휘도 허용합니다.':'';
-    setExercises(generated.map(ex=>({...ex,explanation:[ex.explanation,note?`교수 용어집: ${note}`:'',tone,outside].filter(Boolean).join(' ')})));
-    setShowAll(false);
-    setShowGeneratedPreview(true);
-    setBusy(false);
-    onToast(t('AI가 연습 예시를 만들었어요. (데모)'));
-  },1150);
+import { DEMO_REFERENCE_DATE } from '../../../api/mockDate';
+import { getScopeStatusLabel } from '../../../lib/statusLabels';
+type Props = { onNavigate: (path: string) => void; onToast: (message: string) => void; editScopeId?: number; externalError?: Error | null; onRetryExternal?: () => void };
+type Subject = '포르투갈어 문법' | '포르투갈어 읽기와 쓰기' | '포르투갈어 회화';
+type Exercise = { id: string; prompt: string; answer: string; explanation: string; page: number; options?: string[] };
+const subjectForCourse: Record<'grammar' | 'writing' | 'speaking', Subject> = { grammar: '포르투갈어 문법', writing: '포르투갈어 읽기와 쓰기', speaking: '포르투갈어 회화' };
+const courseIdForSubject: Record<Subject, number> = { '포르투갈어 문법': 1, '포르투갈어 읽기와 쓰기': 2, '포르투갈어 회화': 3 };
+const exerciseTypeForSubject: Record<Subject, ExerciseType> = { '포르투갈어 문법': 'GRAMMAR', '포르투갈어 읽기와 쓰기': 'READING_WRITING', '포르투갈어 회화': 'SPEAKING' };
+const courseForSubject: Record<Subject, 'grammar' | 'writing' | 'speaking'> = { '포르투갈어 문법': 'grammar', '포르투갈어 읽기와 쓰기': 'writing', '포르투갈어 회화': 'speaking' };
+const initialTopic: Record<Subject, string> = { '포르투갈어 문법': '집과 방의 동사·성수 일치', '포르투갈어 읽기와 쓰기': '포르투갈 타일과 집 안 공간 읽기·쓰기', '포르투갈어 회화': '집 안 공간을 묻고 답하기' };
+const initialPages: Record<Subject, [number, number]> = { '포르투갈어 문법': [29, 30], '포르투갈어 읽기와 쓰기': [93, 93], '포르투갈어 회화': [48, 49] };
+const questionsForApi = (exercises: Exercise[]): Question[] => exercises.map((item, index) => ({ questionId: Number(item.id.replace(/\D/g, '')) || index + 1, format: 'MULTIPLE_CHOICE', sentence: item.prompt, answer: item.answer, choices: item.options ?? null, explanation: item.explanation, sourcePage: item.page }));
+const exerciseFromQuestion = (question: Question, index: number): Exercise => ({ id: String(question.questionId || index + 1), prompt: question.sentence, answer: question.answer, explanation: question.explanation ?? '', page: question.sourcePage ?? 1, ...(question.choices ? { options: question.choices } : {}) });
+export function ScopeBuilder({ onNavigate, onToast, editScopeId, externalError, onRetryExternal }: Props) {
+  const { filters, setFilters } = useProfFilters(); const { t, language } = useProfessorLanguage();
+  const defaultSubject: Subject = subjectForCourse[filters.course] ?? '포르투갈어 문법';
+  const [subject, setSubject] = useState<Subject>(defaultSubject);
+  const courseId = courseIdForSubject[subject]; const sectionId = Number(filters.section); const exerciseType = exerciseTypeForSubject[subject];
+  const professorCoursesApi = useApi<ProfCourses>(() => getProfessorCourses(), []);
+  const materialsApi = useApi(() => getMaterials(), []);
+  const typesApi = useApi(() => getExerciseTypes(courseId), [courseId]);
+  const scopeApi = useApi(() => editScopeId ? getScope(editScopeId) : Promise.resolve(null), [editScopeId]);
+  const [scopeListRetry, setScopeListRetry] = useState(0); const [scopeListError, setScopeListError] = useState<Error | null>(null); const [scopeListData, setScopeListData] = useState<ScopeList | null>(null);
+  const handleScopeListError = useCallback((error: Error | null) => setScopeListError(error), []);
+  const handleScopeListData = useCallback((data: ScopeList | null) => setScopeListData(data), []);
+  const apiError = externalError ?? professorCoursesApi.error ?? materialsApi.error ?? typesApi.error ?? scopeApi.error ?? scopeListError;
+  const retryAllData = () => { onRetryExternal?.(); professorCoursesApi.retry(); materialsApi.retry(); typesApi.retry(); scopeApi.retry(); setScopeListError(null); setScopeListRetry((value) => value + 1); };
+  const materials = materialsApi.data?.materials ?? [];
+  const [materialId, setMaterialId] = useState(1); const selectedMaterial = materials.find((material) => material.materialId === materialId) ?? materials[0];
+  const safeSubject = subject in initialPages ? subject : '포르투갈어 문법';
+  const [week, setWeek] = useState(filters.week); const [from, setFrom] = useState(initialPages[safeSubject][0]); const [to, setTo] = useState(initialPages[safeSubject][1]);
+  const [topic, setTopic] = useState(initialTopic[safeSubject]); const [chosen, setChosen] = useState<string[]>([initialTopic[safeSubject]]);
+  const [fileName, setFileName] = useState('Português_A1_2026.pdf'); const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [scopeId, setScopeId] = useState<number | null>(editScopeId ?? null); const [scopeStatus, setScopeStatus] = useState<ScopeStatus | null>(null); const [busy, setBusy] = useState(false); const [uploadBusy, setUploadBusy] = useState(false);
+  const [edit, setEdit] = useState<Exercise | null>(null); const [showPublish, setShowPublish] = useState(false); const [drag, setDrag] = useState(false); const [showAll, setShowAll] = useState(false); const [showGeneratedPreview, setShowGeneratedPreview] = useState(false);
+  const previewExercises = showAll ? exercises : exercises.slice(0, 3);
+  const rangeError = t(from > to ? '시작 쪽은 끝 쪽보다 클 수 없어요.' : to - from + 1 > 10 ? '한 번에 최대 10쪽까지 설정할 수 있어요.' : from < 1 || to > (selectedMaterial?.pageCount ?? 120) ? 'PDF의 1–120쪽 범위에서 선택해 주세요.' : '');
+  const selectedCourseData = professorCoursesApi.data?.courses.find((course) => course.courseId === courseId);
+  const selectedWeekData = selectedCourseData?.weeks.find((item) => item.week === week);
+  const currentWeekScope = scopeListData?.scopes.find((item) => item.week === week);
+  const currentScopeStatus = currentWeekScope?.status ?? scopeStatus;
+  const isPublishedScope = currentScopeStatus === 'IN_PROGRESS' || currentScopeStatus === 'SCHEDULED';
+  const openDate = (value?: string) => value ? `${value.slice(5, 7)}.${value.slice(8, 10)}` : '';
+  const isFutureWeek = Boolean(selectedWeekData?.startDate && selectedWeekData.startDate > DEMO_REFERENCE_DATE);
+  const studentCount = scopeListData?.studentCount;
+  useEffect(() => { const next = subjectForCourse[filters.course]; if (next !== subject) setSubject(next); }, [filters.course, subject]);
+  useEffect(() => { const refresh = () => professorCoursesApi.retry(); window.addEventListener('hufs-demo-change', refresh); return () => window.removeEventListener('hufs-demo-change', refresh); }, [professorCoursesApi.retry]);
+  useEffect(() => { if (filters.week !== week) setWeek(filters.week); }, [filters.week, week]);
+  useEffect(() => { if (!scopeApi.data || !editScopeId) return; const scope = scopeApi.data; setScopeId(scope.scopeId); setScopeStatus(scope.status); setSubject(scope.courseId === 2 ? '포르투갈어 읽기와 쓰기' : scope.courseId === 3 ? '포르투갈어 회화' : '포르투갈어 문법'); setWeek(scope.week); setFrom(scope.startPage); setTo(scope.endPage); setTopic(scope.title); setChosen([scope.title]); setMaterialId(scope.materialId); setExercises(scope.questions.map(exerciseFromQuestion)); setShowGeneratedPreview(scope.questions.length > 0); }, [scopeApi.data, editScopeId]);
+  useEffect(() => { if (!selectedMaterial) return; setFileName(selectedMaterial.fileName); setMaterialId(selectedMaterial.materialId); }, [selectedMaterial?.materialId]);
+  useEffect(() => {
+    if (!scopeId || !exercises.length || editScopeId || scopeStatus === 'IN_PROGRESS' || scopeStatus === 'SCHEDULED' || currentWeekScope?.status === 'IN_PROGRESS' || currentWeekScope?.status === 'SCHEDULED') return;
+    const timer = window.setTimeout(() => {
+      void updateScope(scopeId, { scopeId, courseId, sectionId, week, materialId, startPage: from, endPage: to, title: chosen.join(' · ') || topic, exerciseType, questions: questionsForApi(exercises), updatedAt: new Date().toISOString() }).catch((reason: unknown) => onToast(reason instanceof Error ? reason.message : '임시 저장하지 못했어요.'));
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [scopeId, scopeStatus, currentWeekScope?.status, exercises, courseId, sectionId, week, materialId, from, to, chosen, topic, exerciseType, editScopeId]);
+  function selectExerciseType(next: Subject) { setSubject(next); setFilters((current) => ({ ...current, course: courseForSubject[next] })); }
+  async function upload(file?: File) {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) { onToast(t('PDF 파일만 선택할 수 있어요.')); return; }
+    setUploadBusy(true);
+    try { const material = await uploadMaterial(file); setFileName(material.fileName); setMaterialId(material.materialId); materialsApi.retry(); onToast(t('강의자료를 올렸어요.')); }
+    catch (error) { const reason = error instanceof Error ? error : new Error('강의자료를 올리지 못했어요.'); onToast(reason.message); }
+    finally { setUploadBusy(false); }
+  }
+  async function generate() {
+    if (rangeError) { onToast(rangeError); return; }
+    if (!materialId) { onToast(t('먼저 강의자료를 선택해 주세요.')); return; }
+    setBusy(true);
+    try {
+      const generated = await requestExercises({ courseId, materialId, startPage: from, endPage: to, exerciseType, count: 5 });
+      const nextExercises = generated.questions.map((question, index) => ({ id: String(index + 1), prompt: question.sentence, answer: question.answer, explanation: question.explanation ?? '', page: question.sourcePage ?? from, ...(question.choices ? { options: question.choices } : {}) }));
+      const latestScopes = await getScopes(courseId, sectionId);
+      setScopeListData(latestScopes);
+      const existing = latestScopes.scopes.find((scope) => scope.week === week);
+      if (existing) {
+        setScopeId(existing.scopeId); setScopeStatus(existing.status);
+      } else {
+        try {
+          const created = await createScope({ courseId, sectionId, week, materialId, startPage: from, endPage: to, exerciseType, title: generated.scopeTitle, questions: questionsForApi(nextExercises) });
+          setScopeId(created.scopeId); setScopeStatus(created.status);
+        } catch (error) {
+          if (!(error instanceof ApiError) || error.code !== 409) throw error;
+          const refreshedScopes = await getScopes(courseId, sectionId);
+          const racedScope = refreshedScopes.scopes.find((scope) => scope.week === week);
+          if (!racedScope) throw error;
+          setScopeListData(refreshedScopes); setScopeId(racedScope.scopeId); setScopeStatus(racedScope.status);
+        }
+      }
+      setExercises(nextExercises); setTopic(generated.scopeTitle); setChosen([generated.scopeTitle]); setShowAll(false); setShowGeneratedPreview(true);
+      onToast(t('AI가 연습 예시를 만들었어요.'));
+    } catch (error) { const reason = error instanceof Error ? error : new Error('연습 문제를 만들지 못했어요.'); onToast(t(reason.message)); }
+    finally { setBusy(false); }
+  }
+  async function publish(event: FormEvent) {
+    event.preventDefault(); if (rangeError || !exercises.length) return;
+    setBusy(true);
+    try {
+      const latestScopes = await getScopes(courseId, sectionId);
+      setScopeListData(latestScopes);
+      let existing = latestScopes.scopes.find((scope) => scope.week === week);
+      let currentScopeId = existing?.scopeId ?? null;
+      let savedStatus: ScopeStatus | null = existing?.status ?? null;
+      if (!currentScopeId) {
+        const created = await createScope({ courseId, sectionId, week, materialId, startPage: from, endPage: to, exerciseType, title: chosen.join(' · ') || topic, questions: questionsForApi(exercises) });
+        currentScopeId = created.scopeId; savedStatus = created.status; setScopeId(currentScopeId); setScopeStatus(created.status);
+      } else {
+        setScopeId(currentScopeId); setScopeStatus(savedStatus);
+      }
+      await updateScope(currentScopeId, { scopeId: currentScopeId, courseId, sectionId, week, materialId, startPage: from, endPage: to, title: chosen.join(' · ') || topic, exerciseType, questions: questionsForApi(exercises), updatedAt: new Date().toISOString() });
+      if (savedStatus === 'IN_PROGRESS' || savedStatus === 'SCHEDULED') {
+        setShowPublish(false);
+        onToast(t('수정 내용을 반영했어요.'));
+        return;
+      }
+      const result = await publishScope(currentScopeId);
+      const opensOn = openDate(result.opensAt ?? selectedWeekData?.startDate);
+      setShowPublish(false);
+      onToast(result.status === 'IN_PROGRESS' ? t('학습 범위를 게시했어요.') : language === 'en' ? `Scheduled to be published on ${opensOn}.` : `${opensOn}에 공개되도록 예약했어요.`);
+      onNavigate('/prof/scope/new');
+    } catch (error) { const reason = error instanceof Error ? error : new Error('학습 범위를 게시하지 못했어요.'); onToast(t(reason.message)); }
+    finally { setBusy(false); }
+  }
+  function updateExercise(key: keyof Exercise, value: string) { if (!edit) return; setEdit({ ...edit, [key]: key === 'page' ? Number(value) : value }); }
+  const glossaryText = t('교수 용어집: 정관사=o/a · 부정관사=um/uma');
+  const visibleExplanation = edit && edit.explanation.includes(glossaryText) ? edit.explanation : edit ? `${edit.explanation ? `${edit.explanation} ` : ''}${glossaryText}` : '';
+  function updateExplanation(value: string) {
+    const suffixStart = value.lastIndexOf(glossaryText);
+    const explanation = suffixStart >= 0 && suffixStart + glossaryText.length === value.length ? value.slice(0, suffixStart).trimEnd() : value;
+    updateExercise('explanation', explanation);
+  }
+  return <div className="prof-page scope-builder">
+    {apiError && <ApiErrorState error={apiError} onRetry={retryAllData}/>}
+    {!apiError && (professorCoursesApi.loading || materialsApi.loading || typesApi.loading || (editScopeId && scopeApi.loading)) && <ApiLoadingState label={t('학습 범위를 불러오는 중…')}/>}
+    <header className="prof-page-head"><div><span className="eyebrow">SCOPE STUDIO · P2</span><h1>{t('학습 범위 설정')}</h1><p>{language === 'en' ? `Set the scope and exercises for ${t(subject)}, Section ${filters.section}. Preview the student view.` : `${subject} · ${filters.section}분반 범위와 연습을 설정하고 학생 화면을 미리 봅니다.`}</p></div>{selectedWeekData && <span className="tag">{getScopeStatusLabel(selectedWeekData.status, language)}</span>}</header>
+    <div className="scope-layout"><section className="scope-form-col">
+      {showGeneratedPreview && exercises.length > 0 ? <div className="scope-preview-step"><div className="prof-card student-preview-card"><div className="section-title"><div><span className="eyebrow">STUDENT PREVIEW</span><h2>{t('학생 화면 미리보기')}</h2></div><span className="tag">{week}주차</span></div><div className="student-preview-head"><span>{t('이번 주 범위')}</span><b>{t(subject)}</b><small>{language === 'en' ? `PDF pages ${from}${to !== from ? `–${to}` : ''} · ${t(chosen.join(' · ') || topic)}` : `PDF ${from}${to !== from ? `–${to}` : ''}쪽 · ${chosen.join(' · ') || topic}`}</small></div><div className="preview-practice-head"><b>{t('첫 연습 세트')}</b><span className="ai-pill">✦ AI</span></div><p className="preview-intro">{subject === '포르투갈어 문법' ? t('집과 방의 문법 표현을 다섯 가지 유형으로 연습해요.') : subject === '포르투갈어 읽기와 쓰기' ? t('포르투갈 타일과 집 안 공간에 관한 글을 읽고 핵심 정보를 찾아 답해요.') : t('집 안 공간을 묻고 답하는 회화 5문항을 연습해요.')}</p><div className="exercise-list">{previewExercises.map((ex, i) => <article key={ex.id}><div><b>{String(i + 1).padStart(2, '0')}</b><span>{t(ex.prompt)}</span></div><small>{language === 'en' ? `PDF evidence · p. ${ex.page}` : `PDF ${ex.page}쪽 근거`}</small><button type="button" onClick={() => setEdit(ex)}>{t('수정')}</button><button type="button" onClick={() => setExercises((items) => items.filter((item) => item.id !== ex.id))}>{t('삭제')}</button></article>)}</div>{exercises.length > 3 && <button type="button" className="preview-toggle" aria-expanded={showAll} onClick={() => setShowAll((value) => !value)}>{t(showAll ? '접기' : '전체 보기')} {showAll ? '' : `(${exercises.length})`}</button>}</div><button type="button" className="btn-solid publish-trigger" disabled={!!apiError || !!rangeError || !exercises.length || busy || studentCount == null} onClick={() => setShowPublish(true)}>{t('학습 범위 확정하고 게시 →')}</button><p className="autosave-note">{t('작성 중인 내용은 자동 저장됩니다.')}</p></div> : <>
+        <div className="prof-card scope-step"><div className="scope-step__title"><i>1</i><div><b>{t('강의자료')}</b><small>{t('PDF 파일과 페이지를 선택해요.')}</small></div></div>
+          {materialsApi.loading ? <ApiLoadingState label={t('강의자료를 불러오는 중…')}/> : materialsApi.error ? null : materials.length ? <div className="pdf-file-card"><span className="pdf-icon">PDF</span><span><b>{fileName || selectedMaterial?.fileName}</b><small>{selectedMaterial ? `${selectedMaterial.pageCount}쪽 · ${t('최근 사용')}` : language === 'en' ? 'Recently used' : t('최근 사용')}</small></span><label className="text-link">{t('변경')}<input type="file" accept="application/pdf" onChange={(event) => void upload(event.target.files?.[0])}/></label></div> : <ApiEmptyState message={t('등록된 강의자료가 없어요. PDF를 올려 주세요.')}/ >}
+          <label className={`pdf-drop ${drag ? 'is-drag' : ''}`} onDragOver={(event) => { event.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={(event) => { event.preventDefault(); setDrag(false); void upload(event.dataTransfer.files[0]); }}>{uploadBusy ? t('강의자료를 올리는 중…') : <>{t('PDF를 여기에 놓거나')} <b>{t('새 PDF 올리기')}</b></>}<input type="file" accept="application/pdf" onChange={(event) => void upload(event.target.files?.[0])}/></label>
+        </div>
+        <div className="prof-card scope-step"><div className="scope-step__title"><i>2</i><div><b>{t('주차·쪽 범위')}</b><small>{t('최대 10쪽까지 설정할 수 있어요.')}</small></div></div>
+          <label className="form-label">{t('주차')}<select value={week} onChange={(event) => { const value = Number(event.target.value); setWeek(value); setFilters((current) => ({ ...current, week: value })); }}>{(selectedCourseData?.weeks ?? []).map((item) => <option key={item.week} value={item.week}>{language === 'en' ? `Week ${item.week} · ${getScopeStatusLabel(item.status, language)}` : `${item.week}주차 · ${getScopeStatusLabel(item.status, language)}`}</option>)}</select></label>
+          <div className="page-range-fields"><label className="form-label">{t('시작 쪽')}<input type="number" min={1} max={selectedMaterial?.pageCount ?? 120} value={from} onChange={(event) => setFrom(Number(event.target.value))}/></label><span>—</span><label className="form-label">{t('끝 쪽')}<input type="number" min={1} max={selectedMaterial?.pageCount ?? 120} value={to} onChange={(event) => setTo(Number(event.target.value))}/></label></div>{rangeError && <p className="form-error">{rangeError}</p>}
+          <div className="exercise-type-picker"><span className="form-label">{t('문제 유형 선택')}</span>{typesApi.loading ? <ApiLoadingState label={t('문제 유형을 불러오는 중…')}/> : typesApi.error ? null : typesApi.data?.types.length ? <><div className="exercise-type-picker__options" role="group" aria-label={t('문제 유형 선택')}><button type="button" className={subject === '포르투갈어 문법' ? 'is-selected' : ''} aria-pressed={subject === '포르투갈어 문법'} onClick={() => selectExerciseType('포르투갈어 문법')}>{t('문법')}</button><button type="button" className={subject === '포르투갈어 읽기와 쓰기' ? 'is-selected' : ''} aria-pressed={subject === '포르투갈어 읽기와 쓰기'} onClick={() => selectExerciseType('포르투갈어 읽기와 쓰기')}>{t('작문 독해')}</button><button type="button" className={subject === '포르투갈어 회화' ? 'is-selected' : ''} aria-pressed={subject === '포르투갈어 회화'} onClick={() => selectExerciseType('포르투갈어 회화')}>{t('회화')}</button></div><small>{t('선택한 유형에 맞춰 과목과 연습 문제를 설정합니다.')}</small></> : <ApiEmptyState message={t('선택할 수 있는 문제 유형이 없어요.')}/>}</div>
+        </div><button type="button" className="btn-solid scope-generate" disabled={busy || !!apiError || !!rangeError || materialsApi.loading || typesApi.loading || !materials.length} onClick={() => void generate()}>{busy ? t('AI가 연습을 만들고 있어요…') : t('✦ AI로 연습 만들기')}</button>
+      </>}
+      {scopeApi.loading && editScopeId && <ApiLoadingState label={t('학습 범위를 불러오는 중…')}/>}
+    </section><section className="scope-student-col"><ScopeListCard key={`${courseId}-${sectionId}`} refreshToken={scopeListRetry} onErrorChange={handleScopeListError} onDataChange={handleScopeListData}/></section></div>
+    {edit && <div className="modal-backdrop" onClick={() => setEdit(null)}><section className="simple-modal scope-edit-modal" role="dialog" aria-modal="true" aria-label={t('연습 편집')} onClick={(event) => event.stopPropagation()}><button type="button" className="modal-close" onClick={() => setEdit(null)}>×</button><span className="ai-pill">{t('AI 연습 수정')}</span><h2>{t('연습 내용 편집')}</h2><label className="form-label">{t('문장')}<textarea rows={3} value={edit.prompt} onChange={(event) => updateExercise('prompt', event.target.value)}/></label><label className="form-label">{t('정답')}<input value={edit.answer} onChange={(event) => updateExercise('answer', event.target.value)}/></label>{edit.options && <label className="form-label">{t('선택지')}<input value={edit.options.join(', ')} onChange={(event) => setEdit({ ...edit, options: event.target.value.split(',').map((item) => item.trim()) })}/></label>}<label className="form-label">{t('설명')}<textarea rows={2} value={visibleExplanation} onChange={(event) => updateExplanation(event.target.value)}/></label><label className="form-label">{t('근거 쪽')}<input type="number" value={edit.page} onChange={(event) => updateExercise('page', event.target.value)}/></label><button type="button" className="btn-solid" onClick={() => { setExercises((items) => items.map((item) => item.id === edit.id ? edit : item)); setEdit(null); onToast(t('연습 내용을 저장했어요.')); }}>{t('저장')}</button></section></div>}
+    {showPublish && <div className="modal-backdrop" onClick={() => setShowPublish(false)}><form className="simple-modal" onSubmit={(event) => void publish(event)} role="dialog" aria-modal="true" aria-label={t('학습 범위 게시 확인')} onClick={(event) => event.stopPropagation()}><button type="button" className="modal-close" onClick={() => setShowPublish(false)}>×</button><span className="eyebrow">PUBLISH SCOPE</span><h2>{t('학습 범위를 확정할까요?')}</h2><p>{week}주차 · {subject} · PDF {from}–{to}쪽</p><div className="publish-summary"><b>{chosen.join(' · ') || topic}</b><small>연습 {exercises.length}개 · {filters.section}분반 학생 {studentCount ?? '—'}명</small></div><p>{isPublishedScope ? currentScopeStatus === 'SCHEDULED' ? t('저장하면 공개일에 수정된 내용으로 열려요.') : t('이미 공개된 범위예요. 저장하면 학생 화면에 바로 반영돼요.') : isFutureWeek ? language === 'en' ? `Students will see this scope on ${openDate(selectedWeekData?.startDate)}. Until then it appears locked to students.` : `${openDate(selectedWeekData?.startDate)} 주차 시작일에 학생들에게 공개됩니다. 그 전까지 학생 화면에는 잠금으로 보여요.` : language === 'en' ? 'Students can see this scope right away.' : '확정하면 학생들에게 바로 공개됩니다.'}</p><div className="prof-actions"><button type="button" className="btn-ghost" onClick={() => setShowPublish(false)}>{t('계속 수정')}</button><button type="submit" className="btn-solid" disabled={busy || !selectedWeekData}>{busy ? t('게시하는 중…') : isPublishedScope ? t('수정 내용 반영') : isFutureWeek ? t('게시 예약') : t('지금 게시')}</button></div></form></div>}
+  </div>;
 }
-function publish(event:FormEvent){event.preventDefault();const scope:LearningScope={id:`scope-${Date.now()}`,subject,section:filters.section,week,dates:scopeDates[week]||'12.08–12.14',pages:`${from}${to!==from?`–${to}`:''}`,topic:chosen.join(' · ')||topic,status:'active',participation:85,accuracy:78,exercises};updateDemoState(s=>({...s,scopes:[...s.scopes.filter(x=>!(x.week===week&&x.subject===subject&&(x.section??'01')===filters.section)),scope],scopeDraft:null}));setShowPublish(false);onToast(t('학습 범위를 게시했어요.'));onNavigate('/prof/scope/new');}
-function updateExercise(key:keyof Exercise,value:string){if(!edit)return;setEdit({...edit,[key]:key==='page'?Number(value):value})}
-return <div className="prof-page scope-builder"><header className="prof-page-head"><div><span className="eyebrow">SCOPE STUDIO · P2</span><h1>{t('학습 범위 설정')}</h1><p>{language==='en'?`Set the scope and exercises for ${t(subject)}, Section ${filters.section}. Preview the student view.`:`${subject} · ${filters.section}분반 범위와 연습을 설정하고 학생 화면을 미리 봅니다.`}</p></div><span className="tag">{t(weekStatus)}</span></header>
-<div className="scope-layout"><section className="scope-form-col">{showGeneratedPreview&&exercises.length>0?<div className="scope-preview-step"><div className="prof-card student-preview-card"><div className="section-title"><div><span className="eyebrow">STUDENT PREVIEW</span><h2>{t('학생 화면 미리보기')}</h2></div><span className="tag">{week}주차</span></div><div className="student-preview-head"><span>{t('이번 주 범위')}</span><b>{t(subject)}</b><small>{language==='en'?`PDF pages ${from}${to!==from?`–${to}`:''} · ${t(chosen.join(' · ')||topic)}`:`PDF ${from}${to!==from?`–${to}`:''}쪽 · ${chosen.join(' · ')||topic}`}</small></div><div className="preview-practice-head"><b>{t('첫 연습 세트')}</b><span className="ai-pill">✦ AI</span></div>{exercises.length?<p className="preview-intro">{subject==='포르투갈어 문법'?t('집과 방의 문법 표현을 다섯 가지 유형으로 연습해요.'):subject==='포르투갈어 읽기와 쓰기'?t('포르투갈 타일과 집 안 공간에 관한 글을 읽고 핵심 정보를 찾아 답해요.'):t('집 안 공간을 묻고 답하는 회화 5문항을 연습해요.')}</p>:<p className="preview-intro">{t('2번 카드 아래의 AI 연습 생성 버튼을 누르면 문제가 여기에 표시됩니다.')}</p>}<div className="exercise-list">{previewExercises.map((ex,i)=><article key={ex.id}><div><b>{String(i+1).padStart(2,'0')}</b><span>{t(ex.prompt)}</span></div><small>{language==='en'?`PDF evidence · p. ${ex.page}`:`PDF ${ex.page}쪽 근거`}</small><button onClick={()=>setEdit(ex)}>{t('수정')}</button><button onClick={()=>setExercises(xs=>xs.filter(x=>x.id!==ex.id))}>{t('삭제')}</button></article>)}</div>{exercises.length>3&&<button type="button" className="preview-toggle" aria-expanded={showAll} onClick={()=>setShowAll(value=>!value)}>{t(showAll?'접기':'전체 보기')} {showAll?'':`(${exercises.length})`}</button>}</div><button className="btn-solid publish-trigger" disabled={!!rangeError||!exercises.length} onClick={()=>setShowPublish(true)}>{t('학습 범위 확정하고 게시 →')}</button><p className="autosave-note">{t('작성 중인 내용은 자동 저장됩니다.')}</p></div>:<>
-<div className="prof-card scope-step"><div className="scope-step__title"><i>1</i><div><b>{t('강의자료')}</b><small>{t('PDF 파일과 페이지를 선택해요.')}</small></div></div><div className="pdf-file-card"><span className="pdf-icon">PDF</span><span><b>{fileName}</b><small>{language==='en'?'120 pages · Recently used':`120쪽 · ${t('최근 사용')}`}</small></span><label className="text-link">{t('변경')}<input type="file" accept="application/pdf" onChange={e=>upload(e.target.files?.[0])}/></label></div><label className={`pdf-drop ${drag?'is-drag':''}`} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);upload(e.dataTransfer.files[0])}}>{t('PDF를 여기에 놓거나')} <b>{t('새 PDF 올리기')}</b><input type="file" accept="application/pdf" onChange={e=>upload(e.target.files?.[0])}/></label></div>
-<div className="prof-card scope-step"><div className="scope-step__title"><i>2</i><div><b>{t('주차·쪽 범위')}</b><small>{t('최대 10쪽까지 설정할 수 있어요.')}</small></div></div><label className="form-label">{t('주차')}<select value={week} onChange={e=>{const value=Number(e.target.value);setWeek(value);setFilters(f=>({...f,week:value}))}}><option value={1}>{t('1주차 · 종료')}</option><option value={2}>{t('2주차 · 종료')}</option><option value={3}>{t('3주차 · 진행 중')}</option><option value={4}>{t('4주차 · 예정')}</option><option value={5}>{language==='en'?'Week 5 · Scheduled':'5주차 · 예정'}</option></select></label><div className="page-range-fields"><label className="form-label">{t('시작 쪽')}<input type="number" min={1} max={120} value={from} onChange={e=>setFrom(Number(e.target.value))}/></label><span>—</span><label className="form-label">{t('끝 쪽')}<input type="number" min={1} max={120} value={to} onChange={e=>setTo(Number(e.target.value))}/></label></div>{rangeError&&<p className="form-error">{rangeError}</p>}<div className="exercise-type-picker"><span className="form-label">{t('문제 유형 선택')}</span><div className="exercise-type-picker__options" role="group" aria-label={t('문제 유형 선택')}><button type="button" className={subject==='포르투갈어 문법'?'is-selected':''} aria-pressed={subject==='포르투갈어 문법'} onClick={()=>selectExerciseType('포르투갈어 문법')}>{t('문법')}</button><button type="button" className={subject==='포르투갈어 읽기와 쓰기'?'is-selected':''} aria-pressed={subject==='포르투갈어 읽기와 쓰기'} onClick={()=>selectExerciseType('포르투갈어 읽기와 쓰기')}>{t('작문 독해')}</button><button type="button" className={subject==='포르투갈어 회화'?'is-selected':''} aria-pressed={subject==='포르투갈어 회화'} onClick={()=>selectExerciseType('포르투갈어 회화')}>{t('회화')}</button></div><small>{t('선택한 유형에 맞춰 과목과 연습 문제를 설정합니다.')}</small></div></div><button className="btn-solid scope-generate" disabled={busy||!!rangeError} onClick={generate}>{busy?t('AI가 연습을 만들고 있어요…'):t('✦ AI로 연습 만들기')}</button>
-</>}</section><section className="scope-student-col"><ScopeListCard/></section></div>
-{edit&&<div className="modal-backdrop" onClick={()=>setEdit(null)}><section className="simple-modal scope-edit-modal" role="dialog" aria-modal="true" aria-label={t('연습 편집')} onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setEdit(null)}>×</button><span className="ai-pill">{t('AI 연습 수정')}</span><h2>{t('연습 내용 편집')}</h2><label className="form-label">{t('문장')}<textarea rows={3} value={edit.prompt} onChange={e=>updateExercise('prompt',e.target.value)}/></label><label className="form-label">{t('정답')}<input value={edit.answer} onChange={e=>updateExercise('answer',e.target.value)}/></label>{edit.options&&<label className="form-label">{t('선택지')}<input value={edit.options.join(', ')} onChange={e=>setEdit({...edit,options:e.target.value.split(',').map(x=>x.trim())})}/></label>}<label className="form-label">{t('설명')}<textarea rows={2} value={edit.explanation} onChange={e=>updateExercise('explanation',e.target.value)}/></label><label className="form-label">{t('근거 쪽')}<input type="number" value={edit.page} onChange={e=>updateExercise('page',e.target.value)}/></label><button className="btn-solid" onClick={()=>{setExercises(xs=>xs.map(x=>x.id===edit.id?edit:x));setEdit(null);onToast(t('연습 내용을 저장했어요.'))}}>{t('저장')}</button></section></div>}
-{showPublish&&<div className="modal-backdrop" onClick={()=>setShowPublish(false)}><form className="simple-modal" onSubmit={publish} role="dialog" aria-modal="true" aria-label={t('학습 범위 게시 확인')} onClick={e=>e.stopPropagation()}><button type="button" className="modal-close" onClick={()=>setShowPublish(false)}>×</button><span className="eyebrow">PUBLISH SCOPE</span><h2>{t('학습 범위를 확정할까요?')}</h2><p>{week}주차 · {subject} · PDF {from}–{to}쪽</p><div className="publish-summary"><b>{chosen.join(' · ')||topic}</b><small>연습 {exercises.length}개 · {filters.section}분반 학생 {filters.section==='01'?48:32}명</small></div><p>{language==='en'?'Publishing now will make this scope immediately available to students.':'확정하면 학생들에게 바로 공개됩니다.'}</p><div className="prof-actions"><button type="button" className="btn-ghost" onClick={()=>setShowPublish(false)}>{t('계속 수정')}</button><button className="btn-solid">{t('지금 게시')}</button></div></form></div>}
-</div>}

@@ -5,7 +5,7 @@
  * All content here is mock data; swap the exported constants for API responses later.
  */
 
-export type SubjectId = 'reading' | 'writing' | 'speaking';
+export type SubjectId = 'grammar' | 'writing' | 'speaking';
 
 export type Subject = {
   id: SubjectId;
@@ -21,7 +21,7 @@ export type Subject = {
 
 export const SUBJECTS: Subject[] = [
   {
-    id: 'reading',
+    id: 'grammar',
     name: '포르투갈어 문법',
     type: '문법',
     course: 'PT-GRAM1',
@@ -76,7 +76,7 @@ export function getSubject(id: SubjectId): Subject {
 }
 
 export const COURSE_LABELS: Record<SubjectId, string> = {
-  reading: '포르투갈어 문법',
+  grammar: '포르투갈어 문법',
   writing: '포르투갈어 읽기와 쓰기',
   speaking: '포르투갈어 회화',
 };
@@ -98,10 +98,10 @@ export type PracticeSet = {
 };
 
 export const PRACTICE_SETS: Record<SubjectId, PracticeSet[]> = {
-  reading: [
+  grammar: [
     {
       id: 'r1',
-      subject: 'reading',
+      subject: 'grammar',
       kind: '문법',
       title: '빈칸 채우기',
       desc: '부정관사 um / uma를 골라 문장을 완성해요.',
@@ -112,7 +112,7 @@ export const PRACTICE_SETS: Record<SubjectId, PracticeSet[]> = {
     },
     {
       id: 'r2',
-      subject: 'reading',
+      subject: 'grammar',
       kind: '문법',
       title: '선택형',
       desc: '관사와 명사의 성·수에 맞는 표현을 골라요.',
@@ -123,7 +123,7 @@ export const PRACTICE_SETS: Record<SubjectId, PracticeSet[]> = {
     },
     {
       id: 'r3',
-      subject: 'reading',
+      subject: 'grammar',
       kind: '쓰기',
       title: '문장 바꿔 쓰기',
       desc: '관사를 넣어 자연스러운 문장으로 다시 써요.',
@@ -212,16 +212,16 @@ export type OtherMission = {
 };
 
 export const OTHER_MISSIONS: Record<SubjectId, OtherMission[]> = {
-  reading: [
+  grammar: [
     { subject: 'writing', title: '학교 파티 일기', meta: '읽기와 쓰기 · 80–120단어' },
     { subject: 'speaking', title: '카페에서 주문하기', meta: '회화 · 역할극 10분' },
   ],
   writing: [
-    { subject: 'reading', title: '부정관사 빈칸 채우기', meta: '문법 · 10문제' },
+    { subject: 'grammar', title: '부정관사 빈칸 채우기', meta: '문법 · 10문제' },
     { subject: 'speaking', title: '카페에서 주문하기', meta: '회화 · 역할극 10분' },
   ],
   speaking: [
-    { subject: 'reading', title: '부정관사 빈칸 채우기', meta: '문법 · 10문제' },
+    { subject: 'grammar', title: '부정관사 빈칸 채우기', meta: '문법 · 10문제' },
     { subject: 'writing', title: '학교 파티 일기', meta: '읽기와 쓰기 · 80–120단어' },
   ],
 };
@@ -396,7 +396,7 @@ export const CORRECTION_HISTORY: HistoryItem[] = [
     tag: '관사',
     explanation: '셀 수 있는 남성 명사 앞에는 um이 필요해요.',
     repeat: 3,
-    subject: 'reading',
+    subject: 'grammar',
   },
   {
     id: 'h2',
@@ -440,7 +440,7 @@ export const CORRECTION_HISTORY: HistoryItem[] = [
     tag: '전치사',
     explanation: 'mesa는 여성 명사라서 em + a = na입니다.',
     repeat: 1,
-    subject: 'reading',
+    subject: 'grammar',
   },
   {
     id: 'h6',
@@ -462,7 +462,7 @@ export const CORRECTION_HISTORY: HistoryItem[] = [
     tag: '수 일치',
     explanation: 'uns 뒤에는 복수 명사 pastéis가 와야 합니다.',
     repeat: 0,
-    subject: 'reading',
+    subject: 'grammar',
   },
 ];
 
