@@ -5165,3 +5165,143 @@
 .scope-table__edit-hint { display: none; }
 .scope-table__editable:hover .scope-table__edit-hint { display: block; text-align: right; }
 .scope-table tr:not(.scope-table__editable) { cursor: default; }
+
+
+/* Student correction feedback report: reuse the history card and professor simple-modal tokens. */
+.history-item__note-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.history-item__note-row .history-item__note {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.history-item__report-button,
+.history-item__report-state {
+  flex: 0 0 auto;
+  margin-top: 5px;
+  color: #5f6c7b;
+  font-size: 10.5px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.history-item__report-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.history-item__report-button:hover {
+  color: var(--ink);
+}
+
+.history-report-modal {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.history-report__summary {
+  margin-top: 13px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.history-report__summary .history-item__line {
+  margin-top: 0;
+}
+
+.history-report__fieldset {
+  min-width: 0;
+  margin: 15px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.history-report__fieldset legend {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.history-report__options {
+  display: grid;
+  gap: 6px;
+}
+
+.history-report__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.history-report__option input {
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+}
+
+.history-report__comment {
+  display: grid;
+  gap: 6px;
+  margin-top: 13px;
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.history-report__comment textarea {
+  width: 100%;
+  min-height: 82px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  resize: vertical;
+}
+
+.history-report__comment textarea:focus {
+  outline: 2px solid var(--line);
+  outline-offset: 1px;
+}
+
+.history-report__counter {
+  margin-top: 4px;
+  color: #5f6c7b;
+  font-size: 9px;
+  text-align: right;
+}
+
+.history-report__error {
+  margin: 8px 0 0;
+  color: #5f6c7b;
+  font-size: 11px;
+}
+
+@media (max-width: 520px) {
+  .history-item__note-row {
+    display: block;
+  }
+
+  .history-item__report-button,
+  .history-item__report-state {
+    display: block;
+    margin-left: auto;
+  }
+}

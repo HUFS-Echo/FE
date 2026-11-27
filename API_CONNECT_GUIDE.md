@@ -41,6 +41,7 @@ setMockOptions({ delay: false, forceError: false });
 | 학생 홈 | `getCourseHome` | B1 `GET /student/courses/{courseId}/home` |
 | 학생 주차 목록 | `getCourseWeeks` | B2 `GET /student/courses/{courseId}/weeks` |
 | 학생 사이드바 교정 배지·교정 기록 | `getCorrections` | B8 `GET /student/corrections?week=&courseId=&cursor=&size=20` |
+| 학생 교정 기록 카드의 `피드백이 이상해요` 신고 → 교수 AI 오류 신고 목록에 표시 | `reportCorrection` → `getFeedbackReports` | B11 `POST /corrections/{correctionId}/reports` → B13 `GET /prof/feedback-reports` |
 | 학생 사이드바 과목 선택, 학생 마이페이지 수강 과목 | `getStudentCourses` | A12 `GET /student/courses` |
 | 학생 과목 나가기 | `leaveCourse` | A13 `DELETE /student/courses/{courseId}` |
 | 문법·읽기와 쓰기·회화 연습 문제 | `getPracticeSet` | B3 `GET /practice-sets/{setId}` |
@@ -61,9 +62,9 @@ setMockOptions({ delay: false, forceError: false });
 | 학생 마이페이지 프로필 수정·동의·설정·내보내기 | `getMe`, `updateMe`, `agreeLearningConsent`, `revokeLearningConsent`, `getUserSettings`, `updateUserSettings`, `exportLearningData` | A5 `GET /users/me`; A6 `PATCH /users/me`; A7 `POST /users/me/consent`; A8 `DELETE /users/me/consent`; A9 `GET /users/me/settings`; A10 `PATCH /users/me/settings`; A11 `GET /users/me/export?format=json|csv` |
 | 교수 마이페이지 프로필·자료 | `getMe`, `updateMe`, `getProfessorCourses`, `getMaterials`, `uploadMaterial`, `deleteMaterial` | A5 `GET /users/me`; A6 `PATCH /users/me`; A14 `GET /prof/courses`; A16 `POST /prof/materials`; A17 `GET /prof/materials`; A18 `DELETE /prof/materials/{materialId}` |
 
-문법 연습도 문항별 채점 없이 마지막 B6 제출로 한 번에 채점함. B5(문항별 답 제출)는 현재 화면에서 사용하지 않음.
+문법 연습도 문항별 채점 없이 마지막 B6 제출로 한 번에 채점함. B4(문제 채점·한 문항)는 현재 화면에서 사용하지 않음.
 
-현재 화면에서 사용하지 않는 mock endpoint 함수: B11 `POST /corrections/{correctionId}/reports`; C1–C4 `speaking-sessions`; C5–C9 `writing-tasks`. A3 refresh token 함수도 정의돼 있으나 로그인 갱신 UI/자동 호출은 연결하지 않았습니다.
+현재 화면에서 사용하지 않는 mock endpoint 함수: C1–C4 `speaking-sessions`; C5–C9 `writing-tasks`. A3 refresh token 함수도 정의돼 있으나 로그인 갱신 UI/자동 호출은 연결하지 않았습니다.
 
 ## 목 전용 동작 및 프론트 제안 필드
 
