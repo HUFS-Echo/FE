@@ -1,5 +1,6 @@
 import { getDemoState, updateDemoState, type LearningScope as StoredScope } from '../lib/demoStore';
 import { createScopeExercises } from '../config/scopePreview';
+import { DEMO_REFERENCE_DATE, DEMO_WEEK_DATES } from './mockDate';
 import { mockRequest, fail } from './client';
 import type { ExerciseType, LearningScope, Question, ScopeList, ScopeStatus } from './types';
 const asApiScope = (scope: StoredScope): LearningScope => ({ scopeId: scope.scopeId, courseId: scope.courseId, sectionId: scope.sectionId, week: scope.week, materialId: scope.materialId, startPage: scope.startPage, endPage: scope.endPage, title: scope.title, exerciseType: scope.exerciseType, questions: scope.questions, status: scope.status, updatedAt: scope.updatedAt });
@@ -9,18 +10,20 @@ export function createScope(input: { courseId: number; sectionId: number; week: 
   if (input.endPage - input.startPage > 9 || input.startPage < 1) fail(400, 'INVALID_PAGE_RANGE', '최대 10쪽까지 설정할 수 있어요.');
   const scopeId = Date.now();
   const range = `${input.startPage}–${input.endPage}`;
-  const scope: StoredScope = { scopeId, courseId: input.courseId, sectionId: input.sectionId, week: input.week, materialId: input.materialId, startPage: input.startPage, endPage: input.endPage, startDate: '2026-11-17', endDate: '2026-11-23', pdfPages: range, title: input.title ?? '', exerciseType: input.exerciseType, questions: input.questions, status: 'DRAFT', participants: 0, accuracy: 0, updatedAt: new Date().toISOString() };
+  const dates = DEMO_WEEK_DATES[input.week] ?? DEMO_WEEK_DATES[3];
+  const scope: StoredScope = { scopeId, courseId: input.courseId, sectionId: input.sectionId, week: input.week, materialId: input.materialId, startPage: input.startPage, endPage: input.endPage, startDate: dates.startDate, endDate: dates.endDate, pdfPages: range, title: input.title ?? '', exerciseType: input.exerciseType, questions: input.questions, status: 'DRAFT', participants: null, accuracy: null, updatedAt: new Date().toISOString() };
   updateDemoState((state) => ({ ...state, scopes: [...state.scopes, scope] }));
   return { scopeId, status: 'DRAFT' as const };
 }, '학습 범위를 만들었어요.'); }
 /** A20 GET /prof/scopes?courseId=&sectionId= — Bearer(교수만) */
 export function getScopes(courseId = 1, sectionId = 1) { return mockRequest<ScopeList>('A20', () => {
   const scopes = getDemoState().scopes.filter((scope) => scope.sectionId === sectionId && (courseId === 0 || scope.courseId === courseId));
-  const listedScopes = scopes.filter((scope) => scope.status !== 'DRAFT');
-  return { summary: { published: scopes.filter((scope) => scope.status === 'DONE' || scope.status === 'IN_PROGRESS').length, scheduledOrDraft: scopes.filter((scope) => scope.status === 'SCHEDULED' || scope.status === 'DRAFT').length, avgParticipation: scopes.length ? Math.round(scopes.reduce((sum, scope) => sum + scope.participants, 0) / scopes.length) : 0 }, studentCount: sectionId === 1 ? 48 : 32, scopes: listedScopes.map((scope) => ({ scopeId: scope.scopeId, week: scope.week, startDate: scope.startDate, endDate: scope.endDate, pdfPages: scope.pdfPages, title: scope.title, status: scope.status, participants: scope.participants, accuracy: scope.accuracy })) };
+  const publishedScopes = scopes.filter((scope) => scope.status === 'DONE' || scope.status === 'IN_PROGRESS');
+  const participation = publishedScopes.map((scope) => scope.participants).filter((value): value is number => value != null);
+  return { summary: { published: publishedScopes.length, scheduledOrDraft: scopes.filter((scope) => scope.status === 'SCHEDULED' || scope.status === 'DRAFT').length, avgParticipation: participation.length ? Math.round(participation.reduce((sum, value) => sum + value, 0) / participation.length) : 0 }, studentCount: sectionId === 1 ? 48 : 0, scopes: scopes.map((scope) => ({ scopeId: scope.scopeId, week: scope.week, startDate: scope.startDate, endDate: scope.endDate, pdfPages: scope.pdfPages, title: scope.title, status: scope.status, participants: ['DRAFT', 'SCHEDULED', 'LOCKED'].includes(scope.status) ? null : scope.participants, accuracy: ['DRAFT', 'SCHEDULED', 'LOCKED'].includes(scope.status) ? null : scope.accuracy })) };
 }); }
 /** A21 PUT /prof/scopes/{scopeId} — Bearer(교수만) */
-export function updateScope(scopeId: number, input: Partial<LearningScope>) { return mockRequest<LearningScope>('A21', () => {
+export function updateScope(scopeId: number, input: Partial<Omit<LearningScope, 'status'>>) { return mockRequest<LearningScope>('A21', () => {
   requireScope(scopeId);
   let updated!: StoredScope;
   updateDemoState((state) => ({ ...state, scopes: state.scopes.map((scope) => {
@@ -33,11 +36,14 @@ export function updateScope(scopeId: number, input: Partial<LearningScope>) { re
 /** A22 GET /prof/scopes/{scopeId} — Bearer(교수만) */
 export function getScope(scopeId: number) { return mockRequest<LearningScope>('A22', () => asApiScope(requireScope(scopeId))); }
 /** A23 POST /prof/scopes/{scopeId}/publish — Bearer(교수만) */
-export function publishScope(scopeId: number) { return mockRequest<{ scopeId: number; status: ScopeStatus; opensAt: string }>('A23', () => {
+export function publishScope(scopeId: number) { return mockRequest<{ scopeId: number; status: ScopeStatus; opensAt?: string }>('A23', () => {
   const target = requireScope(scopeId);
   if (!target.title || target.questions.length < 1) fail(400, 'SCOPE_INCOMPLETE', '주제와 연습 문제를 한 개 이상 넣어 주세요.');
-  updateDemoState((state) => ({ ...state, scopes: state.scopes.map((scope) => scope.scopeId === scopeId ? { ...scope, status: 'IN_PROGRESS', updatedAt: new Date().toISOString() } : scope) }));
-  return { scopeId, status: 'IN_PROGRESS', opensAt: new Date().toISOString().slice(0, 10) };
+  // The mock uses its fixed demo clock; real API servers decide against the actual server date.
+  const status: ScopeStatus = target.startDate <= DEMO_REFERENCE_DATE ? 'IN_PROGRESS' : 'SCHEDULED';
+  const opensAt = status === 'SCHEDULED' ? target.startDate : undefined;
+  updateDemoState((state) => ({ ...state, scopes: state.scopes.map((scope) => scope.scopeId === scopeId ? { ...scope, status, participants: status === 'SCHEDULED' ? null : scope.participants ?? 0, accuracy: status === 'SCHEDULED' ? null : scope.accuracy ?? 0, updatedAt: new Date().toISOString() } : scope) }));
+  return { scopeId, status, ...(opensAt ? { opensAt } : {}) };
 }, '학습 범위를 게시했어요.'); }
 /** A24 POST /prof/scopes/ai/exercises — Bearer(교수만) */
 export function generateExercises(input: { courseId: number; materialId: number; startPage: number; endPage: number; exerciseType: ExerciseType; count: number }) { return mockRequest('A24', () => {

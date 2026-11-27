@@ -69,7 +69,7 @@ setMockOptions({ delay: false, forceError: false });
 
 - `src/api/adapters.ts`는 역할·과목·상태 변환만 합니다. 화면 데이터는 API 도메인 함수를 통해 읽으며, `src/lib/demoStore.ts` 접근은 mock API 구현 내부에 한정합니다. A24 문제 생성, B16/B17 리포트, 자료 저장, 신고 처리/되돌리기, 프로필·설정은 모두 브라우저 demoStore/목 카탈로그 기반입니다. 실제 AI 생성, PDF 업로드 서버 저장, 영속 계정·인증·서버 채점은 없습니다.
 - `Question`의 `instruction`, `explanation`, `typeLabel`, `prompt`와 `Correction`의 `courseId`, `courseTitle`, `repeatCount`는 화면 유지/맞춤 연습을 위한 `프론트 제안` 필드입니다. `src/api/types.ts`에 필드 주석이 있습니다. 추가 차이와 결정 질문은 `SPEC_GAPS.md` 27개 항목을 참고하세요.
-- 교수 게시 시연은 사용자 흐름대로 즉시 `IN_PROGRESS`로 처리합니다. API 명세의 미래 시작일/`SCHEDULED` 규칙과는 다를 수 있습니다. 맞춤 연습 생성·진행은 새 연습 결과를 저장하지 않는 mock 데이터입니다.
+- 목업 A23의 게시 상태는 `src/api/mockDate.ts`의 데모 기준일 `2026-11-20`과 주차 `startDate`로 판정하며, **실제 API에서는 서버가 실제 날짜로 판단합니다.** 상태는 A23 응답과 demoStore에 저장된 값을 이후 A14/A20에서도 그대로 사용합니다. 맞춤 연습 생성·진행은 새 연습 결과를 저장하지 않는 mock 데이터입니다.
 - UI 언어 및 교수 필터 선택은 `Workspace.tsx`의 localStorage UI 설정으로 유지합니다. 학습 완료 화면을 새로고침 후 복원하는 `sessionStorage` 값은 화면 전환용 임시 요약입니다. 이는 학습 도메인 데이터를 컴포넌트가 직접 localStorage에서 읽는 경우와 구분됩니다.
 
 ## 명칭·경로 호환

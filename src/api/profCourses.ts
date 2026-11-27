@@ -1,8 +1,22 @@
 import { getDemoState } from '../lib/demoStore';
+import { DEMO_WEEK_DATES } from './mockDate';
 import { mockRequest, fail } from './client';
 import type { ExerciseTypes, ProfCourses } from './types';
 /** A14 GET /prof/courses — Bearer(교수만) */
-export function getProfessorCourses() { return mockRequest<ProfCourses>('A14', () => ({ courses: [1, 2, 3].map((courseId) => ({ courseId, title: ['포르투갈어 문법', '포르투갈어 읽기와 쓰기', '포르투갈어 회화'][courseId - 1], type: (['GRAMMAR', 'WRITING', 'SPEAKING'] as const)[courseId - 1], typeLabel: ['문법·문제 풀이', '작문·교정', '말하기'][courseId - 1], sections: [{ sectionId: 1, name: '01분반', studentCount: 48, classCode: ['PT-GRAM1', 'PT-WRITE1', 'PT-TALK1'][courseId - 1] }, { sectionId: 2, name: '02분반', studentCount: 0, classCode: ['PT-GRAM1', 'PT-WRITE1', 'PT-TALK1'][courseId - 1] }], weeks: getDemoState().scopes.filter((scope) => scope.courseId === courseId).map((scope) => ({ week: scope.week, status: scope.status, startDate: scope.startDate, endDate: scope.endDate })) })), current: { courseId: 1, sectionId: 1, week: 3 } })); }
+export function getProfessorCourses() { return mockRequest<ProfCourses>('A14', () => {
+  const { scopes } = getDemoState();
+  const defaultStatuses = ['DONE', 'DONE', 'IN_PROGRESS', 'SCHEDULED', 'DRAFT'] as const;
+  return { courses: [1, 2, 3].map((courseId) => {
+    const storedScopes = scopes.filter((scope) => scope.courseId === courseId && scope.sectionId === 1);
+    const weeks = defaultStatuses.map((status, index) => {
+      const week = index + 1;
+      const stored = storedScopes.find((scope) => scope.week === week);
+      const dates = stored ?? DEMO_WEEK_DATES[week];
+      return { week, status: stored?.status ?? status, startDate: dates.startDate, endDate: dates.endDate };
+    });
+    return { courseId, title: ['포르투갈어 문법', '포르투갈어 읽기와 쓰기', '포르투갈어 회화'][courseId - 1], type: (['GRAMMAR', 'WRITING', 'SPEAKING'] as const)[courseId - 1], typeLabel: ['문법·문제 풀이', '작문·교정', '말하기'][courseId - 1], sections: [{ sectionId: 1, name: '01분반', studentCount: 48, classCode: ['PT-GRAM1', 'PT-WRITE1', 'PT-TALK1'][courseId - 1] }, { sectionId: 2, name: '02분반', studentCount: 0, classCode: ['PT-GRAM1', 'PT-WRITE1', 'PT-TALK1'][courseId - 1] }], weeks };
+  }), current: { courseId: 1, sectionId: 1, week: 3 } };
+}); }
 /** A15 GET /prof/exercise-types?courseId= — Bearer(교수만) */
 export function getExerciseTypes(courseId: number): Promise<ExerciseTypes> { return mockRequest('A15', () => {
   if (![1, 2, 3].includes(courseId)) fail(404, 'COURSE_NOT_FOUND', '담당하지 않는 과목이에요.');

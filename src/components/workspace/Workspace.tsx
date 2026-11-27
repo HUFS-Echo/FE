@@ -3,6 +3,7 @@ import { Wordmark } from '../Wordmark';
 import { getProfessorCourses } from '../../api/profCourses';
 import { ApiErrorState, ApiLoadingState, useApi } from '../../api/useApi';
 import type { ProfCourses } from '../../api/types';
+import { getScopeStatusLabel } from '../../lib/statusLabels';
 import type { Session } from '../../lib/session';
 import { roleHome } from '../../lib/router';
 import { StudentShell } from './student/StudentShell';
@@ -149,11 +150,9 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
   const selectedCourse = professorCoursesApi.data?.courses.find((course) => course.courseId === courseId);
   const weekSuffix = (weekNumber: number) => {
     const week = selectedCourse?.weeks.find((item) => item.week === weekNumber);
-    if (week?.startDate && week.endDate) return `${week.startDate.slice(5).replace('-', '.')} – ${week.endDate.slice(5).replace('-', '.')}`;
-    if (week?.status === 'DONE') return '종료';
-    if (week?.status === 'SCHEDULED') return '예약';
-    if (week?.status === 'DRAFT') return '임시 저장';
-    return weekNumber <= 2 ? '종료' : weekNumber === 3 ? '11.17 – 11.23' : weekNumber === 4 ? '예약' : '임시 저장';
+    if (!week) return '';
+    if (week.status === 'IN_PROGRESS' && week.startDate && week.endDate) return `${week.startDate.slice(5).replace('-', '.')} – ${week.endDate.slice(5).replace('-', '.')}`;
+    return getScopeStatusLabel(week.status, displayLanguage);
   };
 
   useEffect(() => {
@@ -167,10 +166,11 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
   useEffect(() => {
     const resetFilters = () => {
       if (!localStorage.getItem('hufs-echo.prof-filters.v1')) setFilters(defaultProfFilters);
+      professorCoursesApi.retry();
     };
     window.addEventListener('hufs-demo-change', resetFilters);
     return () => window.removeEventListener('hufs-demo-change', resetFilters);
-  }, []);
+  }, [professorCoursesApi.retry]);
 
   return (
     <ProfessorLanguageContext.Provider value={{ language: displayLanguage, setLanguage: setProfessorLanguage, t }}>
@@ -210,7 +210,7 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
                   <label className="header-select header-select--week">
                     <span className="sr-only">{t('주차')}</span>
                     <select value={filters.week} onChange={event => setFilters(current => ({ ...current, week: Number(event.target.value) }))}>
-                      {[1, 2, 3, 4, 5].map((week) => <option key={week} value={week}>{t(`${week}주차 · ${weekSuffix(week)}`)}</option>)}
+                      {(selectedCourse?.weeks ?? []).map((week) => <option key={week.week} value={week.week}>{displayLanguage === 'en' ? `Week ${week.week} · ${weekSuffix(week.week)}` : `${week.week}주차 · ${weekSuffix(week.week)}`}</option>)}
                     </select>
                   </label>
                   <ProfessorLanguagePicker language={professorLanguage} label={t('화면 언어')} onChange={setProfessorLanguage} />

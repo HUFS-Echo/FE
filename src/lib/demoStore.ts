@@ -3,12 +3,12 @@ import type { ExerciseType, FeedbackReportType, Question, ScopeStatus } from '..
 export type FeedbackCase = {
   reportId: number; courseId: number; sectionId: number; type: FeedbackReportType; typeLabel: string; reportedAt: string; week: number; sourcePage: number;
   student: { maskedName: string; maskedStudentNo: string }; studentSentence: string; aiCorrection: string; aiExplanation: string;
-  comment: string; status: 'OPEN' | 'RESOLVED'; resolution?: 'AI_CORRECT' | 'AI_ERROR' | 'CUSTOM';
+  comment: string; status: 'OPEN' | 'RESOLVED'; resolution?: 'AI_CORRECT' | 'AI_ERROR' | 'CUSTOM'; correctedText?: string;
 };
 export type LearningScope = {
   scopeId: number; courseId: number; sectionId: number; week: number; materialId: number; startPage: number; endPage: number;
   startDate: string; endDate: string; pdfPages: string; title: string; exerciseType: ExerciseType; questions: Question[];
-  status: ScopeStatus; participants: number; accuracy: number; updatedAt: string;
+  status: ScopeStatus; participants: number | null; accuracy: number | null; updatedAt: string;
 };
 export type DemoState = {
   scopes: LearningScope[];
@@ -31,8 +31,8 @@ const initial: DemoState = {
     { scopeId: 1, courseId: 1, sectionId: 1, week: 1, materialId: 1, startPage: 8, endPage: 12, startDate: '2026-11-03', endDate: '2026-11-09', pdfPages: '8–12', title: '인사와 자기소개', exerciseType: 'GRAMMAR', questions: [], status: 'DONE', participants: 44, accuracy: 88, updatedAt: '2026-11-09T09:00:00Z' },
     { scopeId: 2, courseId: 2, sectionId: 1, week: 2, materialId: 1, startPage: 18, endPage: 22, startDate: '2026-11-10', endDate: '2026-11-16', pdfPages: '18–22', title: '길 묻고 답하기', exerciseType: 'READING_WRITING', questions: [], status: 'DONE', participants: 42, accuracy: 82, updatedAt: '2026-11-16T09:00:00Z' },
     { scopeId: 3, courseId: 1, sectionId: 1, week: 3, materialId: 1, startPage: 29, endPage: 30, startDate: '2026-11-17', endDate: '2026-11-23', pdfPages: '29–30', title: '부정관사와 명사의 성·수 일치', exerciseType: 'GRAMMAR', questions: [], status: 'IN_PROGRESS', participants: 41, accuracy: 78, updatedAt: '2026-11-17T09:00:00Z' },
-    { scopeId: 4, courseId: 3, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'SPEAKING', questions: [], status: 'SCHEDULED', participants: 0, accuracy: 0, updatedAt: '2026-11-17T09:00:00Z' },
-    { scopeId: 5, courseId: 2, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'READING_WRITING', questions: [], status: 'SCHEDULED', participants: 0, accuracy: 0, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 4, courseId: 3, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'SPEAKING', questions: [], status: 'SCHEDULED', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 5, courseId: 2, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'READING_WRITING', questions: [], status: 'DRAFT', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
   ],
   feedback: initialFeedback, scopeDraft: null,
   studentSettings: { goal: 10, detail: 'detailed', translation: true, voice: false, outsideWords: true, notifications: { newScope: true, dueTomorrow: true, weeklyReportMail: false }, consent: { agreed: true, agreedAt: '2026-11-17' }, disabledCourseIds: [] },
@@ -46,15 +46,17 @@ function migrateScope(value: any, index: number): LearningScope {
   const status: ScopeStatus = oldStatus === 'ended' ? 'DONE' : oldStatus === 'active' ? 'IN_PROGRESS' : oldStatus === 'scheduled' ? 'SCHEDULED' : ['DONE','IN_PROGRESS','SCHEDULED','DRAFT','LOCKED'].includes(oldStatus) ? oldStatus : 'DRAFT';
   const questions: Question[] = Array.isArray(value.questions) ? value.questions : (Array.isArray(value.exercises) ? value.exercises : []).map((item: any, i: number) => question(i + 1, item.prompt ?? item.sentence ?? '', item.answer ?? '', item.page ?? item.sourcePage ?? startPage));
   const scopeId = Number(value.scopeId ?? String(value.id ?? `s${index + 1}`).replace(/\D/g, '')) || index + 1;
+  const normalizedStatus: ScopeStatus = scopeId === 5 && courseId === 2 && Number(value.week) === 5 && value.updatedAt === '2026-11-17T09:00:00Z' && status === 'SCHEDULED' ? 'DRAFT' : status;
   const sectionId = Number(value.sectionId ?? value.section ?? 1) || 1;
-  const rawParticipants = Number(value.participants ?? value.participation ?? 0);
+  const rawParticipants = value.participants == null && value.participation == null ? null : Number(value.participants ?? value.participation);
   const sectionSize = sectionId === 1 ? 48 : 32;
-  const participants = rawParticipants > sectionSize ? Math.round(sectionSize * rawParticipants / 100) : rawParticipants;
-  return { scopeId, courseId, sectionId, week: Number(value.week) || 1, materialId: Number(value.materialId) || 1, startPage, endPage, startDate: value.startDate ?? '2026-11-17', endDate: value.endDate ?? '2026-11-23', pdfPages: value.pdfPages ?? value.pages ?? `${startPage}–${endPage}`, title: value.title ?? value.topic ?? courseName(courseId), exerciseType: value.exerciseType ?? (courseId === 1 ? 'GRAMMAR' : courseId === 2 ? 'READING_WRITING' : 'SPEAKING'), questions, status, participants, accuracy: Number(value.accuracy ?? 0), updatedAt: value.updatedAt ?? '2026-11-17T09:00:00Z' };
+  const participants = ['DRAFT', 'SCHEDULED', 'LOCKED'].includes(normalizedStatus) ? null : rawParticipants == null ? 0 : rawParticipants > sectionSize ? Math.round(sectionSize * rawParticipants / 100) : rawParticipants;
+  const accuracy = ['DRAFT', 'SCHEDULED', 'LOCKED'].includes(normalizedStatus) ? null : value.accuracy == null ? 0 : Number(value.accuracy);
+  return { scopeId, courseId, sectionId, week: Number(value.week) || 1, materialId: Number(value.materialId) || 1, startPage, endPage, startDate: value.startDate ?? '2026-11-17', endDate: value.endDate ?? '2026-11-23', pdfPages: value.pdfPages ?? value.pages ?? `${startPage}–${endPage}`, title: value.title ?? value.topic ?? courseName(courseId), exerciseType: value.exerciseType ?? (courseId === 1 ? 'GRAMMAR' : courseId === 2 ? 'READING_WRITING' : 'SPEAKING'), questions, status: normalizedStatus, participants, accuracy, updatedAt: value.updatedAt ?? '2026-11-17T09:00:00Z' };
 }
 function migrateFeedback(value: any, index: number): FeedbackCase {
   const typeLabel = value.typeLabel ?? value.type ?? '기타';
-  return { reportId: Number(value.reportId ?? String(value.id ?? index + 1).replace(/\D/g, '')) || index + 1, courseId: legacyCourseId(value.courseId ?? value.subject), sectionId: Number(value.sectionId ?? value.section ?? 1) || 1, type: value.type in { OVER_CORRECTION: 1, TERM_CONFUSION: 1, WRONG_CORRECTION: 1, OTHER: 1 } ? value.type : feedbackType(typeLabel), typeLabel, reportedAt: value.reportedAt ?? '2026-11-21T10:42:00', week: Number(value.week ?? String(value.weekLabel ?? '').replace(/\D/g, '')) || 3, sourcePage: Number(value.sourcePage ?? String(value.page ?? '').replace(/\D/g, '')) || 29, student: value.student && typeof value.student === 'object' ? value.student : { maskedName: String(value.student ?? '').split(' · ')[0] || '학생', maskedStudentNo: String(value.student ?? '').split(' · ')[1] ?? '' }, studentSentence: value.studentSentence ?? value.original ?? '', aiCorrection: value.aiCorrection ?? value.correction ?? '', aiExplanation: value.aiExplanation ?? value.explanation ?? '', comment: value.comment ?? '', status: value.status === 'RESOLVED' || value.status === 'resolved' ? 'RESOLVED' : 'OPEN', resolution: value.resolution };
+  return { reportId: Number(value.reportId ?? String(value.id ?? index + 1).replace(/\D/g, '')) || index + 1, courseId: legacyCourseId(value.courseId ?? value.subject), sectionId: Number(value.sectionId ?? value.section ?? 1) || 1, type: value.type in { OVER_CORRECTION: 1, TERM_CONFUSION: 1, WRONG_CORRECTION: 1, OTHER: 1 } ? value.type : feedbackType(typeLabel), typeLabel, reportedAt: value.reportedAt ?? '2026-11-21T10:42:00', week: Number(value.week ?? String(value.weekLabel ?? '').replace(/\D/g, '')) || 3, sourcePage: Number(value.sourcePage ?? String(value.page ?? '').replace(/\D/g, '')) || 29, student: value.student && typeof value.student === 'object' ? value.student : { maskedName: String(value.student ?? '').split(' · ')[0] || '학생', maskedStudentNo: String(value.student ?? '').split(' · ')[1] ?? '' }, studentSentence: value.studentSentence ?? value.original ?? '', aiCorrection: value.aiCorrection ?? value.correction ?? '', aiExplanation: value.aiExplanation ?? value.explanation ?? '', comment: value.comment ?? '', status: value.status === 'RESOLVED' || value.status === 'resolved' ? 'RESOLVED' : 'OPEN', resolution: value.resolution, correctedText: value.correctedText };
 }
 export function getDemoState(): DemoState {
   try {

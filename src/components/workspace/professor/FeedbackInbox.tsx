@@ -4,6 +4,7 @@ import { getFeedbackReports, resolveFeedbackReport, reopenFeedbackReport } from 
 import { useApi, ApiErrorState, ApiLoadingState, ApiEmptyState } from '../../../api/useApi';
 import { useProfFilters } from './ProfFilterContext';
 import { useProfessorLanguage } from './ProfessorLanguageContext';
+import { getFeedbackResolutionLabel } from '../../../lib/statusLabels';
 type Props = { onToast: (message: string) => void };
 const courseIdForFilter = { grammar: 1, writing: 2, speaking: 3 } as const;
 export function FeedbackInbox({ onToast }: Props) {
@@ -36,7 +37,7 @@ export function FeedbackInbox({ onToast }: Props) {
       {feedbackApi.loading ? <ApiLoadingState label={t('신고 목록을 불러오는 중…')}/> : shown.length === 0 ? <div className="prof-empty"><span>✓</span><div><b>{t('선택한 조건의 신고가 없어요')}</b><p>{t('과목·분반·주차를 바꾸거나 새 신고가 접수되면 여기에 표시됩니다.')}</p></div></div> : shown.map(item => <article className="prof-card feedback-card" key={item.reportId}>
         <header><span className="feedback-type">{t(item.typeLabel)}</span><small>{displayDate(item.reportedAt)} · {weekLabel} · {item.sourcePage}쪽</small></header><div className="feedback-person">{t('익명 학생')} <b>{item.student.maskedName}{item.student.maskedStudentNo ? ` · ${item.student.maskedStudentNo}` : ''}</b></div>
         <div className="feedback-columns"><div><small>{t('학생 문장')}</small><p>{item.studentSentence}</p></div><div className="feedback-ai"><small>{t('AI 교정')}</small><p>{item.aiCorrection}</p><small>{t('AI 설명')}</small><p>{item.aiExplanation}</p></div></div><blockquote>“{item.comment}”</blockquote>
-        {item.status === 'RESOLVED' ? <div className="resolved-note">{t('처리 완료')}</div> : <div className="feedback-actions"><button className="btn-ghost" onClick={() => void resolve(item, 'AI_CORRECT')}>{t('AI 교정이 맞아요')}</button><button className="btn-ghost" onClick={() => void resolve(item, 'AI_ERROR')}>{t('AI 오류로 표시')}</button><button className="btn-solid" onClick={() => { setCorrecting(correcting === item.reportId ? null : item.reportId); setAnswer(''); }}>{t('올바른 교정 입력')}</button></div>}
+        {item.status === 'RESOLVED' ? (() => { const result = getFeedbackResolutionLabel(item.resolution, item.correctedText, language); return <div className="resolved-note">{result.label}{result.correctedText != null && <strong>{result.correctedText}</strong>}</div>; })() : <div className="feedback-actions"><button className="btn-ghost" onClick={() => void resolve(item, 'AI_CORRECT')}>{t('AI 교정이 맞아요')}</button><button className="btn-ghost" onClick={() => void resolve(item, 'AI_ERROR')}>{t('AI 오류로 표시')}</button><button className="btn-solid" onClick={() => { setCorrecting(correcting === item.reportId ? null : item.reportId); setAnswer(''); }}>{t('올바른 교정 입력')}</button></div>}
         {correcting === item.reportId && <div className="inline-correction"><label>{t('올바른 교정 문장')}<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={language === 'en' ? 'e.g. Eu estou cansada.' : '예: Eu estou cansada.'}/></label><button className="btn-solid" onClick={() => custom(item)}>{t('저장하고 처리')}</button></div>}
       </article>)}
     </section><aside className="prof-card quality-card"><span className="eyebrow">QUALITY · THIS WEEK</span><h2>{t('이번 주 교정 품질')}</h2>
