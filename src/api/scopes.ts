@@ -8,6 +8,7 @@ const requireScope = (scopeId: number) => { const scope = getDemoState().scopes.
 /** A19 POST /prof/scopes — Bearer(교수만) */
 export function createScope(input: { courseId: number; sectionId: number; week: number; materialId: number; startPage: number; endPage: number; exerciseType: ExerciseType; questions: Question[]; title?: string }) { return mockRequest<{ scopeId: number; status: ScopeStatus }>('A19', () => {
   if (input.endPage - input.startPage > 9 || input.startPage < 1) fail(400, 'INVALID_PAGE_RANGE', '최대 10쪽까지 설정할 수 있어요.');
+  if (getDemoState().scopes.some((scope) => scope.courseId === input.courseId && scope.sectionId === input.sectionId && scope.week === input.week)) fail(409, 'SCOPE_ALREADY_EXISTS', '이 주차에는 이미 학습 범위가 있어요.');
   const scopeId = Date.now();
   const range = `${input.startPage}–${input.endPage}`;
   const dates = DEMO_WEEK_DATES[input.week] ?? DEMO_WEEK_DATES[3];

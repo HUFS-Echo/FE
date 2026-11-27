@@ -33,6 +33,8 @@ const initial: DemoState = {
     { scopeId: 3, courseId: 1, sectionId: 1, week: 3, materialId: 1, startPage: 29, endPage: 30, startDate: '2026-11-17', endDate: '2026-11-23', pdfPages: '29–30', title: '부정관사와 명사의 성·수 일치', exerciseType: 'GRAMMAR', questions: [], status: 'IN_PROGRESS', participants: 41, accuracy: 78, updatedAt: '2026-11-17T09:00:00Z' },
     { scopeId: 4, courseId: 3, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'SPEAKING', questions: [], status: 'SCHEDULED', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
     { scopeId: 5, courseId: 2, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'READING_WRITING', questions: [], status: 'DRAFT', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 6, courseId: 1, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'GRAMMAR', questions: [], status: 'SCHEDULED', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 7, courseId: 1, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'GRAMMAR', questions: [], status: 'DRAFT', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
   ],
   feedback: initialFeedback, scopeDraft: null,
   studentSettings: { goal: 10, detail: 'detailed', translation: true, voice: false, outsideWords: true, notifications: { newScope: true, dueTomorrow: true, weeklyReportMail: false }, consent: { agreed: true, agreedAt: '2026-11-17' }, disabledCourseIds: [] },
@@ -54,6 +56,37 @@ function migrateScope(value: any, index: number): LearningScope {
   const accuracy = ['DRAFT', 'SCHEDULED', 'LOCKED'].includes(normalizedStatus) ? null : value.accuracy == null ? 0 : Number(value.accuracy);
   return { scopeId, courseId, sectionId, week: Number(value.week) || 1, materialId: Number(value.materialId) || 1, startPage, endPage, startDate: value.startDate ?? '2026-11-17', endDate: value.endDate ?? '2026-11-23', pdfPages: value.pdfPages ?? value.pages ?? `${startPage}–${endPage}`, title: value.title ?? value.topic ?? courseName(courseId), exerciseType: value.exerciseType ?? (courseId === 1 ? 'GRAMMAR' : courseId === 2 ? 'READING_WRITING' : 'SPEAKING'), questions, status: normalizedStatus, participants, accuracy, updatedAt: value.updatedAt ?? '2026-11-17T09:00:00Z' };
 }
+function normalizeScopes(values: any[]): LearningScope[] {
+  const scopes = values.map(migrateScope);
+  for (const seed of initial.scopes.filter((scope) => scope.courseId === 1 && scope.sectionId === 1 && (scope.week === 4 || scope.week === 5))) {
+    if (!scopes.some((scope) => scope.courseId === seed.courseId && scope.sectionId === seed.sectionId && scope.week === seed.week)) scopes.push(seed);
+  }
+  const priority: Record<ScopeStatus, number> = { IN_PROGRESS: 4, SCHEDULED: 3, DONE: 2, DRAFT: 1, LOCKED: 0 };
+  const byCourseSectionWeek = new Map<string, LearningScope>();
+  for (const scope of scopes) {
+    const key = `${scope.courseId}:${scope.sectionId}:${scope.week}`;
+    const existing = byCourseSectionWeek.get(key);
+    if (!existing || priority[scope.status] > priority[existing.status] || (priority[scope.status] === priority[existing.status] && scope.updatedAt > existing.updatedAt)) byCourseSectionWeek.set(key, scope);
+  }
+  for (const seed of initial.scopes.filter((scope) => scope.courseId === 1 && scope.sectionId === 1)) {
+    const key = `${seed.courseId}:${seed.sectionId}:${seed.week}`;
+    const existing = byCourseSectionWeek.get(key);
+    if (!existing || (existing.startDate === seed.startDate && existing.endDate === seed.endDate)) continue;
+    const isUpcomingDefault = seed.week === 4 || seed.week === 5;
+    byCourseSectionWeek.set(key, {
+      ...existing,
+      materialId: seed.materialId,
+      startPage: seed.startPage,
+      endPage: seed.endPage,
+      startDate: seed.startDate,
+      endDate: seed.endDate,
+      pdfPages: seed.pdfPages,
+      title: seed.title,
+      ...(isUpcomingDefault ? { exerciseType: seed.exerciseType, questions: seed.questions, status: seed.status, participants: null, accuracy: null } : {}),
+    });
+  }
+  return [...byCourseSectionWeek.values()];
+}
 function migrateFeedback(value: any, index: number): FeedbackCase {
   const typeLabel = value.typeLabel ?? value.type ?? '기타';
   return { reportId: Number(value.reportId ?? String(value.id ?? index + 1).replace(/\D/g, '')) || index + 1, courseId: legacyCourseId(value.courseId ?? value.subject), sectionId: Number(value.sectionId ?? value.section ?? 1) || 1, type: value.type in { OVER_CORRECTION: 1, TERM_CONFUSION: 1, WRONG_CORRECTION: 1, OTHER: 1 } ? value.type : feedbackType(typeLabel), typeLabel, reportedAt: value.reportedAt ?? '2026-11-21T10:42:00', week: Number(value.week ?? String(value.weekLabel ?? '').replace(/\D/g, '')) || 3, sourcePage: Number(value.sourcePage ?? String(value.page ?? '').replace(/\D/g, '')) || 29, student: value.student && typeof value.student === 'object' ? value.student : { maskedName: String(value.student ?? '').split(' · ')[0] || '학생', maskedStudentNo: String(value.student ?? '').split(' · ')[1] ?? '' }, studentSentence: value.studentSentence ?? value.original ?? '', aiCorrection: value.aiCorrection ?? value.correction ?? '', aiExplanation: value.aiExplanation ?? value.explanation ?? '', comment: value.comment ?? '', status: value.status === 'RESOLVED' || value.status === 'resolved' ? 'RESOLVED' : 'OPEN', resolution: value.resolution, correctedText: value.correctedText };
@@ -72,7 +105,7 @@ export function getDemoState(): DemoState {
     };
     const legacyDisabled = Array.isArray(settings.disabledCourses) ? settings.disabledCourses.map((item: unknown) => legacyCourseId(item)) : [];
     const disabledCourseIds = [...new Set([...(Array.isArray(settings.disabledCourseIds) ? settings.disabledCourseIds.filter((item): item is number => typeof item === 'number') : []), ...legacyDisabled])];
-    const next: DemoState = { ...initial, ...stored, scopes: (stored.scopes ?? initial.scopes).map(migrateScope), feedback: (stored.feedback ?? initial.feedback).filter((item: any) => !(item.studentSentence === 'Queria um café, por favor.' || item.original === 'Queria um café, por favor.')).map(migrateFeedback), studentSettings: { ...settings, disabledCourseIds }, professorSettings: { ...initial.professorSettings, ...stored.professorSettings } };
+    const next: DemoState = { ...initial, ...stored, scopes: normalizeScopes(stored.scopes ?? initial.scopes), feedback: (stored.feedback ?? initial.feedback).filter((item: any) => !(item.studentSentence === 'Queria um café, por favor.' || item.original === 'Queria um café, por favor.')).map(migrateFeedback), studentSettings: { ...settings, disabledCourseIds }, professorSettings: { ...initial.professorSettings, ...stored.professorSettings } };
     return next;
   } catch { return structuredClone(initial); }
 }

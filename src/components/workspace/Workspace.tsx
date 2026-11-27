@@ -210,7 +210,7 @@ export function Workspace({ session, path, onNavigate, onSessionUpdate, onLogout
                   <label className="header-select header-select--week">
                     <span className="sr-only">{t('주차')}</span>
                     <select value={filters.week} onChange={event => setFilters(current => ({ ...current, week: Number(event.target.value) }))}>
-                      {(selectedCourse?.weeks ?? []).map((week) => <option key={week.week} value={week.week}>{displayLanguage === 'en' ? `Week ${week.week} · ${weekSuffix(week.week)}` : `${week.week}주차 · ${weekSuffix(week.week)}`}</option>)}
+                      {(selectedCourse?.weeks ?? []).map((week) => <option key={week.week} value={week.week}>{displayLanguage === 'en' ? `W${week.week} · ${weekSuffix(week.week).replace(' – ', '–')}` : `${week.week}주차 · ${weekSuffix(week.week)}`}</option>)}
                     </select>
                   </label>
                   <ProfessorLanguagePicker language={professorLanguage} label={t('화면 언어')} onChange={setProfessorLanguage} />
