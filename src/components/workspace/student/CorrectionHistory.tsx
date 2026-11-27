@@ -19,8 +19,9 @@ function formatCorrectionDate(value: string): string {
 
 export function CorrectionHistory({ onCustomPractice, subject }: Props) {
   const [filter, setFilter] = useState(0);
+  const [filterEdges, setFilterEdges] = useState({ left: false, right: false });
   const tabRefs = useRef(new Map<number, HTMLButtonElement>());
-  useEffect(() => { tabRefs.current.get(filter)?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); }, [filter]);
+  const filtersRef = useRef<HTMLDivElement>(null);
   const courseId = getCourseIdFromLegacySubject(subject);
   const weeksApi = useApi(() => getCourseWeeks(courseId), [courseId]);
   const week = filter === 0 ? undefined : filter;
@@ -29,9 +30,44 @@ export function CorrectionHistory({ onCustomPractice, subject }: Props) {
   const weeks = weeksApi.data?.weeks ?? [];
   const selectedLabel = filter === 0 ? '전체' : `${filter}주차`;
 
+  useEffect(() => {
+    const scroller = filtersRef.current;
+    const selectedTab = tabRefs.current.get(filter);
+    if (!scroller || !selectedTab) return;
+    const scrollerBounds = scroller.getBoundingClientRect();
+    const tabBounds = selectedTab.getBoundingClientRect();
+    const horizontalDelta = tabBounds.left < scrollerBounds.left
+      ? tabBounds.left - scrollerBounds.left
+      : tabBounds.right > scrollerBounds.right
+        ? tabBounds.right - scrollerBounds.right
+        : 0;
+    if (horizontalDelta) scroller.scrollTo({ left: scroller.scrollLeft + horizontalDelta, behavior: 'smooth' });
+  }, [filter]);
+
+  useEffect(() => {
+    const scroller = filtersRef.current;
+    if (!scroller) return;
+    const updateEdges = () => {
+      const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      const left = scroller.scrollLeft > 1;
+      const right = scroller.scrollLeft < maxScrollLeft - 1;
+      setFilterEdges((current) => current.left === left && current.right === right ? current : { left, right });
+    };
+    updateEdges();
+    scroller.addEventListener('scroll', updateEdges, { passive: true });
+    window.addEventListener('resize', updateEdges);
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateEdges);
+    resizeObserver?.observe(scroller);
+    return () => {
+      scroller.removeEventListener('scroll', updateEdges);
+      window.removeEventListener('resize', updateEdges);
+      resizeObserver?.disconnect();
+    };
+  }, [weeks.length]);
+
   return <div className="history">
     <header className="page-head"><div><p className="eyebrow">REVISÃO · {selectedLabel} 기록</p><h1>교정 기록</h1><p className="page-head__sub">다시 틀리지 않도록, 고친 문장을 모아봤어요.</p></div><button type="button" className="btn-solid" onClick={onCustomPractice}>맞춤 연습 시작<ArrowIcon /></button></header>
-    <div className="history__filter-wrap"><div className="history__filters" role="group" aria-label="주차 필터">
+    <div className={`history__filter-wrap${filterEdges.left ? ' has-overflow-left' : ''}${filterEdges.right ? ' has-overflow-right' : ''}`}><div className="history__filters" ref={filtersRef} role="group" aria-label="주차 필터">
       <button ref={(node) => { if (node) tabRefs.current.set(0, node); }} type="button" className={filter === 0 ? 'is-active' : ''} aria-pressed={filter === 0} onClick={() => setFilter(0)}>전체</button>
       {weeks.map((item) => <button ref={(node) => { if (node) tabRefs.current.set(item.week, node); }} key={item.week} type="button" className={`${filter === item.week ? 'is-active' : ''} ${item.status === 'LOCKED' ? 'is-locked' : ''}`} aria-pressed={filter === item.week} disabled={item.status === 'LOCKED'} onClick={() => setFilter(item.week)}>{item.week}주차</button>)}
     </div></div>

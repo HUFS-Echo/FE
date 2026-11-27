@@ -14,8 +14,15 @@ function displayPages(value: string) {
   return value.replace(/\s*(?:쪽|pages?)\s*$/i, '').trim();
 }
 
+function displayWeekDate(value: string) {
+  const isoDate = value.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return isoDate ? `${isoDate[1]}.${isoDate[2]}` : value;
+}
+
 function displayOpenDate(value: string) {
-  return `${value.replace(/\s*에\s*열려요\s*$/, '').trim()}에 열려요`;
+  const date = value.replace(/\s*에\s*열려요\s*$/, '').trim();
+  const isoDate = date.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return `${isoDate ? `${isoDate[1]}.${isoDate[2]}` : date}에 열려요`;
 }
 
 export function WeekList({ subject, onOpen }: Props) {
@@ -24,7 +31,7 @@ export function WeekList({ subject, onOpen }: Props) {
   const data = weeksApi.data;
   const items = data?.weeks.map((week) => ({
     no: week.week,
-    dates: `${week.startDate} – ${week.endDate}`,
+    dates: `${displayWeekDate(week.startDate)} – ${displayWeekDate(week.endDate)}`,
     range: week.title,
     pdf: `PDF ${displayPages(week.pdfPages)}쪽`,
     status: week.status,
@@ -32,11 +39,10 @@ export function WeekList({ subject, onOpen }: Props) {
     accuracy: week.accuracy,
     openAt: week.opensAt ? displayOpenDate(week.opensAt) : undefined,
   })) ?? [];
-  const orderedItems = items.slice().sort((a, b) => Number(b.status === 'IN_PROGRESS') - Number(a.status === 'IN_PROGRESS'));
 
   return <div className="weeks">
     <header className="page-head"><div><p className="eyebrow">CRONOGRAMA · PORTUGUÊS A1</p><h1>주차 목록</h1><p className="page-head__sub">{data ? `이번 학기 ${data.totalWeeks}주 중 ${data.currentWeek}주차를 지나고 있어요.` : '학습 주차 정보를 불러옵니다.'}</p></div><span className="page-head__pill">{data ? `전체 ${data.totalWeeks}주` : '주차 목록'}</span></header>
-    {weeksApi.loading ? <ApiLoadingState label="주차 목록을 불러오는 중…" /> : weeksApi.error ? <ApiErrorState error={weeksApi.error} onRetry={weeksApi.retry} /> : !items.length ? <ApiEmptyState message="아직 등록된 주차가 없어요." /> : <div className="week-grid">{orderedItems.map((week) => {
+    {weeksApi.loading ? <ApiLoadingState label="주차 목록을 불러오는 중…" /> : weeksApi.error ? <ApiErrorState error={weeksApi.error} onRetry={weeksApi.retry} /> : !items.length ? <ApiEmptyState message="아직 등록된 주차가 없어요." /> : <div className="week-grid">{items.filter((week) => week.status !== 'IN_PROGRESS').map((week) => {
       const done = week.status === 'DONE';
       const locked = week.status === 'SCHEDULED' || week.status === 'DRAFT' || week.status === 'LOCKED';
       return <article className={`week-card ${locked ? 'is-locked' : ''}`} key={week.no}>

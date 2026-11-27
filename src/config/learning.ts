@@ -386,14 +386,6 @@ export type HistoryItem = {
 
 export const CORRECTION_HISTORY: HistoryItem[] = [
   {
-    id: 'h8', date: '어제', week: '2주차', original: 'Onde fica estação?', corrected: 'Onde fica a estação?',
-    tag: '관사', explanation: '특정 장소를 물을 때 정관사 a를 함께 사용해요.', repeat: 1, subject: 'grammar',
-  },
-  {
-    id: 'h9', date: '11.15', week: '2주차', original: 'Vire à direita na rua.', corrected: 'Vire à direita.',
-    tag: '표현', explanation: '방향을 안내할 때 짧고 자연스럽게 말할 수 있어요.', repeat: 0, subject: 'speaking',
-  },
-  {
     id: 'h1',
     date: '오늘',
     week: '3주차',
