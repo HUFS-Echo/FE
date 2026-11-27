@@ -5148,3 +5148,20 @@
 .student-main:has(> .grammar-review) {
   background: #fff;
 }
+
+
+/* 15-week history tabs and complete vertical week list */
+.history__filter-wrap { position: relative; overflow: hidden; margin-bottom: 14px; }
+.history__filter-wrap::before, .history__filter-wrap::after { position: absolute; z-index: 1; top: 0; bottom: 0; width: 18px; content: ''; pointer-events: none; }
+.history__filter-wrap::before { left: 0; background: linear-gradient(90deg, var(--paper), transparent); }
+.history__filter-wrap::after { right: 0; background: linear-gradient(270deg, var(--paper), transparent); }
+.history__filters { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; }
+.history__filters::-webkit-scrollbar { display: none; }
+.history__filters button { flex: 0 0 auto; }
+.history__filters button.is-locked { opacity: .42; cursor: not-allowed; }
+.week-grid { grid-template-columns: minmax(0, 1fr) !important; }
+.scope-table__editable { cursor: pointer; }
+.scope-table__editable:hover { background: var(--paper-deep); }
+.scope-table__edit-hint { display: none; }
+.scope-table__editable:hover .scope-table__edit-hint { display: block; text-align: right; }
+.scope-table tr:not(.scope-table__editable) { cursor: default; }

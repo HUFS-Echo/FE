@@ -85,7 +85,7 @@ export function StudentShell({ session, path, onNavigate, onToast, onSessionUpda
     {view === 'speaking' && <SpeakingPractice setId={practiceSetId} onBack={() => navigate('home')} onComplete={complete} onToast={onToast} />}
     {view === 'summary' && summary && <PracticeSummary data={summary} onHome={() => navigate('home')} />}
     {view === 'customPractice' && customPracticeId && <CustomPractice key={customPracticeId} practiceId={customPracticeId} onBack={() => navigate('history')} />}
-    {view === 'history' && <CorrectionHistory onCustomPractice={startCustomPractice} />}
+    {view === 'history' && <CorrectionHistory subject={subject} onCustomPractice={startCustomPractice} />}
     {view === 'me' && <StudentProfile session={session} onSessionUpdate={onSessionUpdate} onToast={onToast} onLogout={onLogout} onReset={onReset} onReplay={onReplay} />}
   </main></div>;
 }

@@ -26,6 +26,12 @@ const initialFeedback: FeedbackCase[] = [
     { reportId: 2, courseId: 1, sectionId: 1, type: 'TERM_CONFUSION', typeLabel: '문법 용어 혼동', reportedAt: '2026-11-20T16:05:00', week: 3, sourcePage: 30, student: { maskedName: '이*아', maskedStudentNo: '2025****04' }, studentSentence: 'A conta, por favor.', aiCorrection: 'a는 부정관사입니다.', aiExplanation: 'a는 부정관사로 쓰입니다.', comment: 'a는 정관사 아닌가요?', status: 'OPEN' },
 ];
 const question = (questionId: number, sentence: string, answer: string, sourcePage: number): Question => ({ questionId, format: 'MULTIPLE_CHOICE', sentence, answer, choices: [], sourcePage, answerType: 'CHOICE' });
+const seededQuestions = (week: 4 | 5): Question[] => {
+  const data = week === 4
+    ? [['Quanto custa este pão?', 'Custa dois euros.', 38], ['Quero ___ maçãs, por favor.', 'umas', 39], ['Onde fica o mercado?', 'Fica perto da praça.', 40], ['Este queijo é caro?', 'Não, é barato.', 41], ['Quanto é tudo?', 'São cinco euros.', 42]]
+    : [['Lisboa é uma cidade ___.', 'bonita', 52], ['Como vamos para o centro?', 'Vamos de elétrico.', 53], ['O hotel fica perto do rio?', 'Sim, fica.', 54], ['Quero visitar o museu ___ Belém.', 'de', 56], ['A viagem foi muito ___?', 'interessante', 58]];
+  return data.map(([sentence, answer, sourcePage], index) => ({ questionId: index + 1, format: 'MULTIPLE_CHOICE', sentence: String(sentence), answer: String(answer), choices: [], sourcePage: Number(sourcePage), answerType: 'CHOICE' }));
+};
 const initial: DemoState = {
   scopes: [
     { scopeId: 1, courseId: 1, sectionId: 1, week: 1, materialId: 1, startPage: 8, endPage: 12, startDate: '2026-11-03', endDate: '2026-11-09', pdfPages: '8–12', title: '인사와 자기소개', exerciseType: 'GRAMMAR', questions: [], status: 'DONE', participants: 44, accuracy: 88, updatedAt: '2026-11-09T09:00:00Z' },
@@ -33,8 +39,8 @@ const initial: DemoState = {
     { scopeId: 3, courseId: 1, sectionId: 1, week: 3, materialId: 1, startPage: 29, endPage: 30, startDate: '2026-11-17', endDate: '2026-11-23', pdfPages: '29–30', title: '부정관사와 명사의 성·수 일치', exerciseType: 'GRAMMAR', questions: [], status: 'IN_PROGRESS', participants: 41, accuracy: 78, updatedAt: '2026-11-17T09:00:00Z' },
     { scopeId: 4, courseId: 3, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'SPEAKING', questions: [], status: 'SCHEDULED', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
     { scopeId: 5, courseId: 2, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'READING_WRITING', questions: [], status: 'DRAFT', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
-    { scopeId: 6, courseId: 1, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'GRAMMAR', questions: [], status: 'SCHEDULED', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
-    { scopeId: 7, courseId: 1, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'GRAMMAR', questions: [], status: 'DRAFT', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 6, courseId: 1, sectionId: 1, week: 4, materialId: 1, startPage: 38, endPage: 42, startDate: '2026-11-24', endDate: '2026-11-30', pdfPages: '38–42', title: '시장에서 가격 묻기', exerciseType: 'GRAMMAR', questions: seededQuestions(4), status: 'SCHEDULED', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
+    { scopeId: 7, courseId: 1, sectionId: 1, week: 5, materialId: 1, startPage: 52, endPage: 58, startDate: '2026-12-01', endDate: '2026-12-07', pdfPages: '52–58', title: '리스본 여행', exerciseType: 'GRAMMAR', questions: seededQuestions(5), status: 'DRAFT', participants: null, accuracy: null, updatedAt: '2026-11-17T09:00:00Z' },
   ],
   feedback: initialFeedback, scopeDraft: null,
   studentSettings: { goal: 10, detail: 'detailed', translation: true, voice: false, outsideWords: true, notifications: { newScope: true, dueTomorrow: true, weeklyReportMail: false }, consent: { agreed: true, agreedAt: '2026-11-17' }, disabledCourseIds: [] },
@@ -71,18 +77,12 @@ function normalizeScopes(values: any[]): LearningScope[] {
   for (const seed of initial.scopes.filter((scope) => scope.courseId === 1 && scope.sectionId === 1)) {
     const key = `${seed.courseId}:${seed.sectionId}:${seed.week}`;
     const existing = byCourseSectionWeek.get(key);
-    if (!existing || (existing.startDate === seed.startDate && existing.endDate === seed.endDate)) continue;
+    if (!existing) continue;
     const isUpcomingDefault = seed.week === 4 || seed.week === 5;
     byCourseSectionWeek.set(key, {
       ...existing,
-      materialId: seed.materialId,
-      startPage: seed.startPage,
-      endPage: seed.endPage,
-      startDate: seed.startDate,
-      endDate: seed.endDate,
-      pdfPages: seed.pdfPages,
-      title: seed.title,
-      ...(isUpcomingDefault ? { exerciseType: seed.exerciseType, questions: seed.questions, status: seed.status, participants: null, accuracy: null } : {}),
+      ...(existing.startDate === seed.startDate && existing.endDate === seed.endDate ? {} : { materialId: seed.materialId, startPage: seed.startPage, endPage: seed.endPage, startDate: seed.startDate, endDate: seed.endDate, pdfPages: seed.pdfPages, title: seed.title }),
+      ...(isUpcomingDefault ? { exerciseType: existing.exerciseType ?? seed.exerciseType, questions: existing.questions.length ? existing.questions : seed.questions } : {}),
     });
   }
   return [...byCourseSectionWeek.values()];

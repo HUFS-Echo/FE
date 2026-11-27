@@ -81,3 +81,6 @@ setMockOptions({ delay: false, forceError: false });
 
 - `npm run typecheck`와 `npm run build` 통과(2026-11-26). Vite는 500KB 초과 JS 청크 경고를 냈으나 build는 성공했습니다.
 - 화면별 수동 확인 여부와 아직 확인하지 못한 흐름은 PR 검토 설명과 `TODO.md`에 기록합니다. 라이브 배포·실제 API 요청은 수행하지 않습니다.
+
+- 교정 기록 주차 탭은 B2 주차 목록 기준, 기록 유무는 B8로 판단
+- 실제 API에서는 서버가 실제 날짜로 판단함.

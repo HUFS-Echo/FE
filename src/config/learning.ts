@@ -384,9 +384,15 @@ export type HistoryItem = {
   subject: SubjectId;
 };
 
-export const HISTORY_WEEK_FILTERS = ['전체', '1주차', '2주차', '3주차'] as const;
-
 export const CORRECTION_HISTORY: HistoryItem[] = [
+  {
+    id: 'h8', date: '어제', week: '2주차', original: 'Onde fica estação?', corrected: 'Onde fica a estação?',
+    tag: '관사', explanation: '특정 장소를 물을 때 정관사 a를 함께 사용해요.', repeat: 1, subject: 'grammar',
+  },
+  {
+    id: 'h9', date: '11.15', week: '2주차', original: 'Vire à direita na rua.', corrected: 'Vire à direita.',
+    tag: '표현', explanation: '방향을 안내할 때 짧고 자연스럽게 말할 수 있어요.', repeat: 0, subject: 'speaking',
+  },
   {
     id: 'h1',
     date: '오늘',
@@ -535,4 +541,13 @@ export const WEEKS: WeekItem[] = [
     status: 'locked',
     openAt: '12.08에 열려요',
   },
+  { no: 7, dates: '12.15 – 12.21', range: '하루 일과와 시간 말하기', pdf: 'PDF 72–77쪽', status: 'locked', openAt: '12.15에 열려요' },
+  { no: 8, dates: '12.22 – 12.28', range: '음식과 식당 메뉴', pdf: 'PDF 79–84쪽', status: 'locked', openAt: '12.22에 열려요' },
+  { no: 9, dates: '12.29 – 01.04', range: '가족과 성격 묘사', pdf: 'PDF 86–91쪽', status: 'locked', openAt: '12.29에 열려요' },
+  { no: 10, dates: '01.05 – 01.11', range: '주말 계획과 초대하기', pdf: 'PDF 94–99쪽', status: 'locked', openAt: '01.05에 열려요' },
+  { no: 11, dates: '01.12 – 01.18', range: '날씨와 계절 이야기', pdf: 'PDF 101–106쪽', status: 'locked', openAt: '01.12에 열려요' },
+  { no: 12, dates: '01.19 – 01.25', range: '교통수단과 이동 경로', pdf: 'PDF 108–113쪽', status: 'locked', openAt: '01.19에 열려요' },
+  { no: 13, dates: '01.26 – 02.01', range: '건강 상태와 약국에서 말하기', pdf: 'PDF 115–120쪽', status: 'locked', openAt: '01.26에 열려요' },
+  { no: 14, dates: '02.02 – 02.08', range: '쇼핑과 옷 고르기', pdf: 'PDF 122–127쪽', status: 'locked', openAt: '02.02에 열려요' },
+  { no: 15, dates: '02.09 – 02.15', range: '좋아하는 장소 소개하기', pdf: 'PDF 129–134쪽', status: 'locked', openAt: '02.09에 열려요' },
 ];
