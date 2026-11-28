@@ -1,7 +1,7 @@
 import type { ExerciseType, FeedbackReportType, Question, ScopeStatus } from '../api/types';
 
 export type FeedbackCase = {
-  reportId: number; courseId: number; sectionId: number; type: FeedbackReportType; typeLabel: string; reportedAt: string; week: number; sourcePage: number;
+  reportId: number; courseId: number; sectionId: number; type: FeedbackReportType; typeLabel: string; reportedAt: string; week: number; sourcePage: number; correctionId?: number;
   student: { maskedName: string; maskedStudentNo: string }; studentSentence: string; aiCorrection: string; aiExplanation: string;
   comment: string; status: 'OPEN' | 'RESOLVED'; resolution?: 'AI_CORRECT' | 'AI_ERROR' | 'CUSTOM'; correctedText?: string;
 };
@@ -89,7 +89,26 @@ function normalizeScopes(values: any[]): LearningScope[] {
 }
 function migrateFeedback(value: any, index: number): FeedbackCase {
   const typeLabel = value.typeLabel ?? value.type ?? '기타';
-  return { reportId: Number(value.reportId ?? String(value.id ?? index + 1).replace(/\D/g, '')) || index + 1, courseId: legacyCourseId(value.courseId ?? value.subject), sectionId: Number(value.sectionId ?? value.section ?? 1) || 1, type: value.type in { OVER_CORRECTION: 1, TERM_CONFUSION: 1, WRONG_CORRECTION: 1, OTHER: 1 } ? value.type : feedbackType(typeLabel), typeLabel, reportedAt: value.reportedAt ?? '2026-11-21T10:42:00', week: Number(value.week ?? String(value.weekLabel ?? '').replace(/\D/g, '')) || 3, sourcePage: Number(value.sourcePage ?? String(value.page ?? '').replace(/\D/g, '')) || 29, student: value.student && typeof value.student === 'object' ? value.student : { maskedName: String(value.student ?? '').split(' · ')[0] || '학생', maskedStudentNo: String(value.student ?? '').split(' · ')[1] ?? '' }, studentSentence: value.studentSentence ?? value.original ?? '', aiCorrection: value.aiCorrection ?? value.correction ?? '', aiExplanation: value.aiExplanation ?? value.explanation ?? '', comment: value.comment ?? '', status: value.status === 'RESOLVED' || value.status === 'resolved' ? 'RESOLVED' : 'OPEN', resolution: value.resolution, correctedText: value.correctedText };
+  const correctionId = Number(value.correctionId);
+  return {
+    reportId: Number(value.reportId ?? String(value.id ?? index + 1).replace(/\D/g, '')) || index + 1,
+    courseId: legacyCourseId(value.courseId ?? value.subject),
+    sectionId: Number(value.sectionId ?? value.section ?? 1) || 1,
+    type: value.type in { OVER_CORRECTION: 1, TERM_CONFUSION: 1, WRONG_CORRECTION: 1, OTHER: 1 } ? value.type : feedbackType(typeLabel),
+    typeLabel,
+    reportedAt: value.reportedAt ?? '2026-11-21T10:42:00',
+    week: Number(value.week ?? String(value.weekLabel ?? '').replace(/\D/g, '')) || 3,
+    sourcePage: Number(value.sourcePage ?? String(value.page ?? '').replace(/\D/g, '')) || 29,
+    ...(Number.isInteger(correctionId) && correctionId > 0 ? { correctionId } : {}),
+    student: value.student && typeof value.student === 'object' ? value.student : { maskedName: String(value.student ?? '').split(' · ')[0] || '학생', maskedStudentNo: String(value.student ?? '').split(' · ')[1] ?? '' },
+    studentSentence: value.studentSentence ?? value.original ?? '',
+    aiCorrection: value.aiCorrection ?? value.correction ?? '',
+    aiExplanation: value.aiExplanation ?? value.explanation ?? '',
+    comment: value.comment ?? '',
+    status: value.status === 'RESOLVED' || value.status === 'resolved' ? 'RESOLVED' : 'OPEN',
+    resolution: value.resolution,
+    correctedText: value.correctedText,
+  };
 }
 export function getDemoState(): DemoState {
   try {
